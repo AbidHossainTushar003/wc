@@ -137,9 +137,13 @@ switch ($method) {
 
         $allowed = ['name', 'category_id', 'regular_price', 'sale_price', 'stock_quantity', 'sku', 'short_desc', 'description', 'is_featured', 'is_trending'];
         foreach ($allowed as $f) {
-            if (isset($data[$f])) {
+            if (array_key_exists($f, $data)) {
                 $fields[] = "$f = ?";
-                $params[] = $data[$f];
+                if ($f === 'sale_price' && ($data[$f] === null || $data[$f] === '')) {
+                    $params[] = null;
+                } else {
+                    $params[] = $data[$f];
+                }
             }
         }
 

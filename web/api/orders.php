@@ -112,15 +112,19 @@ switch ($method) {
         $deliveryZone = $data['delivery_zone'] ?? (
             isset($data['delivery_area']) && stripos((string)$data['delivery_area'], 'outside') !== false
                 ? 'outside_dhaka'
-                : 'dhaka'
+                : (isset($data['delivery_area']) && stripos((string)$data['delivery_area'], 'dhanmondi') !== false ? 'dhanmondi' : 'dhaka')
         );
-        if (!in_array($deliveryZone, ['dhaka', 'outside_dhaka'], true)) {
+        if (!in_array($deliveryZone, ['dhanmondi', 'dhaka', 'outside_dhaka'], true)) {
             jsonResponse(['error' => 'Invalid delivery zone.'], 422);
         }
         if (isset($data['delivery_area']) && (!is_string($data['delivery_area']) || strlen($data['delivery_area']) > 80)) {
             jsonResponse(['error' => 'Invalid delivery area.'], 422);
         }
-        $deliveryArea = $deliveryZone === 'outside_dhaka' ? 'Outside Dhaka' : 'Inside Dhaka';
+        $deliveryArea = [
+            'dhanmondi' => 'Dhanmondi',
+            'dhaka' => 'Inside Dhaka',
+            'outside_dhaka' => 'Outside Dhaka'
+        ][$deliveryZone];
         $paymentMethod = $data['payment_method'] ?? 'Cash on Delivery';
         if (!in_array($paymentMethod, ['Cash on Delivery', 'bKash', 'Nagad', 'Rocket'], true)) {
             jsonResponse(['error' => 'Invalid payment method.'], 422);
@@ -138,12 +142,16 @@ switch ($method) {
             jsonResponse(['error' => 'One or more order fields contain invalid characters.'], 422);
         }
 
-        $deliverySetting = $deliveryZone === 'outside_dhaka' ? 'delivery_fee_outside_dhaka' : 'delivery_fee_dhaka';
+        $deliverySetting = [
+            'dhanmondi' => 'delivery_fee_dhanmondi',
+            'dhaka' => 'delivery_fee_dhaka',
+            'outside_dhaka' => 'delivery_fee_outside_dhaka'
+        ][$deliveryZone];
         $feeStmt = $pdo->prepare('SELECT value_data FROM settings WHERE key_name = ?');
         $feeStmt->execute([$deliverySetting]);
         $deliveryFeeValue = $feeStmt->fetchColumn();
         $deliveryFee = $deliveryFeeValue === false
-            ? ($deliveryZone === 'outside_dhaka' ? 130.00 : 80.00)
+            ? ['dhanmondi' => 60.00, 'dhaka' => 80.00, 'outside_dhaka' => 130.00][$deliveryZone]
             : max(0, (float)$deliveryFeeValue);
 
         $pdo->beginTransaction();
@@ -296,8 +304,9 @@ switch ($method) {
 
     case 'PUT':
         $data = getRequestBody();
-        if (empty($data['id'])) {
-            jsonResponse(['error' => 'Order ID is required'], 422);
+        $orderId = filter_var($data['id'] ?? null, FILTER_VALIDATE_INT);
+        if ($orderId === false || $orderId < 1) {
+            jsonResponse(['error' => 'A valid order ID is required'], 422);
         }
 
         $fields = [];
@@ -329,16 +338,75 @@ switch ($method) {
             jsonResponse(['error' => 'No fields provided for update'], 400);
         }
 
-        $params[] = (int)$data['id'];
-        $stmt = $pdo->prepare('UPDATE orders SET ' . implode(', ', $fields) . ' WHERE id = ?');
-        $stmt->execute($params);
-        if (isset($data['order_status'])) {
-            logSecurityEvent('order_status_updated');
+        $pdo->beginTransaction();
+        try {
+            $driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+            $lockClause = $driver === 'mysql' ? ' FOR UPDATE' : '';
+            $orderStmt = $pdo->prepare('SELECT order_status FROM orders WHERE id = ?' . $lockClause);
+            $orderStmt->execute([$orderId]);
+            $order = $orderStmt->fetch();
+            if (!$order) {
+                $pdo->rollBack();
+                jsonResponse(['error' => 'Order not found'], 404);
+            }
+
+            $currentStatus = $order['order_status'];
+            if ($currentStatus === 'Cancelled'
+                && isset($data['order_status'])
+                && $data['order_status'] !== 'Cancelled') {
+                throw new DomainException('A cancelled order cannot be reopened.');
+            }
+
+            if (isset($data['order_status'])
+                && $data['order_status'] === 'Cancelled'
+                && $currentStatus !== 'Cancelled') {
+                $itemsStmt = $pdo->prepare("
+                    SELECT product_id, SUM(quantity) AS quantity
+                    FROM order_items
+                    WHERE order_id = ?
+                    GROUP BY product_id
+                ");
+                $itemsStmt->execute([$orderId]);
+                $items = $itemsStmt->fetchAll();
+                if (!$items) {
+                    throw new DomainException('Order items are unavailable; stock could not be restored.');
+                }
+
+                $restoreStockStmt = $pdo->prepare(
+                    'UPDATE products SET stock_quantity = stock_quantity + ? WHERE id = ?'
+                );
+                foreach ($items as $item) {
+                    $restoreStockStmt->execute([(int)$item['quantity'], (int)$item['product_id']]);
+                    if ($restoreStockStmt->rowCount() !== 1) {
+                        throw new DomainException('Product stock could not be restored for this order.');
+                    }
+                }
+            }
+
+            $params[] = $orderId;
+            $updateStmt = $pdo->prepare('UPDATE orders SET ' . implode(', ', $fields) . ' WHERE id = ?');
+            $updateStmt->execute($params);
+            $pdo->commit();
+
+            if (isset($data['order_status'])) {
+                logSecurityEvent('order_status_updated');
+            }
+            if (isset($data['payment_status'])) {
+                logSecurityEvent('order_payment_status_updated');
+            }
+            jsonResponse(['status' => 'success', 'message' => 'Order updated successfully']);
+        } catch (DomainException $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            jsonResponse(['error' => $e->getMessage()], 409);
+        } catch (PDOException $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            error_log('Wonderful Collection order update transaction failed: ' . $e->getMessage());
+            jsonResponse(['error' => 'Failed to update order. Please try again.'], 500);
         }
-        if (isset($data['payment_status'])) {
-            logSecurityEvent('order_payment_status_updated');
-        }
-        jsonResponse(['status' => 'success', 'message' => 'Order updated successfully']);
         break;
 
     default:

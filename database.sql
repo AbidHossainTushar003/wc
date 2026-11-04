@@ -13,6 +13,7 @@ CREATE TABLE `settings` (
 INSERT INTO `settings` (`key_name`, `value_data`) VALUES
 ('store_name', 'Wonderful Collection'),
 ('store_moto', '🛍️ Wonderful Collection: Quality products, delivered across Bangladesh. 🇧🇩'),
+('announcement_text', '🚚 Delivery availability and estimates are shown at checkout. Cash on delivery & bKash available.'),
 ('store_email', 'contact@wonderfulcollection.store'),
 ('store_phone', '+880 1560-024777'),
 ('store_address', 'DHAKA, BANGLADESH'),
