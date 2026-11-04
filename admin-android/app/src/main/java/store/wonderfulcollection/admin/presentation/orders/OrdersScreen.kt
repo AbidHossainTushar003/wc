@@ -9,6 +9,7 @@ import android.view.Gravity
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
+import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
@@ -35,6 +36,8 @@ class OrdersViewModel(
     val ordersState: LiveData<Resource<List<Order>>> = _ordersState
 
     private var allOrders = listOf<Order>()
+    private var currentStatusFilter: String = "All"
+    private var currentSearchQuery: String = ""
 
     fun loadOrders() {
         _ordersState.value = Resource.Loading
@@ -42,22 +45,33 @@ class OrdersViewModel(
             getOrdersUseCase()
                 .onSuccess { orders ->
                     allOrders = orders
-                    _ordersState.value = Resource.Success(orders)
+                    applyFilters()
                     checkNewOrder(orders)
                 }
                 .onFailure { _ordersState.value = Resource.Error(it.message ?: "Failed to load orders") }
         }
     }
 
-    fun filterOrders(query: String) {
-        val filtered = if (query.isBlank()) {
-            allOrders
-        } else {
-            allOrders.filter {
-                it.orderNumber.contains(query, ignoreCase = true) ||
-                it.customerName.contains(query, ignoreCase = true) ||
-                it.customerPhone.contains(query, ignoreCase = true) ||
-                it.orderStatus.contains(query, ignoreCase = true)
+    fun filterByStatus(status: String) {
+        currentStatusFilter = status
+        applyFilters()
+    }
+
+    fun filterByQuery(query: String) {
+        currentSearchQuery = query
+        applyFilters()
+    }
+
+    private fun applyFilters() {
+        var filtered = allOrders
+        if (currentStatusFilter != "All") {
+            filtered = filtered.filter { it.orderStatus.equals(currentStatusFilter, true) }
+        }
+        if (currentSearchQuery.isNotBlank()) {
+            filtered = filtered.filter {
+                it.orderNumber.contains(currentSearchQuery, ignoreCase = true) ||
+                it.customerName.contains(currentSearchQuery, ignoreCase = true) ||
+                it.customerPhone.contains(currentSearchQuery, ignoreCase = true)
             }
         }
         _ordersState.value = Resource.Success(filtered)
@@ -140,9 +154,42 @@ class OrdersActivity : AppCompatActivity() {
         headerRow.addView(title)
         container.addView(headerRow)
 
+        // Status Filter Chips Row
+        val statusScroll = HorizontalScrollView(this).apply {
+            isHorizontalScrollBarEnabled = false
+            setPadding(0, 0, 0, 16)
+        }
+        val statusChipsLayout = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+        }
+        val statuses = listOf("All", "Pending", "Processing", "Shipped", "Delivered")
+        statuses.forEach { st ->
+            val chip = Button(this).apply {
+                text = st
+                textSize = 12f
+                setBackgroundColor(if (st == "All") 0xFFDB2777.toInt() else 0xFF1E293B.toInt())
+                setTextColor(0xFFFFFFFF.toInt())
+                setOnClickListener {
+                    // Update chip styling
+                    for (i in 0 until statusChipsLayout.childCount) {
+                        val child = statusChipsLayout.getChildAt(i) as? Button
+                        child?.setBackgroundColor(0xFF1E293B.toInt())
+                    }
+                    setBackgroundColor(0xFFDB2777.toInt())
+                    viewModel.filterByStatus(st)
+                }
+                val lp = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+                lp.setMargins(0, 0, 12, 0)
+                layoutParams = lp
+            }
+            statusChipsLayout.addView(chip)
+        }
+        statusScroll.addView(statusChipsLayout)
+        container.addView(statusScroll)
+
         // Search Filter Bar
         val searchInput = EditText(this).apply {
-            hint = "🔍 Search orders by number, customer, status..."
+            hint = "🔍 Search orders by number, customer..."
             setTextColor(0xFFF8FAFC.toInt())
             setHintTextColor(0xFF64748B.toInt())
             setBackgroundColor(0xFF1E293B.toInt())
@@ -154,7 +201,7 @@ class OrdersActivity : AppCompatActivity() {
             addTextChangedListener(object : TextWatcher {
                 override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                    viewModel.filterOrders(s?.toString() ?: "")
+                    viewModel.filterByQuery(s?.toString() ?: "")
                 }
                 override fun afterTextChanged(s: Editable?) {}
             })
@@ -181,7 +228,7 @@ class OrdersActivity : AppCompatActivity() {
                             gravity = Gravity.CENTER
                         }
                         val tv = TextView(this).apply {
-                            text = "📑 No customer orders found yet.\nOrders placed in the store will appear here instantly."
+                            text = "📑 No matching customer orders found.\nOrders placed in the store will appear here instantly."
                             setTextColor(0xFF94A3B8.toInt())
                             textSize = 14f
                             gravity = Gravity.CENTER
@@ -200,7 +247,6 @@ class OrdersActivity : AppCompatActivity() {
                                 layoutParams = lp
                             }
 
-                            // Top Accent Indicator based on status
                             val statusColor = when (o.orderStatus) {
                                 "Pending" -> 0xFFF59E0B.toInt()
                                 "Processing" -> 0xFF3B82F6.toInt()
