@@ -18,7 +18,123 @@ const Store = {
         this.updateBadgeCounters();
         this.bindGlobalEvents();
         this.updateCategoryNavigation();
+        this.bindLocationControls();
+        this.loadPublicAnnouncement();
         console.log('🛍️ Wonderful Collection Store Initialized');
+    },
+
+    async loadPublicAnnouncement() {
+        const announcement = document.getElementById('announcement-copy');
+        if (!announcement) return;
+        try {
+            const response = await fetch(`${this.API_BASE}/settings?public=1`);
+            const result = await response.json();
+            if (!response.ok || result.status !== 'success') {
+                throw new Error(result.error || 'Could not load store announcement.');
+            }
+            const text = String(result.data.announcement_text || '').trim();
+            if (text) {
+                document.querySelectorAll('.announcement-marquee-copy').forEach(copy => {
+                    copy.textContent = text;
+                });
+            }
+        } catch (error) {
+            console.error('Could not load store announcement:', error);
+        }
+    },
+
+    bindLocationControls() {
+        const button = document.getElementById('nav-location-button');
+        if (!button) return;
+        const savedLocation = sessionStorage.getItem('wc_delivery_location');
+        if (savedLocation) {
+            try {
+                const location = JSON.parse(savedLocation);
+                button.textContent = `📍 ${location.label}`;
+            } catch (error) {
+                sessionStorage.removeItem('wc_delivery_location');
+            }
+        }
+
+        button.addEventListener('click', async () => {
+            button.disabled = true;
+            button.textContent = 'Finding location…';
+            try {
+                const location = await this.detectDeliveryLocation();
+                sessionStorage.setItem('wc_delivery_location', JSON.stringify(location));
+                button.textContent = `📍 ${location.label}`;
+            } catch (error) {
+                button.textContent = '📍 Use my location';
+                this.showToast(error.message || 'Could not detect your location. You can choose a delivery area at checkout.');
+            } finally {
+                button.disabled = false;
+            }
+        });
+    },
+
+    async detectDeliveryLocation() {
+        if (!sessionStorage.getItem('wc_nominatim_consent')) {
+            const consent = window.confirm('To identify your delivery area, your location coordinates will be sent to OpenStreetMap for a lookup. Continue?');
+            if (!consent) {
+                throw new Error('Location lookup was cancelled. Choose your delivery area manually at checkout.');
+            }
+            sessionStorage.setItem('wc_nominatim_consent', '1');
+        }
+        if (!navigator.geolocation) {
+            throw new Error('Location is not supported by this browser. Choose your delivery area at checkout.');
+        }
+
+        const position = await new Promise((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, () => {
+                reject(new Error('Location permission was denied or unavailable. Choose your delivery area at checkout.'));
+            }, { enableHighAccuracy: false, timeout: 12000, maximumAge: 300000 });
+        });
+        const { latitude, longitude } = position.coords;
+        const query = new URLSearchParams({
+            format: 'jsonv2',
+            lat: latitude.toFixed(6),
+            lon: longitude.toFixed(6),
+            zoom: '14',
+            addressdetails: '1'
+        });
+        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?${query}`, {
+            headers: { Accept: 'application/json' }
+        });
+        if (!response.ok) {
+            throw new Error('Location lookup is temporarily unavailable. Choose your delivery area at checkout.');
+        }
+
+        const result = await response.json();
+        const address = result.address || {};
+        if (address.country_code !== 'bd') {
+            throw new Error('We currently deliver within Bangladesh. Choose your delivery area manually at checkout.');
+        }
+
+        const locality = [
+            address.suburb || address.neighbourhood || address.quarter || address.city_district,
+            address.city || address.town || address.village || address.county,
+            address.state
+        ].filter(Boolean);
+        const uniqueLocality = [...new Set(locality)];
+        const label = uniqueLocality.length ? uniqueLocality.join(', ') : 'Bangladesh';
+        const dhakaLocation = [
+            address.city,
+            address.town,
+            address.city_district,
+            address.county,
+            address.state_district
+        ].filter(Boolean).join(' ').toLowerCase();
+        const neighborhood = [
+            address.suburb,
+            address.neighbourhood,
+            address.quarter,
+            address.city_district
+        ].filter(Boolean).join(' ').toLowerCase();
+        const zone = /dhanmondi/.test(neighborhood)
+            ? 'dhanmondi'
+            : /dhaka/.test(dhakaLocation) ? 'dhaka' : 'outside_dhaka';
+
+        return { label, zone };
     },
 
     loadState() {

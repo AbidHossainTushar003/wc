@@ -77,20 +77,43 @@ button, input, select, textarea {
 }
 
 .top-bar-notice {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
 }
 
-.top-bar-badge {
-  background: var(--accent-orange);
-  color: #fff;
-  font-size: 0.72rem;
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 999px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+.announcement-marquee {
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.announcement-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: announcement-scroll 28s linear infinite;
+}
+
+.announcement-marquee-copy {
+  display: block;
+  flex: 0 0 auto;
+  padding-right: 64px;
+}
+
+.announcement-marquee:hover .announcement-marquee-track {
+  animation-play-state: paused;
+}
+
+@keyframes announcement-scroll {
+  to { transform: translateX(-50%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .announcement-marquee-track {
+    animation: none;
+  }
+  .announcement-marquee-copy[aria-hidden="true"] {
+    display: none;
+  }
 }
 
 .top-bar-links {
@@ -275,11 +298,24 @@ button, input, select, textarea {
   gap: 6px;
   font-size: 0.82rem;
   font-weight: 700;
-  background: rgba(240,84,35,0.25);
-  color: #ffbb99;
-  border: 1px solid rgba(240,84,35,0.4);
+  background: rgba(255,255,255,0.08);
+  color: #e2e8f0;
+  border: 1px solid rgba(255,255,255,0.18);
   padding: 6px 14px;
   border-radius: 999px;
+}
+
+.nav-location-pill button {
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+
+.nav-location-pill button:disabled {
+  cursor: wait;
 }
 
 /* --- CONTAINER HELPER --- */
@@ -1151,6 +1187,22 @@ button, input, select, textarea {
 }
 
 @media (max-width: 640px) {
+  .nav-container {
+    gap: 8px;
+    padding: 0 8px;
+  }
+  .nav-links {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+  .nav-location-pill {
+    flex: 0 0 auto;
+    padding: 6px 8px;
+    font-size: 0.72rem;
+  }
+  .nav-location-pill button {
+    white-space: nowrap;
+  }
   .header-container {
     flex-wrap: wrap;
   }

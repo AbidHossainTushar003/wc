@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Checkout | Wonderful Collection Dhaka</title>
+  <title>Secure Checkout | Wonderful Collection</title>
+  <meta name="description" content="Review your Wonderful Collection items, delivery area, fees, and payment details before placing an order.">
   <meta name="robots" content="noindex, nofollow">
   <link rel="stylesheet" href="css/style.css">
   <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
@@ -60,11 +61,15 @@
             </div>
 
             <div style="margin-bottom: 14px;">
-              <label style="display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 6px;">Delivery Area *</label>
-              <select id="delivery_area" onchange="updateDeliveryFee()" style="width: 100%; border: 1px solid #cbd5e1; padding: 10px 14px; border-radius: 8px; font-size: 0.95rem; background: #fff;">
-                <option value="dhaka" selected>Inside Dhaka (Regular 24-48 Hours) — ৳80</option>
-                <option value="outside_dhaka">Outside Dhaka (Steadfast / SA Paribahan) — ৳130</option>
+              <label for="delivery_area" style="display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 6px;">Delivery Area *</label>
+              <select id="delivery_area" onchange="handleDeliveryAreaChange()" style="width: 100%; border: 1px solid #cbd5e1; padding: 10px 14px; border-radius: 8px; font-size: 0.95rem; background: #fff;">
+                <option value="dhanmondi">Dhanmondi — ৳60</option>
+                <option value="dhaka" selected>Inside Dhaka — ৳80</option>
+                <option value="outside_dhaka">Outside Dhaka — ৳130</option>
               </select>
+              <button type="button" id="detect-checkout-location" class="btn-primary" style="margin-top: 10px; padding: 8px 12px;" onclick="detectCheckoutLocation()">📍 Use my location</button>
+              <p id="checkout-location-status" role="status" aria-live="polite" style="font-size: 0.8rem; color: #64748b; margin: 8px 0 0;"></p>
+              <small style="display: block; color: #64748b; margin-top: 6px;">If you allow location access, your coordinates are sent to OpenStreetMap to identify the delivery area. You can choose an area manually instead. <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap attribution</a>.</small>
             </div>
 
             <div style="margin-bottom: 14px;">
@@ -105,7 +110,7 @@
               <label class="checkout-payment-option" style="display: flex; align-items: center; gap: 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 12px 16px; cursor: pointer;">
                 <input type="radio" name="payment_method" value="Nagad" onchange="togglePaymentFields()">
                 <div>
-                  <div style="font-weight: 700; color: #f7931e;">Nagad Mobile Payment</div>
+                  <div style="font-weight: 700; color: #a85e00;">Nagad Mobile Payment</div>
                   <div style="font-size: 0.8rem; color: #64748b;">Send Money to our Nagad Personal number: <strong>01560024777</strong></div>
                 </div>
               </label>
@@ -173,11 +178,12 @@
   <script src="js/store.js"></script>
   <script>
     let deliveryFees = {
+      dhanmondi: 60,
       dhaka: 80,
       outside_dhaka: 130
     };
 
-    function initCheckout() {
+    async function initCheckout() {
       if (!Store.state.cart.length) {
         window.location.href = 'cart.html';
         return;
@@ -189,6 +195,20 @@
         document.getElementById('cust_phone').value = Store.state.user.phone || '';
         document.getElementById('cust_email').value = Store.state.user.email || '';
         document.getElementById('cust_address').value = Store.state.user.address || '';
+      }
+
+      await loadPublicCheckoutSettings();
+      const savedLocation = sessionStorage.getItem('wc_delivery_location');
+      if (savedLocation) {
+        try {
+          const location = JSON.parse(savedLocation);
+          if (['dhanmondi', 'dhaka', 'outside_dhaka'].includes(location.zone)) {
+            document.getElementById('delivery_area').value = location.zone;
+            document.getElementById('checkout-location-status').textContent = `Detected location: ${location.label}. Confirm your delivery address below.`;
+          }
+        } catch (error) {
+          sessionStorage.removeItem('wc_delivery_location');
+        }
       }
 
       // Render items
@@ -206,9 +226,57 @@
       updateDeliveryFee();
     }
 
+    async function loadPublicCheckoutSettings() {
+      try {
+        const response = await fetch(`${Store.API_BASE}/settings?public=1`);
+        const result = await response.json();
+        if (!response.ok || result.status !== 'success') {
+          throw new Error(result.error || 'Could not load delivery charges.');
+        }
+        deliveryFees = {
+          dhanmondi: Number(result.data.delivery_fee_dhanmondi),
+          dhaka: Number(result.data.delivery_fee_dhaka),
+          outside_dhaka: Number(result.data.delivery_fee_outside_dhaka)
+        };
+        const area = document.getElementById('delivery_area');
+        area.options[0].text = `Dhanmondi — ${Store.formatBDT(deliveryFees.dhanmondi)}`;
+        area.options[1].text = `Inside Dhaka — ${Store.formatBDT(deliveryFees.dhaka)}`;
+        area.options[2].text = `Outside Dhaka — ${Store.formatBDT(deliveryFees.outside_dhaka)}`;
+      } catch (error) {
+        console.error('Could not load public delivery settings:', error);
+        document.getElementById('checkout-location-status').textContent = 'Showing standard delivery charges. The final charge is confirmed by the server.';
+      }
+    }
+
+    function handleDeliveryAreaChange() {
+      const area = document.getElementById('delivery_area').value;
+      const labels = { dhanmondi: 'Dhanmondi', dhaka: 'Inside Dhaka', outside_dhaka: 'Outside Dhaka' };
+      document.getElementById('checkout-location-status').textContent = `Selected delivery area: ${labels[area]}.`;
+      sessionStorage.setItem('wc_delivery_location', JSON.stringify({ zone: area, label: labels[area] }));
+      updateDeliveryFee();
+    }
+
+    async function detectCheckoutLocation() {
+      const button = document.getElementById('detect-checkout-location');
+      const status = document.getElementById('checkout-location-status');
+      button.disabled = true;
+      status.textContent = 'Requesting location permission…';
+      try {
+        const location = await Store.detectDeliveryLocation();
+        sessionStorage.setItem('wc_delivery_location', JSON.stringify(location));
+        document.getElementById('delivery_area').value = location.zone;
+        status.textContent = `Detected location: ${location.label}. Confirm your delivery address below.`;
+        updateDeliveryFee();
+      } catch (error) {
+        status.textContent = error.message || 'Could not detect location. Choose your delivery area manually.';
+      } finally {
+        button.disabled = false;
+      }
+    }
+
     function updateDeliveryFee() {
       const area = document.getElementById('delivery_area').value;
-      const fee = deliveryFees[area] || 80;
+      const fee = deliveryFees[area] ?? deliveryFees.dhaka;
       const subtotal = Store.getCartSubtotal();
       const discount = Store.state.appliedCoupon ? Store.state.appliedCoupon.discount : 0;
       const total = Math.max(0, subtotal - discount + fee);
@@ -246,6 +314,7 @@
 
       const areaKey = document.getElementById('delivery_area').value;
       const areaLabels = {
+        dhanmondi: 'Dhanmondi',
         dhaka: 'Inside Dhaka',
         outside_dhaka: 'Outside Dhaka'
       };
@@ -257,7 +326,7 @@
         delivery_address: document.getElementById('cust_address').value.trim(),
         delivery_area: areaLabels[areaKey] || 'Inside Dhaka',
         delivery_zone: areaKey,
-        delivery_fee: deliveryFees[areaKey] || 80,
+        delivery_fee: deliveryFees[areaKey] ?? deliveryFees.dhaka,
         subtotal: Store.getCartSubtotal(),
         discount: Store.state.appliedCoupon ? Store.state.appliedCoupon.discount : 0,
         coupon_code: Store.state.appliedCoupon ? Store.state.appliedCoupon.code : '',

@@ -35,14 +35,17 @@
 
   <!-- Top Announcement Bar -->
   <div class="top-bar">
-    <div class="top-bar-notice">
-      <span class="top-bar-badge">WONDERFUL COLLECTION</span>
-      <span>🚚 Delivery availability and estimates are shown at checkout. Cash on delivery &amp; bKash available.</span>
+    <div class="top-bar-notice" aria-label="Store announcement">
+      <div class="announcement-marquee">
+        <div class="announcement-marquee-track">
+          <span class="announcement-marquee-copy" id="announcement-copy">🚚 Delivery availability and estimates are shown at checkout. Cash on delivery &amp; bKash available.</span>
+          <span class="announcement-marquee-copy" aria-hidden="true">🚚 Delivery availability and estimates are shown at checkout. Cash on delivery &amp; bKash available.</span>
+        </div>
+      </div>
     </div>
     <div class="top-bar-links">
       <a href="track-order.html">📍 Track Order</a>
       <a href="contact.html">📞 +880 1560-024777</a>
-      <a href="admin.html" style="color: #ff9d7e; font-weight: bold;">🔐 Admin Panel</a>
     </div>
   </div>
 
@@ -97,7 +100,7 @@
         <li><a href="category.html?cat=home-decor">Home Decor</a></li>
       </ul>
       <div class="nav-location-pill">
-        <span>📍 Dhaka, Bangladesh</span>
+        <button id="nav-location-button" type="button" title="If you allow location access, coordinates are looked up through OpenStreetMap." aria-label="Detect your location for delivery">📍 Use my location</button>
       </div>
     </div>
   </nav>
