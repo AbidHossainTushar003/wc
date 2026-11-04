@@ -6,6 +6,12 @@ import store.wonderfulcollection.admin.data.api.ApiClient
 import store.wonderfulcollection.admin.domain.model.*
 import store.wonderfulcollection.admin.domain.repository.*
 
+private const val FALLBACK_PRODUCT_IMAGE = "https://wonderfulcollection.store/assets/product-placeholder.svg"
+
+private fun firstProductImage(images: JSONArray?): String =
+    images?.takeIf { it.length() > 0 }?.optString(0)?.takeIf { it.isNotBlank() }
+        ?: FALLBACK_PRODUCT_IMAGE
+
 class ProductRepositoryImpl(private val api: ApiClient) : ProductRepository {
     override suspend fun getProducts(category: String?, query: String?): Result<List<Product>> {
         val params = mutableMapOf<String, String>()
@@ -17,8 +23,7 @@ class ProductRepositoryImpl(private val api: ApiClient) : ProductRepository {
             val list = mutableListOf<Product>()
             for (i in 0 until data.length()) {
                 val obj = data.getJSONObject(i)
-                val imagesJson = obj.optJSONArray("images")
-                val img = if (imagesJson != null && imagesJson.length() > 0) imagesJson.getString(0) else "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=500&q=80"
+                val img = firstProductImage(obj.optJSONArray("images"))
                 list.add(
                     Product(
                         id = obj.optLong("id"),
@@ -55,7 +60,7 @@ class ProductRepositoryImpl(private val api: ApiClient) : ProductRepository {
                 stockQuantity = obj.optInt("stock_quantity"),
                 sku = obj.optString("sku"),
                 shortDesc = obj.optString("short_desc"),
-                imageUrl = "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=500&q=80",
+                imageUrl = firstProductImage(obj.optJSONArray("images")),
                 isFeatured = obj.optInt("is_featured") == 1,
                 isTrending = obj.optInt("is_trending") == 1
             )
@@ -354,14 +359,14 @@ class SettingsRepositoryImpl(private val api: ApiClient) : SettingsRepository {
             val data = json.getJSONObject("data")
             StoreSettings(
                 storeName = data.optString("store_name", "Wonderful Collection"),
-                storePhone = data.optString("store_phone", "+880 1712-345678"),
+                storePhone = data.optString("store_phone", "+880 1560-024777"),
                 storeEmail = data.optString("store_email", "contact@wonderfulcollection.store"),
-                storeAddress = data.optString("store_address", "House 42, Road 7/A, Dhanmondi, Dhaka"),
+                storeAddress = data.optString("store_address", "DHAKA, BANGLADESH"),
                 deliveryFeeDhanmondi = data.optDouble("delivery_fee_dhanmondi", 60.0),
                 deliveryFeeDhaka = data.optDouble("delivery_fee_dhaka", 80.0),
                 deliveryFeeOutsideDhaka = data.optDouble("delivery_fee_outside_dhaka", 130.0),
-                bkashNumber = data.optString("bkash_number", "01712-345678"),
-                nagadNumber = data.optString("nagad_number", "01812-345678")
+                bkashNumber = data.optString("bkash_number", "01560024777"),
+                nagadNumber = data.optString("nagad_number", "01560024777")
             )
         }
     }

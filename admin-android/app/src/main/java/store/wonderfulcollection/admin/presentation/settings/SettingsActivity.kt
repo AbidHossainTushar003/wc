@@ -120,9 +120,10 @@ class SettingsActivity : AppCompatActivity() {
         val profileDesc = TextView(this).apply {
             text = """
                 • Store Name: Wonderful Collection
-                • Dhanmondi Hub: House 42, Road 7/A, Dhaka-1209
-                • bKash Merchant: 01712-345678 (Personal/Agent)
-                • Nagad Merchant: 01812-345678 (Merchant)
+                • Business Address: DHAKA, BANGLADESH
+                • bKash Personal: 01560024777
+                • Nagad Personal: 01560024777
+                • Rocket Personal: 01560024777
                 • Production cPanel: https://wonderfulcollection.store/api
                 • Android Emulator Local: http://10.0.2.2:3000/api
             """.trimIndent()

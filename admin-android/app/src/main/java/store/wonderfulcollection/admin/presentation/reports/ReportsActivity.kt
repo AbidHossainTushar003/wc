@@ -122,13 +122,13 @@ class ReportsActivity : AppCompatActivity() {
             layoutParams = lp
         }
         val t2 = TextView(this).apply {
-            text = "🏬 Dhanmondi Hub Performance"
+            text = "🏬 Delivery Performance"
             textSize = 16f
             setTextColor(0xFF10B981.toInt())
             paint.isFakeBoldText = true
         }
         val b2 = TextView(this).apply {
-            text = "• Express Deliveries (2-4h): Active & Optimized\n• Delivery Hub: House 42, Road 7/A, Dhanmondi, Dhaka\n• Top Payment Methods: Cash on Delivery, bKash, Nagad\n• Fulfillment Rate: 99.4%"
+            text = "• Express Deliveries (2-4h): Active & Optimized\n• Delivery Area: DHAKA, BANGLADESH\n• Top Payment Methods: Cash on Delivery, bKash, Nagad\n• Fulfillment Rate: 99.4%"
             textSize = 14f
             setTextColor(0xFFF8FAFC.toInt())
             setPadding(0, 8, 0, 0)

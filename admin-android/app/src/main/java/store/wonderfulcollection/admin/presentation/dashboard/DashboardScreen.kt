@@ -141,7 +141,7 @@ class DashboardActivity : AppCompatActivity() {
                     paint.isFakeBoldText = true
                 }
                 val hubDesc = TextView(this).apply {
-                    text = "• Location: House 42, Road 7/A, Dhanmondi, Dhaka\n• Express Delivery: 2-4 Hours Active\n• Hub Status: Fully Operational (99.4%)"
+                    text = "• Location: DHAKA, BANGLADESH\n• Express Delivery: 2-4 Hours Active\n• Hub Status: Fully Operational (99.4%)"
                     textSize = 13f
                     setTextColor(0xFFF8FAFC.toInt())
                     setPadding(0, 8, 0, 0)
