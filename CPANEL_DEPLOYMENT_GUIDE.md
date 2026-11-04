@@ -41,7 +41,7 @@ This overwrites the generated `deploy\wonderful-deploy.zip` with `index.html` at
    - From the cPanel home page, open **Databases → MySQL® Databases**.
    - Under **Create New Database**, enter a suffix such as `store`; cPanel adds the `wonderfu_` prefix. Record the full database name it displays.
    - Under **MySQL Users → Add New User**, create a user with a unique password. Record the full prefixed username and keep the password private.
-   - Under **Add User To Database**, select that user and database, click **Add**, select **ALL PRIVILEGES**, then click **Make Changes**.
+   - Under **Add User To Database**, select that user and database and click **Add**. Use **ALL PRIVILEGES** only temporarily if needed to import the schema; after import, return to **MySQL Databases → Current Databases → Manage User Privileges** and leave only **SELECT**, **INSERT**, **UPDATE**, and **DELETE** for the PHP application user.
 
 2. **Import the production schema**
    - Return to cPanel home and open **Databases → phpMyAdmin**.
@@ -54,6 +54,7 @@ This overwrites the generated `deploy\wonderful-deploy.zip` with `index.html` at
    - Check the `wonderfulcollection.store` row, select **PHP 8.1** or later from **PHP Version**, and click **Apply**.
    - If cPanel provides **Software → Select PHP Version**, open its **Extensions** tab and enable `pdo_mysql`, `mbstring`, and `json`, then click **Apply**.
    - **MultiPHP INI Editor** changes PHP configuration directives; it does not enable missing extensions. If **Select PHP Version** is unavailable or an extension is missing, ask the hosting provider to enable it for this domain.
+   - In **Software → MultiPHP INI Editor**, select the domain and set `display_errors` to **Off** and `log_errors` to **On**. Keep PHP diagnostics in hosting logs, not API responses.
 
 4. **Upload and configure the site**
    - From cPanel home, open **Files → File Manager**, then open `/home/wonderfu/public_html`.
@@ -63,12 +64,14 @@ This overwrites the generated `deploy\wonderful-deploy.zip` with `index.html` at
    - Open `public_html/api/config.local.php` in File Manager's editor and replace the database-name, database-user, and password placeholders:
      ```php
      define('DB_HOST', 'localhost');
-     define('DB_NAME', 'wonderfu_<full_database_name>');
-     define('DB_USER', 'wonderfu_<full_database_user>');
+     define('DB_NAME', 'REPLACE_WITH_EXACT_FULL_DATABASE_NAME_SHOWN_IN_CPANEL');
+     define('DB_USER', 'REPLACE_WITH_EXACT_FULL_DATABASE_USER_SHOWN_IN_CPANEL');
      define('DB_PASS', '<database_password>');
      define('DEV_MODE', false);
+     define('MAIL_FROM', 'REPLACE_WITH_A_VERIFIED_SENDER_EMAIL');
      ```
    - Use the exact full prefixed names shown in MySQL Databases. Keep the password in cPanel only; escape `'` and `\` if either appears inside the PHP single-quoted password value. Save the file.
+   - Replace `MAIL_FROM` with a sender address hosted and verified for this domain. Confirm PHP mail delivery with the hosting provider; customer registration, verification, and password reset depend on working outbound email.
 
 5. **Set file permissions**
    - In File Manager, set directories (including `api`, `assets`, `css`, and `js`) to **755** and ordinary files to **644**.
@@ -82,6 +85,28 @@ This overwrites the generated `deploy\wonderful-deploy.zip` with `index.html` at
 7. **Initialize the real catalog**
    - Sign in at `https://wonderfulcollection.store/admin.html` using username `admin` and the one-time initial password already provided; change it immediately.
    - The production database intentionally starts without products, categories, coupons, or reviews. Add real categories and products in the admin panel before accepting customer orders. See [deploy/IMAGE_UPLOADS.md](./deploy/IMAGE_UPLOADS.md) for local image placeholders and image path guidance.
+
+8. **Backups and the additive account-auth migration**
+   - Before changing an existing database, create a cPanel backup from **Files → Backup** or **Files → Backup Wizard**, download the MySQL database backup, and verify that the downloaded file is non-empty and can be opened/imported into a separate test database. Do not apply a migration until this backup is verified.
+   - The new customer password-reset and email-verification tables are additive. For an existing installation, run `database-migrations/2026-11-04-password-reset-tokens.sql` in phpMyAdmin only after the verified backup; it marks pre-existing customers as verified so their sign-in continues to work.
+   - For scheduled backups, upload `deploy/backup-mysql.sh` outside `public_html` (for example, `/home/wonderfu/bin/backup-mysql.sh`) and set its permissions to `700`. Create a private MySQL client option file outside `public_html` with mode `600`:
+     ```ini
+     [client]
+     host=localhost
+     user=wonderfu_<full_database_user>
+     password=<database_password>
+     ```
+     In **Advanced → Cron Jobs**, use a command like the following, replacing the database name with its exact cPanel value:
+     ```sh
+     DB_NAME=REPLACE_WITH_EXACT_DATABASE_NAME MYSQL_CNF=/home/wonderfu/.mysql-backup.cnf BACKUP_DIR=/home/wonderfu/backups /bin/bash /home/wonderfu/bin/backup-mysql.sh
+     ```
+     First run the script manually from Terminal (if enabled) and confirm its `.sql.gz` passes `gzip -t`; then schedule it. Keep the backup directory private and download copies off-host.
+   - Restore only after confirming the target database and selecting a verified backup. In phpMyAdmin, select the intended target and use **Import** with the `.sql` backup (decompress it first); importing replaces/duplicates data depending on the SQL contents, so do not restore into production without a fresh backup and explicit approval.
+
+9. **Google Search Console**
+   - In Search Console, add and verify the HTTPS URL-prefix property `https://wonderfulcollection.store/` (or use the domain property if you control its DNS).
+   - If using HTML-tag verification, copy the exact token from the Search Console account and add it to the homepage `<head>`; do not commit an invented or shared verification token.
+   - Open **Indexing → Sitemaps**, submit `https://wonderfulcollection.store/sitemap.xml`, and review the reported fetch/indexing status.
 
 ---
 
