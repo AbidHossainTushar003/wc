@@ -5,6 +5,7 @@
  */
 
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/mail.php';
 
 $pdo = Database::getConnection();
 $method = $_SERVER['REQUEST_METHOD'];
@@ -288,6 +289,51 @@ switch ($method) {
             }
 
             $pdo->commit();
+            $mailRecipient = getMailToAddress();
+            $mailSender = getMailFromAddress();
+            if (filter_var($mailRecipient, FILTER_VALIDATE_EMAIL)
+                && filter_var($mailSender, FILTER_VALIDATE_EMAIL)) {
+                $mailLines = [
+                    'New order ' . $orderNumber,
+                    'Customer: ' . trim($data['customer_name']),
+                    'Phone: ' . trim($data['customer_phone']),
+                    'Address: ' . trim($data['delivery_address']),
+                    'Delivery area: ' . $deliveryArea,
+                    'Payment: ' . $paymentMethod . ' (' . $paymentStatus . ')',
+                    '',
+                    'Items:'
+                ];
+                foreach ($lineItems as $item) {
+                    $mailLines[] = sprintf(
+                        '%s x %d — %s',
+                        $item['product_name'],
+                        $item['quantity'],
+                        number_format($item['total'], 2, '.', '')
+                    );
+                }
+                $mailLines[] = '';
+                $mailLines[] = 'Subtotal: ' . number_format($subtotal, 2, '.', '');
+                $mailLines[] = 'Discount: ' . number_format($discount, 2, '.', '');
+                $mailLines[] = 'Delivery: ' . number_format($deliveryFee, 2, '.', '');
+                $mailLines[] = 'Total: ' . number_format($total, 2, '.', '');
+                if (!sendStoreMail($mailRecipient, 'New Wonderful Collection order ' . $orderNumber, implode("\n", $mailLines))) {
+                    error_log('Wonderful Collection owner order notification failed.');
+                }
+
+                if ($customerEmail !== '') {
+                    $customerBody = implode("\n", [
+                        'Thank you for your order from Wonderful Collection.',
+                        'Order: ' . $orderNumber,
+                        'Tracking code: ' . $trackingCode,
+                        'Total: ' . number_format($total, 2, '.', ''),
+                        'Payment status: ' . $paymentStatus,
+                        'Please keep your order number and tracking code.'
+                    ]);
+                    if (!sendStoreMail($customerEmail, 'Wonderful Collection order ' . $orderNumber, $customerBody)) {
+                        error_log('Wonderful Collection customer order notification failed.');
+                    }
+                }
+            }
             jsonResponse([
                 'status' => 'success',
                 'message' => 'Order placed successfully!',

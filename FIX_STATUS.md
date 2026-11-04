@@ -7,7 +7,7 @@ This ledger tracks findings in `AUDIT_REPORT.md`. `OPEN` means not addressed yet
 | M-01 | PARTIAL | Catalog and real product/category images require owner-provided business data and photos. The empty database catalog safely prevents checkout of nonexistent products. |
 | M-02 | PARTIAL | Idempotent MySQL table migration is prepared in `migrations/2026-11-04-fixes.sql`; owner must back up, run it, and provide genuine opening balances before finance transactions are usable. |
 | M-03 | PARTIAL | Contact API validates and rate-limits submissions and sends only through configured cPanel mail; it returns 503 while sender/recipient are unset or delivery fails. Needs owner mail setup and delivery test. |
-| M-04 | OPEN | Owner/customer order notifications require verified sender/recipient and DNS mail authentication. |
+| M-04 | PARTIAL | Order creation sends owner and optional customer confirmation via cPanel `mail()` after commit; delivery is safely skipped until verified `MAIL_FROM`/`MAIL_TO` are configured. SPF/DKIM/DMARC and end-to-end delivery remain owner actions. |
 | M-05 | OPEN | Return/refund policy has no corresponding workflow. |
 | M-06 | OPEN | Analytics and hosted error monitoring are not configured. |
 | M-07 | OPEN | Product review submission feature is absent. |
