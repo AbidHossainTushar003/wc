@@ -369,10 +369,10 @@ function editProduct(id) {
 function handleProductImageSelection(event) {
     const files = Array.from(event.target.files || []);
     const status = document.getElementById('product-create-status');
-    if (files.some(file => !['image/jpeg', 'image/jpg'].includes(file.type.toLowerCase()) || file.size <= 0 || file.size > 1500000)) {
+    if (files.some(file => !['image/jpeg', 'image/png', 'image/webp'].includes(file.type.toLowerCase()) || file.size <= 0 || file.size > 1500000)) {
         event.target.value = '';
         selectedProductFiles = [];
-        status.textContent = 'Choose JPEG photos smaller than 1.5 MB each.';
+        status.textContent = 'Choose JPEG, PNG, or WebP photos smaller than 1.5 MB each.';
         status.style.color = '#fca5a5';
         status.style.display = 'block';
         renderProductImagePreview();
@@ -586,11 +586,16 @@ async function loadOrders() {
 
 async function updateOrderStatus(orderId, newStatus) {
     if (!newStatus) return;
-    await adminFetch(`${API_BASE}/orders`, {
+    const response = await adminFetch(`${API_BASE}/orders`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: orderId, order_status: newStatus })
     });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok || result.status !== 'success') {
+        alert(result.error || 'The order status could not be updated.');
+        return;
+    }
     alert('Order status updated to ' + newStatus);
     loadOrders();
 }

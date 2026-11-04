@@ -100,6 +100,7 @@ CREATE TABLE `orders` (
   `trx_id` VARCHAR(100) DEFAULT NULL,
   `order_status` ENUM('Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled') DEFAULT 'Pending',
   `tracking_code` VARCHAR(50) UNIQUE NOT NULL,
+  `idempotency_key` VARCHAR(128) DEFAULT NULL UNIQUE,
   `notes` TEXT,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (`customer_id`) REFERENCES `customers`(`id`) ON DELETE SET NULL

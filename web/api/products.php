@@ -93,8 +93,15 @@ switch ($method) {
     case 'POST':
         // Create Product (Admin)
         $data = getRequestBody();
-        if (empty($data['name']) || empty($data['category_id']) || empty($data['regular_price'])) {
-            jsonResponse(['error' => 'Missing required fields: name, category_id, regular_price'], 422);
+        $categoryId = filter_var($data['category_id'] ?? null, FILTER_VALIDATE_INT);
+        $regularPrice = isset($data['regular_price']) ? (float)$data['regular_price'] : null;
+        $salePriceRaw = $data['sale_price'] ?? null;
+        $salePrice = $salePriceRaw === null || $salePriceRaw === '' ? null : (float)$salePriceRaw;
+        if (empty($data['name']) || $categoryId === false || $categoryId < 1 || !is_numeric($regularPrice) || $regularPrice <= 0) {
+            jsonResponse(['error' => 'Missing required fields: valid name, category_id, and positive regular_price'], 422);
+        }
+        if ($salePrice !== null && (!is_numeric($salePrice) || $salePrice <= 0 || $salePrice >= $regularPrice)) {
+            jsonResponse(['error' => 'Sale price must be positive and lower than the regular price.'], 422);
         }
 
         $slug = !empty($data['slug']) ? $data['slug'] : strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $data['name']), '-')) . '-' . rand(100, 999);
@@ -130,6 +137,22 @@ switch ($method) {
         $data = getRequestBody();
         if (empty($data['id'])) {
             jsonResponse(['error' => 'Missing product ID'], 422);
+        }
+
+        if (isset($data['regular_price']) && (!is_numeric($data['regular_price']) || (float)$data['regular_price'] <= 0)) {
+            jsonResponse(['error' => 'Regular price must be a positive number.'], 422);
+        }
+        if (isset($data['sale_price']) && ($data['sale_price'] === null || $data['sale_price'] === '') ) {
+            $data['sale_price'] = null;
+        }
+        if (isset($data['sale_price']) && $data['sale_price'] !== null && (!is_numeric($data['sale_price']) || (float)$data['sale_price'] <= 0)) {
+            jsonResponse(['error' => 'Sale price must be positive and lower than the regular price.'], 422);
+        }
+        if (isset($data['sale_price']) && isset($data['regular_price']) && is_numeric($data['regular_price']) && is_numeric($data['sale_price']) && (float)$data['sale_price'] >= (float)$data['regular_price']) {
+            jsonResponse(['error' => 'Sale price must be lower than the regular price.'], 422);
+        }
+        if (isset($data['category_id']) && (filter_var($data['category_id'], FILTER_VALIDATE_INT) === false || (int)$data['category_id'] < 1)) {
+            jsonResponse(['error' => 'Category ID must be a valid positive integer.'], 422);
         }
 
         $fields = [];

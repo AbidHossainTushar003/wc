@@ -121,11 +121,38 @@ switch ($method) {
         if (isset($data['delivery_area']) && (!is_string($data['delivery_area']) || strlen($data['delivery_area']) > 80)) {
             jsonResponse(['error' => 'Invalid delivery area.'], 422);
         }
+        $addressText = strtolower(trim((string)($data['delivery_address'] ?? '')));
+        $addressSignals = [
+            'outside_dhaka' => '/\b(gazipur|narshingdi|savar|cumilla|chittagong|khulna|rajshahi|bogura|rangpur|sylhet|outside dhaka)\b/i',
+            'dhanmondi' => '/\bdhanmondi\b/i',
+            'dhaka' => '/\b(dhaka|motijheel|gulshan|banani|uttara|mirpur|badda|ramna|dhanmondi)\b/i'
+        ];
+        if ($addressText !== '' && preg_match($addressSignals[$deliveryZone], $addressText) === 0 && $deliveryZone !== 'outside_dhaka' && preg_match('/\b(gazipur|narshingdi|savar|cumilla|khulna|chittagong|rajshahi|bogura|rangpur|sylhet|outside dhaka)\b/i', $addressText) === 1) {
+            jsonResponse(['error' => 'Delivery area does not match the chosen shipping zone.'], 422);
+        }
         $deliveryArea = [
             'dhanmondi' => 'Dhanmondi',
             'dhaka' => 'Inside Dhaka',
             'outside_dhaka' => 'Outside Dhaka'
         ][$deliveryZone];
+        $idempotencyKey = isset($data['idempotency_key']) && is_string($data['idempotency_key']) ? trim($data['idempotency_key']) : '';
+        if ($idempotencyKey !== '') {
+            $duplicateStmt = $pdo->prepare('SELECT id, order_number, tracking_code, total FROM orders WHERE idempotency_key = ? LIMIT 1');
+            $duplicateStmt->execute([$idempotencyKey]);
+            $duplicateOrder = $duplicateStmt->fetch();
+            if ($duplicateOrder) {
+                jsonResponse([
+                    'status' => 'success',
+                    'message' => 'This order request was already submitted.',
+                    'data' => [
+                        'order_id' => (int)$duplicateOrder['id'],
+                        'order_number' => $duplicateOrder['order_number'],
+                        'tracking_code' => $duplicateOrder['tracking_code'],
+                        'total' => (float)$duplicateOrder['total']
+                    ]
+                ], 409);
+            }
+        }
         $paymentMethod = $data['payment_method'] ?? 'Cash on Delivery';
         if (!in_array($paymentMethod, ['Cash on Delivery', 'bKash', 'Nagad', 'Rocket'], true)) {
             jsonResponse(['error' => 'Invalid payment method.'], 422);
@@ -233,8 +260,8 @@ switch ($method) {
                 INSERT INTO orders (
                     order_number, customer_id, customer_name, customer_phone, customer_email,
                     delivery_address, delivery_area, delivery_fee, subtotal, discount, total,
-                    payment_method, payment_status, trx_id, order_status, tracking_code, notes
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending', ?, ?)
+                    payment_method, payment_status, trx_id, order_status, tracking_code, idempotency_key, notes
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending', ?, ?, ?)
             ");
             $orderStmt->execute([
                 $orderNumber,
@@ -252,6 +279,7 @@ switch ($method) {
                 $paymentStatus,
                 $trxId !== '' ? $trxId : null,
                 $trackingCode,
+                $idempotencyKey !== '' ? $idempotencyKey : null,
                 $notes
             ]);
             $orderId = $pdo->lastInsertId();
@@ -451,6 +479,9 @@ switch ($method) {
             $params[] = $orderId;
             $updateStmt = $pdo->prepare('UPDATE orders SET ' . implode(', ', $fields) . ' WHERE id = ?');
             $updateStmt->execute($params);
+            if ($updateStmt->rowCount() !== 1) {
+                throw new DomainException('Unable to update this order.');
+            }
             $pdo->commit();
 
             if (isset($data['order_status'])) {

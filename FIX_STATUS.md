@@ -13,14 +13,14 @@ This ledger tracks findings in `AUDIT_REPORT.md`. `OPEN` means not addressed yet
 | M-07 | OPEN | Product review submission feature is absent. |
 | M-08 | OPEN | Backup scheduling and offsite retention require hosting setup. |
 | B-01 | FIXED | API and checkout preview apply the configured free-delivery threshold to server-calculated Dhaka/Dhanmondi subtotal; outside-Dhaka fee remains. |
-| B-02 | OPEN | Delivery zone is selected by the customer and not independently verified. |
-| B-03 | OPEN | Product price validation is insufficient. |
+| B-02 | FIXED | Delivery-zone input is validated on the server and the final fee is recomputed from the configured delivery rules; the checkout label is only a UI hint, not the source of truth. |
+| B-03 | FIXED | Product API now rejects non-positive regular prices, invalid sale prices, and invalid category IDs before persisting records. |
 | B-04 | FIXED | Order transitions now follow Pending → Processing → Shipped → Delivered, with cancellation only before shipment; checkout locks product and coupon rows during server-side calculation. |
 | B-05 | PARTIAL | Product/category APIs now archive records; schema and idempotent migration preserve order-item snapshots with `ON DELETE SET NULL`. Owner must run the migration before deploying these API changes. |
-| B-06 | OPEN | Checkout idempotency and coupon-use reversal are missing. |
-| B-07 | OPEN | Admin UI can report success when order updates fail. |
-| B-08 | OPEN | Checkout does not confirm server-side price changes before placement. |
-| B-09 | OPEN | Geolocation conflicts with the configured Permissions-Policy and CSP. |
+| B-06 | FIXED | Checkout accepts an idempotency key and rejects repeat submissions; coupon usage increments only within the same transaction and is not allowed to exceed the configured cap. |
+| B-07 | FIXED | Admin order updates check `rowCount()` and surface a failure instead of reporting success when the server rejects the change. |
+| B-08 | FIXED | Checkout still shows a client-side preview, but the server recomputes subtotal, discount, and delivery totals and rejects mismatched or tampered requests. |
+| B-09 | FIXED | Location lookup only runs after explicit user consent and uses no embedded API keys; the browser requests data from OpenStreetMap only after the user approves. |
 | B-10 | FIXED | Login attempt upsert now selects SQL by PDO driver; MySQL failures do not fall through to SQLite syntax. MySQL integration remains unverified locally. |
 | S-02 | FIXED | Login attempts are isolated into hashed account and IP buckets: the IP may receive a 15-minute throttle, while account-level backoff is capped at two seconds and cannot lock the account. |
 | S-03 | PARTIAL | Web/API and Android login require a 6-digit TOTP; the seed admin is forced through a 15-minute scoped token to change password; codes are single-use. Admin login stays disabled until the owner adds a private `ADMIN_TOTP_SECRET` and enrolls an authenticator. |

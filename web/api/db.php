@@ -174,6 +174,7 @@ class Database {
                 trx_id TEXT,
                 order_status TEXT DEFAULT 'Pending',
                 tracking_code TEXT UNIQUE NOT NULL,
+                idempotency_key TEXT UNIQUE,
                 notes TEXT,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP
             );
