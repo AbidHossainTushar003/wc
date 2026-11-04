@@ -6,6 +6,11 @@
 const API_BASE = '/api';
 const ADMIN_TOKEN_KEY = 'wc_admin_token';
 const ADMIN_NAME_KEY = 'wc_admin_name';
+let productsById = new Map();
+let couponsById = new Map();
+let productImages = [];
+let selectedProductFiles = [];
+let productPreviewUrls = [];
 
 function showAdminLogin(message = '') {
     document.getElementById('admin-login-screen').style.display = 'block';
@@ -254,8 +259,10 @@ async function loadProducts() {
     if (!res.ok || json.status !== 'success') {
         throw new Error(json.error || 'Could not load products.');
     }
+    const products = json.data || [];
+    productsById = new Map(products.map(product => [Number(product.id), product]));
     const tbody = document.querySelector('#products-table tbody');
-    tbody.innerHTML = (json.data || []).map(p => `
+    tbody.innerHTML = products.map(p => `
         <tr>
             <td><img src="${escapeAdminHtml(safeAdminImage(Array.isArray(p.images) && p.images.length ? p.images[0] : p.image))}" alt="${escapeAdminHtml(p.name)}" width="44" height="44" loading="lazy" onerror="this.onerror=null;this.src='assets/product-placeholder.svg'" style="border-radius: 6px; object-fit: cover;"></td>
             <td style="font-weight: 700; color: #f8fafc;">${escapeAdminHtml(p.name)}</td>
@@ -263,7 +270,10 @@ async function loadProducts() {
             <td>${formatBDT(p.regular_price)}</td>
             <td style="color: #f97316; font-weight: 700;">${p.sale_price ? formatBDT(p.sale_price) : '-'}</td>
             <td style="font-weight: 700;">${p.stock_quantity}</td>
-            <td><button onclick="deleteProduct(${Number.isSafeInteger(Number(p.id)) ? Number(p.id) : 0})" style="border: none; background: #dc2626; color: #fff; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.78rem;">Delete</button></td>
+            <td style="white-space: nowrap;">
+                <button type="button" onclick="editProduct(${Number(p.id)})" class="admin-btn" style="padding: 4px 10px; font-size: 0.78rem;">Edit</button>
+                <button type="button" onclick="deleteProduct(${Number.isSafeInteger(Number(p.id)) ? Number(p.id) : 0})" style="border: none; background: #dc2626; color: #fff; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.78rem;">Delete</button>
+            </td>
         </tr>
     `).join('');
 }
@@ -271,13 +281,35 @@ async function loadProducts() {
 async function showAddProductModal() {
     const form = document.getElementById('product-create-form');
     const isOpening = form.style.display === 'none';
-    form.style.display = isOpening ? 'block' : 'none';
-    if (!isOpening) return;
+    if (!isOpening) {
+        hideProductForm();
+        return;
+    }
 
+    await prepareProductForm(null);
+}
+
+function hideProductForm() {
+    const form = document.getElementById('product-create-form');
+    form.style.display = 'none';
     form.reset();
+    productImages = [];
+    selectedProductFiles = [];
+    renderProductImagePreview();
+}
+
+async function prepareProductForm(product) {
+    const form = document.getElementById('product-create-form');
+    form.reset();
+    form.style.display = 'block';
     const status = document.getElementById('product-create-status');
     status.textContent = '';
     status.style.display = 'none';
+    document.getElementById('new-product-id').value = product ? String(product.id) : '';
+    document.getElementById('product-form-title').textContent = product ? 'Edit product' : 'Add a product';
+    document.getElementById('product-create-submit').textContent = product ? 'Save Product Changes' : 'Save Product';
+    productImages = Array.isArray(product?.images) ? [...product.images] : [];
+    selectedProductFiles = [];
 
     try {
         const response = await adminFetch(`${API_BASE}/categories`);
@@ -294,12 +326,115 @@ async function showAddProductModal() {
         if (!result.data || result.data.length === 0) {
             throw new Error('Create a category before adding products.');
         }
+        if (product) {
+            document.getElementById('new-product-name').value = product.name || '';
+            categorySelect.value = String(product.category_id || '');
+            document.getElementById('new-product-price').value = product.regular_price ?? '';
+            document.getElementById('new-product-sale-price').value = product.sale_price ?? '';
+            document.getElementById('new-product-stock').value = product.stock_quantity ?? 0;
+            document.getElementById('new-product-sku').value = product.sku || '';
+            document.getElementById('new-product-description').value = product.short_desc || '';
+            document.getElementById('new-product-long-description').value = product.description || '';
+            document.getElementById('new-product-featured').checked = Number(product.is_featured) === 1;
+            document.getElementById('new-product-trending').checked = Number(product.is_trending) === 1;
+        }
+        renderProductImagePreview();
         document.getElementById('new-product-name').focus();
     } catch (error) {
         status.textContent = error.message || 'Could not load product categories.';
         status.style.color = '#fca5a5';
         status.style.display = 'block';
     }
+}
+
+function editProduct(id) {
+    const product = productsById.get(Number(id));
+    if (!product) {
+        alert('Product details are not loaded. Refresh the product list and try again.');
+        return;
+    }
+    prepareProductForm(product);
+}
+
+function handleProductImageSelection(event) {
+    const files = Array.from(event.target.files || []);
+    const status = document.getElementById('product-create-status');
+    if (files.some(file => !['image/jpeg', 'image/jpg'].includes(file.type.toLowerCase()) || file.size <= 0 || file.size > 1500000)) {
+        event.target.value = '';
+        selectedProductFiles = [];
+        status.textContent = 'Choose JPEG photos smaller than 1.5 MB each.';
+        status.style.color = '#fca5a5';
+        status.style.display = 'block';
+        renderProductImagePreview();
+        return;
+    }
+    if (productImages.length + files.length > 5) {
+        event.target.value = '';
+        selectedProductFiles = [];
+        status.textContent = 'A product can have up to five photos total.';
+        status.style.color = '#fca5a5';
+        status.style.display = 'block';
+        renderProductImagePreview();
+        return;
+    }
+    selectedProductFiles = files;
+    status.textContent = '';
+    status.style.display = 'none';
+    renderProductImagePreview();
+}
+
+function renderProductImagePreview() {
+    productPreviewUrls.forEach(url => URL.revokeObjectURL(url));
+    productPreviewUrls = [];
+    const preview = document.getElementById('product-image-preview');
+    if (!preview) return;
+    preview.replaceChildren();
+
+    const renderImage = (source, label, onRemove) => {
+        const wrapper = document.createElement('div');
+        wrapper.style.cssText = 'position:relative;width:84px;';
+        const image = document.createElement('img');
+        image.src = source;
+        image.alt = label;
+        image.width = 80;
+        image.height = 80;
+        image.style.cssText = 'object-fit:cover;border-radius:6px;border:1px solid #475569;';
+        const remove = document.createElement('button');
+        remove.type = 'button';
+        remove.textContent = '×';
+        remove.setAttribute('aria-label', `Remove ${label}`);
+        remove.style.cssText = 'position:absolute;top:2px;right:4px;border:0;border-radius:50%;background:#dc2626;color:#fff;width:22px;height:22px;cursor:pointer;';
+        remove.addEventListener('click', onRemove);
+        wrapper.append(image, remove);
+        preview.appendChild(wrapper);
+    };
+
+    productImages.forEach((image, index) => {
+        renderImage(safeAdminImage(image), `Current product photo ${index + 1}`, () => {
+            productImages.splice(index, 1);
+            renderProductImagePreview();
+        });
+    });
+    selectedProductFiles.forEach((file, index) => {
+        const url = URL.createObjectURL(file);
+        productPreviewUrls.push(url);
+        renderImage(url, `New product photo ${index + 1}`, () => {
+            selectedProductFiles.splice(index, 1);
+            document.getElementById('new-product-images').value = '';
+            renderProductImagePreview();
+        });
+    });
+}
+
+async function uploadProductImages(files) {
+    const body = new FormData();
+    files.forEach(file => body.append('images[]', file));
+    const response = await adminFetch(`${API_BASE}/product-images.php`, { method: 'POST', body });
+    const result = await response.json();
+    if (!response.ok || result.status !== 'success') {
+        throw new Error(result.error || 'Could not upload product photos.');
+    }
+    return result.data.images;
 }
 
 async function handleAddProduct(event) {
@@ -310,10 +445,10 @@ async function handleAddProduct(event) {
     const price = Number(document.getElementById('new-product-price').value);
     const salePriceInput = document.getElementById('new-product-sale-price').value;
     const salePrice = salePriceInput === '' ? null : Number(salePriceInput);
-    let productCreated = false;
+    const productId = document.getElementById('new-product-id').value;
 
-    if (salePrice !== null && salePrice >= price) {
-        status.textContent = 'Sale price must be less than the regular price.';
+    if (!Number.isFinite(price) || price <= 0 || (salePrice !== null && (!Number.isFinite(salePrice) || salePrice <= 0 || salePrice >= price))) {
+        status.textContent = 'Enter a valid regular price and a lower sale price.';
         status.style.color = '#fca5a5';
         status.style.display = 'block';
         return;
@@ -323,32 +458,41 @@ async function handleAddProduct(event) {
     status.textContent = '';
     status.style.display = 'none';
     try {
-        const response = await adminFetch(`${API_BASE}/products`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
+        const uploadedImages = selectedProductFiles.length ? await uploadProductImages(selectedProductFiles) : [];
+        const images = [...productImages, ...uploadedImages];
+        const payload = {
+                ...(productId ? { id: Number(productId) } : {}),
                 name: document.getElementById('new-product-name').value.trim(),
                 category_id: document.getElementById('new-product-category').value,
                 regular_price: price,
                 sale_price: salePrice,
                 stock_quantity: Number(document.getElementById('new-product-stock').value),
                 sku: document.getElementById('new-product-sku').value.trim() || null,
-                short_desc: document.getElementById('new-product-description').value.trim()
-            })
+                short_desc: document.getElementById('new-product-description').value.trim(),
+                description: document.getElementById('new-product-long-description').value.trim(),
+                is_featured: document.getElementById('new-product-featured').checked,
+                is_trending: document.getElementById('new-product-trending').checked,
+                images
+            };
+        const response = await adminFetch(`${API_BASE}/products${productId ? `?id=${encodeURIComponent(productId)}` : ''}`, {
+            method: productId ? 'PUT' : 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
         });
         const result = await response.json();
         if (!response.ok || result.status !== 'success') {
-            throw new Error(result.error || 'Could not add the product.');
+            throw new Error(result.error || 'Could not save the product.');
         }
 
-        productCreated = true;
-        form.reset();
-        await loadProducts();
-        form.style.display = 'none';
+        try {
+            await loadProducts();
+            hideProductForm();
+        } catch (error) {
+            hideProductForm();
+            alert(`Product was saved, but the product list could not be refreshed: ${error.message}`);
+        }
     } catch (error) {
-        status.textContent = productCreated
-            ? `Product was added, but the product list could not be refreshed: ${error.message}`
-            : error.message || 'Could not add the product.';
+        status.textContent = error.message || 'Could not save the product.';
         status.style.color = '#fca5a5';
         status.style.display = 'block';
     } finally {
@@ -358,8 +502,13 @@ async function handleAddProduct(event) {
 
 async function deleteProduct(id) {
     if (!confirm('Are you sure you want to delete this product?')) return;
-    await adminFetch(`${API_BASE}/products?id=${id}`, { method: 'DELETE' });
-    loadProducts();
+    const response = await adminFetch(`${API_BASE}/products?id=${id}`, { method: 'DELETE' });
+    const result = await response.json();
+    if (!response.ok || result.status !== 'success') {
+        alert(result.error || 'Could not delete the product.');
+        return;
+    }
+    await loadProducts();
 }
 
 // 3. CATEGORIES
@@ -456,31 +605,98 @@ async function loadCustomers() {
 async function loadCoupons() {
     const res = await adminFetch(`${API_BASE}/coupons`);
     const json = await res.json();
+    if (!res.ok || json.status !== 'success') {
+        throw new Error(json.error || 'Could not load coupons.');
+    }
+    couponsById = new Map((json.data || []).map(coupon => [Number(coupon.id), coupon]));
     const tbody = document.querySelector('#coupons-table tbody');
     tbody.innerHTML = (json.data || []).map(cp => `
         <tr>
-            <td style="font-weight: 800; color: #38bdf8;">${/dhanmondi/i.test(String(cp.code ?? '')) ? 'Legacy coupon' : escapeAdminHtml(cp.code)}</td>
+            <td style="font-weight: 800; color: #38bdf8;">${escapeAdminHtml(cp.code)}</td>
             <td>${cp.type === 'percentage' ? `${Number(cp.value) || 0}%` : formatBDT(cp.value)}</td>
             <td>${formatBDT(cp.min_order)}</td>
-            <td><span style="color: ${cp.is_active ? '#10b981' : '#ef4444'}; font-weight: 700;">● ${cp.is_active ? 'Active' : 'Disabled'}</span></td>
+            <td><span style="color: ${Number(cp.is_active) === 1 ? '#10b981' : '#ef4444'}; font-weight: 700;">● ${Number(cp.is_active) === 1 ? 'Active' : 'Disabled'}</span></td>
+            <td style="white-space: nowrap;">
+                <button type="button" class="admin-btn" style="padding: 4px 10px; font-size: 0.78rem;" onclick="editCoupon(${Number(cp.id)})">Edit</button>
+                <button type="button" style="border: none; background: #dc2626; color: #fff; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.78rem;" onclick="deleteCoupon(${Number(cp.id)})">Delete</button>
+            </td>
         </tr>
     `).join('');
 }
 
-async function handleAddCoupon() {
-    const code = document.getElementById('new-cp-code').value.trim();
-    const val = document.getElementById('new-cp-val').value;
-    const type = document.getElementById('new-cp-type').value;
-    const min = document.getElementById('new-cp-min').value;
+function resetCouponForm() {
+    document.getElementById('coupon-form').reset();
+    document.getElementById('new-cp-id').value = '';
+    document.getElementById('new-cp-active').checked = true;
+    document.getElementById('coupon-form-title').textContent = '+ Create Coupon';
+    document.getElementById('coupon-submit').textContent = 'Create Coupon';
+    document.getElementById('coupon-cancel').style.display = 'none';
+}
 
-    if (!code || !val) return alert('Code and value required');
-    await adminFetch(`${API_BASE}/coupons`, {
-        method: 'POST',
+function editCoupon(id) {
+    const coupon = couponsById.get(Number(id));
+    if (!coupon) {
+        alert('Coupon details are not loaded. Refresh the coupon list and try again.');
+        return;
+    }
+    document.getElementById('new-cp-id').value = String(coupon.id);
+    document.getElementById('new-cp-code').value = coupon.code || '';
+    document.getElementById('new-cp-val').value = coupon.value ?? '';
+    document.getElementById('new-cp-type').value = coupon.type || 'percentage';
+    document.getElementById('new-cp-min').value = coupon.min_order ?? 0;
+    document.getElementById('new-cp-max').value = coupon.max_discount ?? '';
+    document.getElementById('new-cp-expiry').value = coupon.expiry_date || '';
+    document.getElementById('new-cp-limit').value = coupon.usage_limit ?? 0;
+    document.getElementById('new-cp-active').checked = Number(coupon.is_active) === 1;
+    document.getElementById('coupon-form-title').textContent = `Edit coupon ${coupon.code}`;
+    document.getElementById('coupon-submit').textContent = 'Save Coupon Changes';
+    document.getElementById('coupon-cancel').style.display = 'inline-block';
+    document.getElementById('coupon-form').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+async function handleSaveCoupon(event) {
+    event.preventDefault();
+    const id = document.getElementById('new-cp-id').value;
+    const value = Number(document.getElementById('new-cp-val').value);
+    const type = document.getElementById('new-cp-type').value;
+    if (!document.getElementById('new-cp-code').value.trim() || !Number.isFinite(value) || value <= 0 || (type === 'percentage' && value > 100)) {
+        alert('Enter a coupon code and a valid discount value.');
+        return;
+    }
+    const payload = {
+        ...(id ? { id: Number(id) } : {}),
+        code: document.getElementById('new-cp-code').value.trim(),
+        value,
+        type,
+        min_order: Number(document.getElementById('new-cp-min').value || 0),
+        max_discount: document.getElementById('new-cp-max').value || null,
+        expiry_date: document.getElementById('new-cp-expiry').value || null,
+        usage_limit: Number(document.getElementById('new-cp-limit').value || 0),
+        is_active: document.getElementById('new-cp-active').checked ? 1 : 0
+    };
+    const response = await adminFetch(`${API_BASE}/coupons`, {
+        method: id ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code, value: val, type, min_order: min || 0 })
+        body: JSON.stringify(payload)
     });
-    alert('Coupon created!');
-    loadCoupons();
+    const result = await response.json();
+    if (!response.ok || result.status !== 'success') {
+        alert(result.error || 'Could not save the coupon.');
+        return;
+    }
+    resetCouponForm();
+    await loadCoupons();
+}
+
+async function deleteCoupon(id) {
+    if (!confirm('Delete this coupon?')) return;
+    const response = await adminFetch(`${API_BASE}/coupons?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
+    const result = await response.json();
+    if (!response.ok || result.status !== 'success') {
+        alert(result.error || 'Could not delete the coupon.');
+        return;
+    }
+    await loadCoupons();
 }
 
 // 7. INVENTORY
@@ -564,8 +780,10 @@ async function loadSettings() {
     const s = json.data || {};
 
     document.getElementById('set_store_name').value = s.store_name || 'Wonderful Collection';
+    document.getElementById('set_announcement_text').value = s.announcement_text || 'Delivery availability and estimates are shown at checkout.';
     document.getElementById('set_fee_dhanmondi').value = s.delivery_fee_dhanmondi || '60';
     document.getElementById('set_fee_dhaka').value = s.delivery_fee_dhaka || '80';
+    document.getElementById('set_fee_outside_dhaka').value = s.delivery_fee_outside_dhaka || '130';
     document.getElementById('set_bkash').value = s.bkash_number || '';
     document.getElementById('set_nagad').value = s.nagad_number || '';
     document.getElementById('set_rocket').value = s.rocket_number || '';
@@ -575,8 +793,10 @@ async function handleSaveSettings(e) {
     e.preventDefault();
     const payload = {
         store_name: document.getElementById('set_store_name').value,
+        announcement_text: document.getElementById('set_announcement_text').value.trim(),
         delivery_fee_dhanmondi: document.getElementById('set_fee_dhanmondi').value,
         delivery_fee_dhaka: document.getElementById('set_fee_dhaka').value,
+        delivery_fee_outside_dhaka: document.getElementById('set_fee_outside_dhaka').value,
         bkash_number: document.getElementById('set_bkash').value,
         nagad_number: document.getElementById('set_nagad').value,
         rocket_number: document.getElementById('set_rocket').value
