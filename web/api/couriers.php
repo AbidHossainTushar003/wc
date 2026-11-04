@@ -12,13 +12,33 @@ $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method === 'POST' && isset($_GET['webhook'])) {
     $rawBody = file_get_contents('php://input');
-    $data = json_decode($rawBody, true);
-    if (!empty($data['tracking_code']) && !empty($data['status'])) {
-        $stmt = $pdo->prepare("UPDATE courier_parcels SET status = ? WHERE tracking_code = ?");
-        $stmt->execute([$data['status'], $data['tracking_code']]);
-        jsonResponse(['status' => 'success']);
+    $signature = $_SERVER['HTTP_X_COURIER_SIGNATURE'] ?? '';
+    $secret = defined('COURIER_WEBHOOK_SECRET') && COURIER_WEBHOOK_SECRET !== ''
+        ? COURIER_WEBHOOK_SECRET
+        : (getenv('COURIER_WEBHOOK_SECRET') ?: '');
+    if ($secret === '') {
+        logSecurityEvent('courier_webhook_unconfigured');
+        jsonResponse(['error' => 'Courier webhook is not configured'], 503);
     }
-    jsonResponse(['error' => 'Invalid webhook payload'], 400);
+    if (!is_string($rawBody) || !verifyWebhookSignature($rawBody, $signature, $secret)) {
+        logSecurityEvent('courier_webhook_signature_invalid');
+        jsonResponse(['error' => 'Webhook authorization failed'], 401);
+    }
+
+    $data = json_decode($rawBody, true);
+    $trackingCode = is_array($data) && is_string($data['tracking_code'] ?? null)
+        ? trim($data['tracking_code'])
+        : '';
+    $status = is_array($data) && is_string($data['status'] ?? null)
+        ? trim($data['status'])
+        : '';
+    if ($trackingCode === '' || strlen($trackingCode) > 100 || $status === '' || strlen($status) > 100) {
+        jsonResponse(['error' => 'Invalid webhook payload'], 400);
+    }
+
+    $stmt = $pdo->prepare("UPDATE courier_parcels SET status = ? WHERE tracking_code = ?");
+    $stmt->execute([$status, $trackingCode]);
+    jsonResponse(['status' => 'success']);
 }
 
 $admin = requireAdminToken($pdo);

@@ -91,6 +91,7 @@ CREATE TABLE `orders` (
   `customer_email` VARCHAR(150),
   `delivery_address` TEXT NOT NULL,
   `delivery_area` VARCHAR(100) NOT NULL,
+  `delivery_zone` VARCHAR(32) DEFAULT NULL,
   `delivery_fee` DECIMAL(10,2) NOT NULL DEFAULT 60.00,
   `subtotal` DECIMAL(10,2) NOT NULL,
   `discount` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
@@ -103,6 +104,7 @@ CREATE TABLE `orders` (
   `idempotency_key` VARCHAR(128) DEFAULT NULL UNIQUE,
   `notes` TEXT,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY `uq_orders_payment_trx_id` (`payment_method`, `trx_id`),
   FOREIGN KEY (`customer_id`) REFERENCES `customers`(`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

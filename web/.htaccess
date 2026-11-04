@@ -30,9 +30,9 @@ ErrorDocument 404 /404.html
     Header always set X-Content-Type-Options "nosniff"
     Header always set X-Frame-Options "DENY"
     Header always set Referrer-Policy "strict-origin-when-cross-origin"
-    Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
+    Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(self)"
     Header always set Strict-Transport-Security "max-age=31536000"
-    Header always set Content-Security-Policy "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; img-src 'self' https: data:; font-src 'self' https://fonts.gstatic.com data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; script-src 'self' 'unsafe-inline'; connect-src 'self'; upgrade-insecure-requests"
+    Header always set Content-Security-Policy "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; img-src 'self' https: data:; font-src 'self' https://fonts.gstatic.com data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; script-src 'self' 'unsafe-inline'; connect-src 'self' https://nominatim.openstreetmap.org; upgrade-insecure-requests"
     <IfModule mod_setenvif.c>
         SetEnvIf Request_URI "^/api/" NO_CACHE
         Header always set Cache-Control "no-store, no-cache, must-revalidate" env=NO_CACHE

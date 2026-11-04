@@ -59,6 +59,14 @@ switch ($method) {
         if (empty($data)) {
             jsonResponse(['error' => 'No settings provided to update'], 400);
         }
+        if (array_key_exists('announcement_text', $data)) {
+            $announcement = $data['announcement_text'];
+            if (!is_string($announcement) || preg_match('/\A.{0,240}\z/usD', $announcement) !== 1) {
+                jsonResponse(['error' => 'Announcement text must be valid text no longer than 240 characters.'], 422);
+            }
+            $data['announcement_text'] = trim($announcement);
+        }
+
         $driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
         $sql = $driver === 'sqlite'
             ? 'INSERT OR REPLACE INTO settings (key_name, value_data) VALUES (?, ?)'

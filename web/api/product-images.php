@@ -55,30 +55,38 @@ for ($index = 0; $index < $count; $index++) {
 
     $mimeType = $finfo->file($temporaryPath);
     $imageInfo = getimagesize($temporaryPath);
+    $extensionsByMime = [
+        'image/jpeg' => 'jpg',
+        'image/png' => 'png',
+        'image/webp' => 'webp'
+    ];
     if (
-        $mimeType !== 'image/jpeg'
+        !isset($extensionsByMime[$mimeType])
         || $imageInfo === false
-        || ($imageInfo['mime'] ?? '') !== 'image/jpeg'
+        || ($imageInfo['mime'] ?? '') !== $mimeType
         || ($imageInfo[0] ?? 0) > 6000
         || ($imageInfo[1] ?? 0) > 6000
     ) {
-        jsonResponse(['error' => 'Product photos must be valid JPEG images.'], 422);
+        jsonResponse(['error' => 'Product photos must be valid JPEG, PNG, or WebP images.'], 422);
     }
 
-    $validFiles[] = $temporaryPath;
+    $validFiles[] = [
+        'path' => $temporaryPath,
+        'extension' => $extensionsByMime[$mimeType]
+    ];
 }
 
 $storedPaths = [];
-foreach ($validFiles as $temporaryPath) {
+foreach ($validFiles as $file) {
     try {
-        $fileName = bin2hex(random_bytes(16)) . '.jpg';
+        $fileName = bin2hex(random_bytes(16)) . '.' . $file['extension'];
     } catch (Exception $error) {
         error_log('Wonderful Collection could not generate a product image filename: ' . $error->getMessage());
         jsonResponse(['error' => 'Could not safely name the uploaded image.'], 500);
     }
 
     $destination = $targetDirectory . DIRECTORY_SEPARATOR . $fileName;
-    if (!move_uploaded_file($temporaryPath, $destination)) {
+    if (!move_uploaded_file($file['path'], $destination)) {
         foreach ($storedPaths as $storedPath) {
             if (!unlink($targetDirectory . DIRECTORY_SEPARATOR . basename($storedPath))) {
                 error_log('Wonderful Collection failed to remove a partial product image upload');

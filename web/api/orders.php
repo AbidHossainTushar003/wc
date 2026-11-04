@@ -158,10 +158,23 @@ switch ($method) {
             jsonResponse(['error' => 'Invalid payment method.'], 422);
         }
         $trxId = is_string($data['trx_id'] ?? null) ? trim($data['trx_id']) : '';
+        if (in_array($paymentMethod, ['bKash', 'Nagad', 'Rocket'], true) && $trxId === '') {
+            jsonResponse(['error' => 'Enter the transaction ID for your mobile payment.'], 422);
+        }
         $customerEmail = is_string($data['customer_email'] ?? null) ? trim($data['customer_email']) : '';
         $notes = is_string($data['notes'] ?? null) ? trim($data['notes']) : '';
+        $previewTotal = isset($data['preview_total']) && is_numeric($data['preview_total'])
+            ? round((float)$data['preview_total'], 2)
+            : null;
+        $confirmedServerTotal = isset($data['confirmed_server_total']) && is_numeric($data['confirmed_server_total'])
+            ? round((float)$data['confirmed_server_total'], 2)
+            : null;
         if (strlen($customerEmail) > 150 || strlen($trxId) > 100 || strlen($notes) > 2000) {
             jsonResponse(['error' => 'One or more order fields are too long.'], 422);
+        }
+        if ((array_key_exists('preview_total', $data) && $previewTotal === null)
+            || (array_key_exists('confirmed_server_total', $data) && $confirmedServerTotal === null)) {
+            jsonResponse(['error' => 'Invalid checkout total confirmation.'], 422);
         }
         if ($customerEmail !== '' && !filter_var($customerEmail, FILTER_VALIDATE_EMAIL)) {
             jsonResponse(['error' => 'Please provide a valid email address.'], 422);
@@ -250,6 +263,35 @@ switch ($method) {
             }
 
             $total = round($subtotal - $discount + $deliveryFee, 2);
+            if ($confirmedServerTotal !== null && abs($confirmedServerTotal - $total) > 0.01) {
+                $pdo->rollBack();
+                jsonResponse([
+                    'error' => 'The order total changed again. Please review and confirm the updated total.',
+                    'requires_confirmation' => true,
+                    'server_total' => $total
+                ], 409);
+            }
+            if ($previewTotal !== null
+                && abs($previewTotal - $total) > 0.01
+                && ($confirmedServerTotal === null || abs($confirmedServerTotal - $total) > 0.01)) {
+                $pdo->rollBack();
+                jsonResponse([
+                    'error' => 'Prices, discount, or delivery fees changed. Please confirm the updated total.',
+                    'requires_confirmation' => true,
+                    'preview_total' => $previewTotal,
+                    'server_total' => $total
+                ], 409);
+            }
+
+            if ($trxId !== '') {
+                $duplicateTrxStmt = $pdo->prepare(
+                    'SELECT id FROM orders WHERE payment_method = ? AND trx_id = ? LIMIT 1' . $lockClause
+                );
+                $duplicateTrxStmt->execute([$paymentMethod, $trxId]);
+                if ($duplicateTrxStmt->fetch()) {
+                    throw new DomainException('This transaction ID has already been used for this payment method.');
+                }
+            }
             $orderNumber = 'WC-' . strtoupper(bin2hex(random_bytes(5)));
             $trackingCode = 'TRK-WC-' . strtoupper(bin2hex(random_bytes(5)));
             $paymentStatus = $trxId !== '' || in_array($paymentMethod, ['bKash', 'Nagad', 'Rocket'], true)
@@ -260,28 +302,37 @@ switch ($method) {
                 INSERT INTO orders (
                     order_number, customer_id, customer_name, customer_phone, customer_email,
                     delivery_address, delivery_area, delivery_fee, subtotal, discount, total,
-                    payment_method, payment_status, trx_id, order_status, tracking_code, idempotency_key, notes
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending', ?, ?, ?)
+                    delivery_zone, payment_method, payment_status, trx_id, order_status, tracking_code, idempotency_key, notes
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending', ?, ?, ?)
             ");
-            $orderStmt->execute([
-                $orderNumber,
-                $customerId,
-                trim($data['customer_name']),
-                trim($data['customer_phone']),
-                $customerEmail,
-                trim($data['delivery_address']),
-                $deliveryArea,
-                $deliveryFee,
-                $subtotal,
-                $discount,
-                $total,
-                $paymentMethod,
-                $paymentStatus,
-                $trxId !== '' ? $trxId : null,
-                $trackingCode,
-                $idempotencyKey !== '' ? $idempotencyKey : null,
-                $notes
-            ]);
+            try {
+                $orderStmt->execute([
+                    $orderNumber,
+                    $customerId,
+                    trim($data['customer_name']),
+                    trim($data['customer_phone']),
+                    $customerEmail,
+                    trim($data['delivery_address']),
+                    $deliveryArea,
+                    $deliveryFee,
+                    $subtotal,
+                    $discount,
+                    $total,
+                    $deliveryZone,
+                    $paymentMethod,
+                    $paymentStatus,
+                    $trxId !== '' ? $trxId : null,
+                    $trackingCode,
+                    $idempotencyKey !== '' ? $idempotencyKey : null,
+                    $notes
+                ]);
+            } catch (PDOException $e) {
+                $databaseError = is_array($e->errorInfo ?? null) ? (string)($e->errorInfo[2] ?? '') : '';
+                if ($trxId !== '' && stripos($databaseError, 'uq_orders_payment_trx_id') !== false) {
+                    throw new DomainException('This transaction ID has already been used for this payment method.');
+                }
+                throw $e;
+            }
             $orderId = $pdo->lastInsertId();
 
             $itemStmt = $pdo->prepare("

@@ -44,6 +44,8 @@ class Database {
                 self::ensureSQLiteColumn(self::$instance, 'products', 'is_archived', 'INTEGER NOT NULL DEFAULT 0');
                 self::ensureSQLiteColumn(self::$instance, 'admins', 'password_change_required', 'INTEGER NOT NULL DEFAULT 1');
                 self::ensureSQLiteColumn(self::$instance, 'admins', 'last_totp_counter', 'INTEGER DEFAULT NULL');
+                self::ensureSQLiteColumn(self::$instance, 'orders', 'delivery_zone', 'TEXT DEFAULT NULL');
+                self::$instance->exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_orders_payment_trx_id ON orders (payment_method, trx_id)');
                 self::$instance->exec("
                     CREATE TABLE IF NOT EXISTS admin_tokens (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -165,6 +167,7 @@ class Database {
                 customer_email TEXT,
                 delivery_address TEXT NOT NULL,
                 delivery_area TEXT NOT NULL,
+                delivery_zone TEXT,
                 delivery_fee REAL NOT NULL DEFAULT 60.00,
                 subtotal REAL NOT NULL,
                 discount REAL NOT NULL DEFAULT 0.00,

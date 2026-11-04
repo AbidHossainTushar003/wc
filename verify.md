@@ -307,3 +307,42 @@ static server, not the PHP/MySQL backend or the production image store. At a
 375 CSS-pixel viewport, the checkout showed the test item and had no
 horizontal overflow. The local test cart was isolated; no order was submitted.
 Production remains unchanged until an approved deployment.
+
+## Phase 11 post-deploy test kit
+
+After an approved deployment, run `tests/post-deploy.ps1` from Windows
+PowerShell. It reads `WC_ADMIN_TOKEN` from the process environment or prompts
+securely; it never reads the token from a file and never prints it. The
+announcement XSS check temporarily changes the live banner only after you type
+`RUN`, pauses for a browser check, then restores the previous announcement.
+If the restoration check fails, restore the prior text immediately in Admin →
+Settings.
+
+`POST /api/orders` is intentionally public for customer checkout. The script
+does not expect 401 for that route; it submits an empty, invalid payload and
+expects HTTP 422 (or 429 if checkout rate-limiting is already active), before
+any order can be created. Order `PUT` and `DELETE` remain admin-token
+protected. The HTTP redirect checks print expected host failures until ticket
+`FPB-032495` is resolved.
+
+Use `tests/stock-test.md` for the controlled order/cancellation sequence and
+phpMyAdmin read-only SQL checks. Do not run that test until the existing
+production test order marked **DO NOT FULFILL** has been resolved.
+
+### Results (fill in after the tests)
+
+| Test | PASS/FAIL | Date | Notes |
+|---|---|---|---|
+| GET `/api/products` returns JSON 200 |  |  |  |
+| No-token admin writes return 401 |  |  |  |
+| Invalid public order POST is rejected without creating an order |  |  |  |
+| Sensitive files return 403/404 |  |  |  |
+| `/assets/products/` has no directory listing |  |  |  |
+| PHP payload uploaded as `.jpg` is rejected |  |  |  |
+| Announcement renders literal text; no script executes; original restored |  |  |  |
+| HTTP `/` redirects to HTTPS (ticket `FPB-032495`) |  |  |  |
+| HTTP `/api/products` redirects to HTTPS (ticket `FPB-032495`) |  |  |  |
+| Order reduces stock by ordered quantity |  |  |  |
+| First cancellation restores stock |  |  |  |
+| Repeated cancellation does not restore stock again |  |  |  |
+| Cancelled order cannot be reopened |  |  |  |

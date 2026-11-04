@@ -1,6 +1,16 @@
 Options -Indexes -ExecCGI
 
-<FilesMatch "(?i)\.(php[0-9]?|phtml|phar)$">
+<IfModule mod_php.c>
+    php_flag engine off
+</IfModule>
+<IfModule mod_php8.c>
+    php_flag engine off
+</IfModule>
+<IfModule php_module>
+    php_flag engine off
+</IfModule>
+
+<FilesMatch "(?i)\.(php[0-9]*|phtml|phar|phps|pht)$">
     <IfModule mod_authz_core.c>
         Require all denied
     </IfModule>

@@ -1,6 +1,65 @@
--- Wonderful Collection audit fixes.
--- Safe to re-run: tables are created only when absent; this migration does not drop data.
--- Back up the live database before running. See CPANEL-DEPLOY-RUNBOOK.md.
+-- Wonderful Collection additive MySQL/MariaDB migration.
+-- Back up first. Run tests/schema-check.sql and resolve duplicate payment references before this migration.
+-- Run each ALTER statement separately in phpMyAdmin. "Duplicate column" means it is already applied; continue.
+-- "Duplicate key name" means that index name already exists; confirm it covers the same columns before continuing.
+-- A duplicate-entry error on uq_orders_payment_trx_id means existing orders reuse a TrxID; resolve those records first.
+-- Rollback: restore the complete pre-migration database backup. Do not guess at DROP/column rollback SQL.
+
+CREATE TABLE IF NOT EXISTS `admin_tokens` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `token_hash` CHAR(64) NOT NULL,
+  `admin_id` INT NOT NULL,
+  `expires_at` DATETIME NOT NULL,
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_admin_tokens_token_hash` (`token_hash`),
+  KEY `idx_admin_tokens_admin_id` (`admin_id`),
+  CONSTRAINT `fk_admin_tokens_admin` FOREIGN KEY (`admin_id`) REFERENCES `admins` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `customer_tokens` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `token_hash` CHAR(64) NOT NULL,
+  `customer_id` INT NOT NULL,
+  `expires_at` DATETIME NOT NULL,
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_customer_tokens_token_hash` (`token_hash`),
+  KEY `idx_customer_tokens_customer_id` (`customer_id`),
+  CONSTRAINT `fk_customer_tokens_customer` FOREIGN KEY (`customer_id`) REFERENCES `customers` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `login_attempts` (
+  `username_hash` CHAR(64) NOT NULL,
+  `ip_hash` CHAR(64) NOT NULL,
+  `attempt_count` INT NOT NULL,
+  `window_started_at` DATETIME NOT NULL,
+  `locked_until` DATETIME DEFAULT NULL,
+  PRIMARY KEY (`username_hash`, `ip_hash`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `password_reset_tokens` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `customer_id` INT NOT NULL,
+  `token_hash` CHAR(64) NOT NULL,
+  `expires_at` DATETIME NOT NULL,
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_password_reset_tokens_token_hash` (`token_hash`),
+  KEY `idx_password_reset_customer_id` (`customer_id`),
+  CONSTRAINT `fk_password_reset_tokens_customer` FOREIGN KEY (`customer_id`) REFERENCES `customers` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `customer_email_verifications` (
+  `customer_id` INT NOT NULL,
+  `token_hash` CHAR(64) DEFAULT NULL,
+  `expires_at` DATETIME DEFAULT NULL,
+  `verified_at` DATETIME DEFAULT NULL,
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`customer_id`),
+  UNIQUE KEY `uq_customer_email_verifications_token_hash` (`token_hash`),
+  CONSTRAINT `fk_customer_email_verifications_customer` FOREIGN KEY (`customer_id`) REFERENCES `customers` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `accounts` (
   `id` INT NOT NULL AUTO_INCREMENT,
@@ -125,76 +184,21 @@ CREATE TABLE IF NOT EXISTS `courier_parcels` (
   CONSTRAINT `fk_courier_parcels_order` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Archive catalog records instead of deleting historical sales references.
--- The guarded DDL calls allow the migration to be re-run without destructive changes.
-DROP PROCEDURE IF EXISTS `wc_20261104_add_column_if_missing`;
-DELIMITER //
-CREATE PROCEDURE `wc_20261104_add_column_if_missing`(
-  IN p_table VARCHAR(64),
-  IN p_column VARCHAR(64),
-  IN p_definition VARCHAR(255)
-)
-BEGIN
-  DECLARE column_count INT DEFAULT 0;
-  SELECT COUNT(*) INTO column_count
-  FROM information_schema.COLUMNS
-  WHERE TABLE_SCHEMA = DATABASE()
-    AND TABLE_NAME = p_table
-    AND COLUMN_NAME = p_column;
-  IF column_count = 0 THEN
-    SET @wc_ddl = CONCAT('ALTER TABLE `', p_table, '` ADD COLUMN `', p_column, '` ', p_definition);
-    PREPARE wc_stmt FROM @wc_ddl;
-    EXECUTE wc_stmt;
-    DEALLOCATE PREPARE wc_stmt;
-  END IF;
-END//
-DELIMITER ;
+-- Each ALTER is standalone. Duplicate column error = already applied, safe to continue.
+ALTER TABLE `products` ADD COLUMN `is_archived` TINYINT(1) NOT NULL DEFAULT 0;
+ALTER TABLE `categories` ADD COLUMN `is_archived` TINYINT(1) NOT NULL DEFAULT 0;
+ALTER TABLE `admins` ADD COLUMN `password_change_required` TINYINT(1) NOT NULL DEFAULT 1;
+ALTER TABLE `admins` ADD COLUMN `last_totp_counter` BIGINT UNSIGNED DEFAULT NULL;
+ALTER TABLE `orders` ADD COLUMN `delivery_zone` VARCHAR(32) DEFAULT NULL;
+ALTER TABLE `orders` ADD COLUMN `idempotency_key` VARCHAR(128) DEFAULT NULL;
 
-CALL `wc_20261104_add_column_if_missing`('products', 'is_archived', 'TINYINT(1) NOT NULL DEFAULT 0');
-CALL `wc_20261104_add_column_if_missing`('categories', 'is_archived', 'TINYINT(1) NOT NULL DEFAULT 0');
-CALL `wc_20261104_add_column_if_missing`('admins', 'password_change_required', 'TINYINT(1) NOT NULL DEFAULT 1');
-CALL `wc_20261104_add_column_if_missing`('admins', 'last_totp_counter', 'BIGINT UNSIGNED DEFAULT NULL');
-DROP PROCEDURE IF EXISTS `wc_20261104_add_column_if_missing`;
+-- Run only when schema-check shows no equivalent unique idempotency_key index.
+-- Duplicate key name error = already applied; verify the existing index columns before continuing.
+ALTER TABLE `orders` ADD UNIQUE KEY `uq_orders_idempotency_key` (`idempotency_key`);
+-- Resolve duplicate TrxIDs reported by schema-check before running this statement.
+ALTER TABLE `orders` ADD UNIQUE KEY `uq_orders_payment_trx_id` (`payment_method`, `trx_id`);
 
-DROP PROCEDURE IF EXISTS `wc_20261104_preserve_order_items`;
-DELIMITER //
-CREATE PROCEDURE `wc_20261104_preserve_order_items`()
-BEGIN
-  DECLARE fk_name VARCHAR(64) DEFAULT NULL;
-  DECLARE fk_delete_rule VARCHAR(30) DEFAULT NULL;
-  DECLARE fk_count INT DEFAULT 0;
-  SELECT kcu.CONSTRAINT_NAME, rc.DELETE_RULE INTO fk_name, fk_delete_rule
-  FROM information_schema.KEY_COLUMN_USAGE kcu
-  JOIN information_schema.REFERENTIAL_CONSTRAINTS rc
-    ON rc.CONSTRAINT_SCHEMA = kcu.CONSTRAINT_SCHEMA
-    AND rc.TABLE_NAME = kcu.TABLE_NAME
-    AND rc.CONSTRAINT_NAME = kcu.CONSTRAINT_NAME
-  WHERE kcu.TABLE_SCHEMA = DATABASE()
-    AND kcu.TABLE_NAME = 'order_items'
-    AND kcu.COLUMN_NAME = 'product_id'
-    AND kcu.REFERENCED_TABLE_NAME = 'products'
-  LIMIT 1;
-  IF fk_name IS NOT NULL AND fk_delete_rule <> 'SET NULL' THEN
-    SET @wc_ddl = CONCAT('ALTER TABLE `order_items` DROP FOREIGN KEY `', fk_name, '`');
-    PREPARE wc_stmt FROM @wc_ddl;
-    EXECUTE wc_stmt;
-    DEALLOCATE PREPARE wc_stmt;
-    SET fk_name = NULL;
-  END IF;
-  ALTER TABLE `order_items` MODIFY COLUMN `product_id` INT DEFAULT NULL;
-  SELECT COUNT(*) INTO fk_count
-  FROM information_schema.KEY_COLUMN_USAGE
-  WHERE TABLE_SCHEMA = DATABASE()
-    AND TABLE_NAME = 'order_items'
-    AND COLUMN_NAME = 'product_id'
-    AND REFERENCED_TABLE_NAME = 'products';
-  IF fk_count = 0 THEN
-    ALTER TABLE `order_items`
-      ADD CONSTRAINT `fk_order_items_product`
-      FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE SET NULL;
-  END IF;
-END//
-DELIMITER ;
-
-CALL `wc_20261104_preserve_order_items`();
-DROP PROCEDURE IF EXISTS `wc_20261104_preserve_order_items`;
+-- Existing database.sql uses ON DELETE SET NULL for order_items.product_id.
+-- If schema-check reports another delete rule, inspect it and change the named FK manually
+-- in staging first; do not guess the existing constraint name in phpMyAdmin.
+ALTER TABLE `order_items` MODIFY COLUMN `product_id` INT DEFAULT NULL;

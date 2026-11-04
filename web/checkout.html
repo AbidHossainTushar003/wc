@@ -279,13 +279,22 @@
       }
     }
 
+    function getCheckoutPreviewTotal() {
+      const area = document.getElementById('delivery_area').value;
+      const subtotal = Store.getCartSubtotal();
+      const baseFee = deliveryFees[area] ?? deliveryFees.dhaka;
+      const fee = area !== 'outside_dhaka' && subtotal >= freeDeliveryMinimum ? 0 : baseFee;
+      const discount = Store.state.appliedCoupon ? Store.state.appliedCoupon.discount : 0;
+      return Math.round(Math.max(0, subtotal - discount + fee) * 100) / 100;
+    }
+
     function updateDeliveryFee() {
       const area = document.getElementById('delivery_area').value;
       const subtotal = Store.getCartSubtotal();
       const baseFee = deliveryFees[area] ?? deliveryFees.dhaka;
       const fee = area !== 'outside_dhaka' && subtotal >= freeDeliveryMinimum ? 0 : baseFee;
       const discount = Store.state.appliedCoupon ? Store.state.appliedCoupon.discount : 0;
-      const total = Math.max(0, subtotal - discount + fee);
+      const total = getCheckoutPreviewTotal();
 
       document.getElementById('chk-subtotal').textContent = Store.formatBDT(subtotal);
       document.getElementById('chk-delivery').textContent = Store.formatBDT(fee);
@@ -339,6 +348,7 @@
         payment_method: document.querySelector('input[name="payment_method"]:checked').value,
         trx_id: document.getElementById('trx_id').value.trim() || null,
         notes: document.getElementById('order_notes').value.trim(),
+        preview_total: getCheckoutPreviewTotal(),
         items: Store.state.cart.map(i => ({
           product_id: i.id,
           name: i.name,
@@ -347,7 +357,23 @@
         }))
       };
 
-      const res = await Store.placeOrder(payload);
+      let res = await Store.placeOrder(payload);
+      let confirmationCount = 0;
+      while (res.requires_confirmation && confirmationCount < 2) {
+        const serverTotal = Number(res.server_total);
+        if (!Number.isFinite(serverTotal)) break;
+        const accepted = window.confirm(
+          `${res.error || 'The order total changed.'}\n\nNew total: ${Store.formatBDT(serverTotal)}\n\nPlace the order at this total?`
+        );
+        if (!accepted) {
+          res = { error: 'Order not placed. Review your cart and try again.' };
+          break;
+        }
+        payload.confirmed_server_total = serverTotal;
+        res = await Store.placeOrder(payload);
+        confirmationCount++;
+      }
+
       if (res.status === 'success') {
         const orderData = res.data;
         Store.clearCart();

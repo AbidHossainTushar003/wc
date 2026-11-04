@@ -322,8 +322,8 @@
               <label><input id="new-product-trending" type="checkbox"> Trending product</label>
             </div>
             <div style="grid-column: 1 / -1;">
-              <label for="new-product-images" style="display: block; margin-bottom: 6px;">Product photos (up to 5 JPEGs, 1.5 MB each)</label>
-              <input id="new-product-images" name="images[]" class="admin-input" type="file" accept="image/jpeg,.jpg,.jpeg" multiple onchange="handleProductImageSelection(event)">
+              <label for="new-product-images" style="display: block; margin-bottom: 6px;">Product photos (up to 5 JPEG, PNG, or WebP images, 1.5 MB each)</label>
+              <input id="new-product-images" name="images[]" class="admin-input" type="file" accept="image/jpeg,.jpg,.jpeg,image/png,.png,image/webp,.webp" multiple onchange="handleProductImageSelection(event)">
               <small id="product-image-help" style="display: block; color: #94a3b8; margin-top: 6px;">Choose multiple photos. On edit, new photos are added to the existing set.</small>
               <div id="product-image-preview" style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px;"></div>
             </div>
