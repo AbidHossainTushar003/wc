@@ -274,10 +274,48 @@
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
           <h2 style="font-size: 1.6rem; font-weight: 800; color: #0284c7;">📦 Product Management</h2>
           <div style="display: flex; gap: 10px;">
-            <button onclick="showAddProductModal()" class="admin-btn">+ Add Product</button>
+            <button type="button" onclick="showAddProductModal()" class="admin-btn">+ Add Product</button>
             <button onclick="closeModule()" class="admin-btn" style="background: #334155; color: #fff;">← Grid</button>
           </div>
         </div>
+        <form id="product-create-form" onsubmit="handleAddProduct(event)" style="display: none; background: #0f172a; padding: 20px; border-radius: 12px; border: 1px solid #334155; margin-bottom: 24px;">
+          <h3 style="color: #38bdf8; margin-bottom: 16px;">Add a product</h3>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px;">
+            <div>
+              <label for="new-product-name" style="display: block; margin-bottom: 6px;">Product name *</label>
+              <input id="new-product-name" class="admin-input" maxlength="150" required>
+            </div>
+            <div>
+              <label for="new-product-category" style="display: block; margin-bottom: 6px;">Category *</label>
+              <select id="new-product-category" class="admin-input" required></select>
+            </div>
+            <div>
+              <label for="new-product-price" style="display: block; margin-bottom: 6px;">Regular price (BDT) *</label>
+              <input id="new-product-price" class="admin-input" type="number" min="0.01" step="0.01" required>
+            </div>
+            <div>
+              <label for="new-product-sale-price" style="display: block; margin-bottom: 6px;">Sale price (BDT)</label>
+              <input id="new-product-sale-price" class="admin-input" type="number" min="0.01" step="0.01">
+            </div>
+            <div>
+              <label for="new-product-stock" style="display: block; margin-bottom: 6px;">Stock quantity *</label>
+              <input id="new-product-stock" class="admin-input" type="number" min="0" step="1" value="0" required>
+            </div>
+            <div>
+              <label for="new-product-sku" style="display: block; margin-bottom: 6px;">SKU</label>
+              <input id="new-product-sku" class="admin-input" maxlength="100">
+            </div>
+            <div style="grid-column: 1 / -1;">
+              <label for="new-product-description" style="display: block; margin-bottom: 6px;">Short description</label>
+              <input id="new-product-description" class="admin-input" maxlength="500">
+            </div>
+          </div>
+          <p id="product-create-status" role="status" style="display: none; margin-top: 12px;"></p>
+          <div style="display: flex; gap: 10px; margin-top: 16px;">
+            <button id="product-create-submit" type="submit" class="admin-btn">Save Product</button>
+            <button type="button" onclick="showAddProductModal()" class="admin-btn" style="background: #334155; color: #fff;">Cancel</button>
+          </div>
+        </form>
         <div style="overflow-x: auto;">
           <table class="admin-table" id="products-table">
             <thead><tr><th>Image</th><th>Name</th><th>Category</th><th>Regular</th><th>Sale</th><th>Stock</th><th>Action</th></tr></thead>
@@ -347,7 +385,7 @@
           </table>
           <div style="background: #0f172a; padding: 20px; border-radius: 12px; border: 1px solid #334155;">
             <h4 style="margin-bottom: 12px; color: #0891b2;">+ Create Coupon</h4>
-            <input type="text" id="new-cp-code" placeholder="CODE (e.g. DHANMONDI20)" class="admin-input" style="margin-bottom: 10px; text-transform: uppercase;">
+            <input type="text" id="new-cp-code" placeholder="Enter coupon code" class="admin-input" style="margin-bottom: 10px; text-transform: uppercase;">
             <input type="number" id="new-cp-val" placeholder="Value (e.g. 10 for % or 150 for BDT)" class="admin-input" style="margin-bottom: 10px;">
             <select id="new-cp-type" class="admin-input" style="margin-bottom: 10px;">
               <option value="percentage">Percentage (%)</option>
@@ -395,8 +433,8 @@
             <input type="text" id="set_store_name" class="admin-input">
           </div>
           <div style="margin-bottom: 14px;">
-            <label style="display: block; font-size: 0.85rem; color: #94a3b8; margin-bottom: 4px;">Dhanmondi Express Delivery Fee (৳)</label>
-            <input type="number" id="set_fee_dhanmondi" class="admin-input">
+            <label style="display: block; font-size: 0.85rem; color: #94a3b8; margin-bottom: 4px;">Local Delivery Fee (৳)</label>
+            <input type="number" id="set_fee_Dhaka" class="admin-input">
           </div>
           <div style="margin-bottom: 14px;">
             <label style="display: block; font-size: 0.85rem; color: #94a3b8; margin-bottom: 4px;">Inside Dhaka Regular Delivery Fee (৳)</label>

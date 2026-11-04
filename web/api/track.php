@@ -8,30 +8,42 @@ require_once __DIR__ . '/db.php';
 
 $pdo = Database::getConnection();
 
-if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     jsonResponse(['error' => 'Method not allowed'], 405);
 }
 
-$query = trim($_GET['order'] ?? ($_GET['tracking_code'] ?? ''));
-$phone = trim($_GET['phone'] ?? '');
+$data = getRequestBody();
+$query = trim(is_string($data['order'] ?? null) ? $data['order'] : (is_string($data['tracking_code'] ?? null) ? $data['tracking_code'] : ''));
+$phone = trim(is_string($data['phone'] ?? null) ? $data['phone'] : '');
 
 if (empty($query)) {
     jsonResponse(['error' => 'Please provide an Order Number (e.g. WC-10021) or Tracking Code (e.g. TRK-WC-7721)'], 400);
 }
-
-$sql = "SELECT * FROM orders WHERE (order_number = ? OR tracking_code = ?)";
-$params = [$query, $query];
-
-if (!empty($phone)) {
-    $sql .= " AND customer_phone LIKE ?";
-    $params[] = '%' . substr($phone, -8);
+if ($phone === '') {
+    jsonResponse(['error' => 'Please provide the phone number used when placing the order.'], 400);
 }
 
+$normalizePhone = static function (string $value): string {
+    $digits = preg_replace('/\D+/', '', $value);
+    if (str_starts_with($digits, '00880')) {
+        $digits = substr($digits, 2);
+    }
+    if (str_starts_with($digits, '880')) {
+        $digits = '0' . substr($digits, 3);
+    }
+    return $digits;
+};
+$phone = $normalizePhone($phone);
+if (strlen($phone) < 8 || strlen($phone) > 15) {
+    jsonResponse(['error' => 'Please provide a valid phone number.'], 400);
+}
+
+$sql = "SELECT * FROM orders WHERE (order_number = ? OR tracking_code = ?)";
 $stmt = $pdo->prepare($sql);
-$stmt->execute($params);
+$stmt->execute([$query, $query]);
 $order = $stmt->fetch();
 
-if (!$order) {
+if (!$order || !hash_equals($normalizePhone((string)$order['customer_phone']), $phone)) {
     jsonResponse(['error' => 'No order found matching your tracking information. Please verify your order number and phone.'], 404);
 }
 
@@ -39,6 +51,9 @@ if (!$order) {
 $itemStmt = $pdo->prepare("SELECT product_name, quantity, price, total FROM order_items WHERE order_id = ?");
 $itemStmt->execute([(int)$order['id']]);
 $order['items'] = $itemStmt->fetchAll();
+$deliveryArea = stripos((string)$order['delivery_area'], 'dhanmondi') !== false
+    ? 'Dhaka'
+    : $order['delivery_area'];
 
 // Generate dynamic timeline stages based on order_status
 $status = $order['order_status'];
@@ -51,7 +66,7 @@ $stages = [
     ],
     [
         'title' => 'Order Confirmed',
-        'desc' => 'Verified by Wonderful Collection Dhanmondi Hub',
+        'desc' => 'Verified by Wonderful Collection',
         'time' => in_array($status, ['Processing', 'Shipped', 'Delivered']) ? 'Completed' : 'Pending',
         'completed' => in_array($status, ['Processing', 'Shipped', 'Delivered'])
     ],
@@ -62,15 +77,15 @@ $stages = [
         'completed' => in_array($status, ['Processing', 'Shipped', 'Delivered'])
     ],
     [
-        'title' => 'Dispatched from Dhanmondi Hub',
-        'desc' => 'Handed over to delivery rider for ' . $order['delivery_area'],
+        'title' => 'Dispatched by Wonderful Collection',
+        'desc' => 'Handed over to the delivery rider',
         'time' => in_array($status, ['Shipped', 'Delivered']) ? 'In Transit' : 'Pending',
         'completed' => in_array($status, ['Shipped', 'Delivered'])
     ],
     [
         'title' => 'Delivered to Customer',
-        'desc' => 'Delivered at ' . $order['delivery_address'],
-        'time' => ($status === 'Delivered') ? 'Delivered' : 'Estimated 2-4 hrs for Dhanmondi / 24 hrs Dhaka',
+        'desc' => 'Delivery completed.',
+        'time' => ($status === 'Delivered') ? 'Delivered' : 'Delivery estimate provided by courier',
         'completed' => ($status === 'Delivered')
     ]
 ];
@@ -81,9 +96,7 @@ jsonResponse([
         'order_number' => $order['order_number'],
         'tracking_code' => $order['tracking_code'],
         'order_status' => $order['order_status'],
-        'customer_name' => $order['customer_name'],
-        'delivery_address' => $order['delivery_address'],
-        'delivery_area' => $order['delivery_area'],
+        'delivery_area' => $deliveryArea,
         'payment_method' => $order['payment_method'],
         'payment_status' => $order['payment_status'],
         'total' => (float)$order['total'],

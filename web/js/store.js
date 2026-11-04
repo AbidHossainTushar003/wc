@@ -17,6 +17,7 @@ const Store = {
         this.loadState();
         this.updateBadgeCounters();
         this.bindGlobalEvents();
+        this.updateCategoryNavigation();
         console.log('🛍️ Wonderful Collection Store Initialized');
     },
 
@@ -47,16 +48,72 @@ const Store = {
         return '৳' + Number(amount || 0).toLocaleString('en-BD', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
     },
 
+    escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>"']/g, char => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+        })[char]);
+    },
+
+    isSafeProductImage(image) {
+        return typeof image === 'string'
+            && (image.startsWith('https://') || /^assets\/[a-z0-9._/-]+$/i.test(image));
+    },
+
+    productImage(product) {
+        const image = Array.isArray(product.images) ? product.images[0] : product.image;
+        return this.isSafeProductImage(image) ? image : 'assets/product-placeholder.svg';
+    },
+
+    async updateCategoryNavigation() {
+        const nav = document.querySelector('.nav-links');
+        if (!nav) return;
+        const categories = await this.fetchCategories();
+        if (!categories.length) return;
+
+        const fixedItems = Array.from(nav.querySelectorAll('li')).filter(item => {
+            const link = item.querySelector('a');
+            return link && (link.getAttribute('href') === 'index.html' || link.getAttribute('href') === 'shop.html');
+        });
+        nav.replaceChildren(...fixedItems);
+        categories.forEach(category => {
+            const item = document.createElement('li');
+            const link = document.createElement('a');
+            link.href = `category.html?cat=${encodeURIComponent(category.slug)}`;
+            link.textContent = category.name;
+            item.appendChild(link);
+            nav.appendChild(item);
+        });
+    },
+
     // --- CART METHODS ---
     addToCart(product, quantity = 1) {
+        const stock = Number(product.stock_quantity);
+        quantity = Number(quantity);
+        if (!Number.isInteger(stock) || stock < 1) {
+            this.showToast('This product is currently out of stock.');
+            return false;
+        }
+        if (!Number.isInteger(quantity) || quantity < 1) {
+            this.showToast('Choose a valid quantity.');
+            return false;
+        }
+
         const existing = this.state.cart.find(item => item.id === product.id);
+        const nextQuantity = (existing?.quantity || 0) + quantity;
+        if (nextQuantity > stock) {
+            this.showToast(`Only ${stock} item(s) are currently in stock.`);
+            return false;
+        }
         const price = Number(product.sale_price || product.regular_price);
-        const image = Array.isArray(product.images) && product.images.length
-            ? product.images[0]
-            : (product.image || 'assets/product-placeholder.svg');
+        const image = this.productImage(product);
 
         if (existing) {
-            existing.quantity += quantity;
+            existing.quantity = nextQuantity;
+            existing.stock_quantity = stock;
         } else {
             this.state.cart.push({
                 id: product.id,
@@ -65,6 +122,7 @@ const Store = {
                 regular_price: Number(product.regular_price),
                 image: image,
                 quantity: quantity,
+                stock_quantity: stock,
                 slug: product.slug
             });
         }
@@ -72,6 +130,7 @@ const Store = {
         this.showToast(`Added "${product.name}" to your cart! 🛍️`);
         this.renderDrawerCart();
         this.openDrawerCart();
+        return true;
     },
 
     removeFromCart(productId) {
@@ -85,6 +144,10 @@ const Store = {
     updateCartQuantity(productId, delta) {
         const item = this.state.cart.find(i => i.id === productId);
         if (!item) return;
+        if (delta > 0 && Number.isInteger(Number(item.stock_quantity)) && item.quantity + delta > Number(item.stock_quantity)) {
+            this.showToast(`Only ${item.stock_quantity} item(s) are currently in stock.`);
+            return;
+        }
         item.quantity += delta;
         if (item.quantity <= 0) {
             this.removeFromCart(productId);
@@ -121,7 +184,9 @@ const Store = {
                 name: product.name,
                 price: Number(product.sale_price || product.regular_price),
                 regular_price: Number(product.regular_price),
-                image: Array.isArray(product.images) ? product.images[0] : product.image,
+                sale_price: Number(product.sale_price || 0),
+                stock_quantity: Number(product.stock_quantity),
+                image: this.productImage(product),
                 slug: product.slug
             });
             this.showToast(`Saved to wishlist! ❤️`);
@@ -160,7 +225,9 @@ const Store = {
 
         const toast = document.createElement('div');
         toast.className = 'toast';
-        toast.innerHTML = `<span>${message}</span>`;
+        const text = document.createElement('span');
+        text.textContent = message;
+        toast.appendChild(text);
         container.appendChild(toast);
 
         setTimeout(() => {
@@ -201,7 +268,7 @@ const Store = {
                 <div style="text-align: center; padding: 48px 16px; color: #94a3b8;">
                     <div style="font-size: 3rem; margin-bottom: 12px;">🛍️</div>
                     <p style="font-weight: 700; color: #1e293b; font-size: 1.1rem;">Your shopping cart is empty</p>
-                    <p style="font-size: 0.88rem; margin: 8px 0 20px;">Explore our curated Dhanmondi collection and fill it with style.</p>
+                    <p style="font-size: 0.88rem; margin: 8px 0 20px;">Explore our curated collection and fill it with style.</p>
                     <a href="shop.html" class="btn-primary" style="display: inline-block; padding: 10px 20px; font-size: 0.88rem;" onclick="Store.closeDrawerCart()">Browse Shop</a>
                 </div>
             `;
@@ -213,9 +280,9 @@ const Store = {
         this.state.cart.forEach(item => {
             itemsHtml += `
                 <div class="drawer-cart-item">
-                    <img src="${item.image}" alt="${item.name}" class="drawer-cart-img">
+                    <img src="${this.escapeHtml(item.image)}" alt="${this.escapeHtml(item.name)}" class="drawer-cart-img" onerror="this.onerror=null;this.src='assets/product-placeholder.svg'">
                     <div style="flex: 1;">
-                        <a href="product.html?id=${item.id}" class="drawer-item-title" style="color: #0e2a47;">${item.name}</a>
+                        <a href="product.html?id=${Number(item.id)}" class="drawer-item-title" style="color: #0e2a47;">${this.escapeHtml(item.name)}</a>
                         <div class="drawer-item-price">${this.formatBDT(item.price)}</div>
                         <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 8px;">
                             <div style="display: flex; align-items: center; border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden; background: #fff;">
@@ -263,6 +330,25 @@ const Store = {
         if (overlay) {
             overlay.addEventListener('click', () => this.closeDrawerCart());
         }
+
+        document.addEventListener('click', event => {
+            const target = event.target instanceof Element
+                ? event.target.closest('[data-add-to-cart], [data-toggle-wishlist]')
+                : null;
+            if (!target) return;
+            try {
+                const product = JSON.parse(target.dataset.product);
+                if (target.hasAttribute('data-add-to-cart')) {
+                    this.addToCart(product);
+                } else {
+                    this.toggleWishlist(product);
+                    target.classList.toggle('active', this.isInWishlist(product.id));
+                }
+            } catch (error) {
+                console.error('Could not process product action:', error);
+                this.showToast('Could not process that product. Please refresh and try again.');
+            }
+        });
     },
 
     // --- API WRAPPERS ---
@@ -271,9 +357,11 @@ const Store = {
             const query = new URLSearchParams(params).toString();
             const res = await fetch(`${this.API_BASE}/products${query ? '?' + query : ''}`);
             const json = await res.json();
-            return json.data || [];
+            if (!res.ok || !Array.isArray(json.data)) throw new Error(json.message || `Request failed (${res.status})`);
+            return json.data;
         } catch (e) {
             console.error('Fetch products error:', e);
+            this.showToast('Products could not be loaded. Please try again shortly.');
             return [];
         }
     },
@@ -282,9 +370,11 @@ const Store = {
         try {
             const res = await fetch(`${this.API_BASE}/products?id=${id}`);
             const json = await res.json();
+            if (!res.ok) throw new Error(json.message || `Request failed (${res.status})`);
             return json.data || null;
         } catch (e) {
             console.error('Fetch product by id error:', e);
+            this.showToast('Product details could not be loaded. Please try again shortly.');
             return null;
         }
     },
@@ -293,9 +383,11 @@ const Store = {
         try {
             const res = await fetch(`${this.API_BASE}/categories`);
             const json = await res.json();
-            return json.data || [];
+            if (!res.ok || !Array.isArray(json.data)) throw new Error(json.message || `Request failed (${res.status})`);
+            return json.data;
         } catch (e) {
             console.error('Fetch categories error:', e);
+            this.showToast('Categories could not be loaded. Please try again shortly.');
             return [];
         }
     },
@@ -332,8 +424,11 @@ const Store = {
 
     async trackOrder(orderOrCode, phone) {
         try {
-            const query = new URLSearchParams({ order: orderOrCode, phone: phone || '' }).toString();
-            const res = await fetch(`${this.API_BASE}/track?${query}`);
+            const res = await fetch(`${this.API_BASE}/track`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ order: orderOrCode, phone: phone || '' })
+            });
             return await res.json();
         } catch (e) {
             return { error: 'Tracking service unreachable' };

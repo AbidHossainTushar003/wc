@@ -3,15 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Category | Wonderful Collection Dhanmondi</title>
+  <title>Category | Wonderful Collection Dhaka</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
 </head>
 <body>
   <div class="top-bar">
     <div class="top-bar-notice">
-      <span class="top-bar-badge">DHANMONDI HUB</span>
-      <span>⚡ Super-fast delivery within 2-4 hours across Dhanmondi, Dhaka!</span>
+      <span class="top-bar-badge">WONDERFUL COLLECTION</span>
+      <span>⚡ Delivery availability and estimates are shown at checkout.</span>
     </div>
     <div class="top-bar-links">
       <a href="track-order.html">📍 Track Order</a>
@@ -48,7 +48,7 @@
         <li><a href="category.html?cat=leather-accessories">Leather</a></li>
         <li><a href="category.html?cat=home-decor">Home Decor</a></li>
       </ul>
-      <div class="nav-dhanmondi-pill">📍 Dhanmondi, Dhaka</div>
+      <div class="nav-location-pill">📍 Dhaka, Bangladesh</div>
     </div>
   </nav>
 
@@ -56,7 +56,7 @@
     <div style="background: linear-gradient(135deg, #0e2a47 0%, #1a426e 100%); color: #fff; padding: 40px; border-radius: 18px; margin-bottom: 32px;">
       <div style="font-size: 0.85rem; color: #ff9d7e; font-weight: 700; text-transform: uppercase;">Category</div>
       <h1 id="cat-header-title" style="font-size: 2.2rem; font-weight: 800; margin: 6px 0;">Loading Category...</h1>
-      <p id="cat-header-desc" style="color: #cbd5e1; max-width: 600px;">Hand-curated collection for delivery across Dhanmondi and Dhaka.</p>
+      <p id="cat-header-desc" style="color: #cbd5e1; max-width: 600px;">Hand-curated collection. Delivery options and estimates are shown at checkout.</p>
     </div>
 
     <div class="products-grid" id="category-products-grid"></div>
@@ -70,37 +70,43 @@
   </div>
 
   <footer class="site-footer">
-    <div class="footer-bottom"><div class="footer-bottom-container"><div>© 2026 Wonderful Collection - Dhanmondi, Dhaka 🇧🇩</div></div></div>
+    <div class="footer-bottom"><div class="footer-bottom-container"><div>© 2026 Wonderful Collection - Dhaka, Bangladesh 🇧🇩</div></div></div>
   </footer>
 
   <script src="js/store.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
       const urlParams = new URLSearchParams(window.location.search);
-      const catSlug = urlParams.get('cat') || 'mens-fashion';
-
       const categories = await Store.fetchCategories();
-      const currentCat = categories.find(c => c.slug === catSlug) || { name: catSlug.replace('-', ' ').toUpperCase(), description: 'Explore our hand-picked selections.' };
+      const catSlug = urlParams.get('cat') || categories[0]?.slug;
+      const currentCat = categories.find(c => c.slug === catSlug);
+      const grid = document.getElementById('category-products-grid');
+
+      if (!currentCat) {
+        document.getElementById('cat-header-title').textContent = 'Category not found';
+        document.getElementById('cat-header-desc').textContent = 'Browse all available products instead.';
+        grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 48px; color: #64748b;"><a href="shop.html">Browse all products</a></div>';
+        return;
+      }
 
       document.getElementById('cat-header-title').textContent = currentCat.name;
       if (currentCat.description) document.getElementById('cat-header-desc').textContent = currentCat.description;
 
       const products = await Store.fetchProducts({ category: catSlug });
-      const grid = document.getElementById('category-products-grid');
       if (products.length) {
         grid.innerHTML = products.map(p => `
           <div class="product-card">
             <div class="product-thumb-wrap">
-              <a href="product.html?id=${p.id}"><img src="${Array.isArray(p.images) ? p.images[0] : p.image}" alt="${p.name}"></a>
+              <a href="product.html?id=${Number(p.id)}"><img src="${Store.escapeHtml(Store.productImage(p))}" alt="${Store.escapeHtml(p.name)}" onerror="this.onerror=null;this.src='assets/product-placeholder.svg'"></a>
             </div>
             <div class="product-body">
-              <div class="product-category-tag">${p.category_name}</div>
-              <a href="product.html?id=${p.id}" class="product-title">${p.name}</a>
+              <div class="product-category-tag">${Store.escapeHtml(p.category_name)}</div>
+              <a href="product.html?id=${Number(p.id)}" class="product-title">${Store.escapeHtml(p.name)}</a>
               <div class="product-pricing">
                 <span class="price-current">${Store.formatBDT(p.sale_price || p.regular_price)}</span>
                 ${p.sale_price ? `<span class="price-original">${Store.formatBDT(p.regular_price)}</span>` : ''}
               </div>
-              <button class="btn-add-cart" onclick='Store.addToCart(${JSON.stringify(p).replace(/'/g, "&apos;")})'>🛒 Add to Cart</button>
+              <button class="btn-add-cart" data-add-to-cart data-product="${Store.escapeHtml(JSON.stringify(p))}" ${Number(p.stock_quantity) > 0 ? '' : 'disabled'}>${Number(p.stock_quantity) > 0 ? '🛒 Add to Cart' : 'Sold Out'}</button>
             </div>
           </div>
         `).join('');

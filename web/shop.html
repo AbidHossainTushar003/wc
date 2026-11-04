@@ -3,15 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Shop All Products | Wonderful Collection Dhanmondi</title>
+  <title>Shop All Products | Wonderful Collection Dhaka</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
 </head>
 <body>
   <div class="top-bar">
     <div class="top-bar-notice">
-      <span class="top-bar-badge">DHANMONDI HUB</span>
-      <span>⚡ Super-fast delivery within 2-4 hours across Dhanmondi, Dhaka!</span>
+      <span class="top-bar-badge">WONDERFUL COLLECTION</span>
+      <span>⚡ Delivery availability and estimates are shown at checkout.</span>
     </div>
     <div class="top-bar-links">
       <a href="track-order.html">📍 Track Order</a>
@@ -52,7 +52,7 @@
         <li><a href="category.html?cat=leather-accessories">Leather</a></li>
         <li><a href="category.html?cat=home-decor">Home Decor</a></li>
       </ul>
-      <div class="nav-dhanmondi-pill">📍 Dhanmondi, Dhaka</div>
+      <div class="nav-location-pill">📍 Dhaka, Bangladesh</div>
     </div>
   </nav>
 
@@ -65,12 +65,7 @@
     <!-- Filters and Sort Bar -->
     <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 32px;">
       <div style="display: flex; gap: 12px; flex-wrap: wrap;" id="category-filter-chips">
-        <button onclick="filterCategory('')" class="cat-chip active" style="padding: 6px 14px; border-radius: 999px; border: 1px solid #0e2a47; background: #0e2a47; color: #fff; font-size: 0.82rem; font-weight: 700; cursor: pointer;">All</button>
-        <button onclick="filterCategory('mens-fashion')" class="cat-chip" style="padding: 6px 14px; border-radius: 999px; border: 1px solid #cbd5e1; background: #fff; color: #0e2a47; font-size: 0.82rem; font-weight: 600; cursor: pointer;">Men's Fashion</button>
-        <button onclick="filterCategory('womens-fashion')" class="cat-chip" style="padding: 6px 14px; border-radius: 999px; border: 1px solid #cbd5e1; background: #fff; color: #0e2a47; font-size: 0.82rem; font-weight: 600; cursor: pointer;">Women's Fashion</button>
-        <button onclick="filterCategory('perfumes-attar')" class="cat-chip" style="padding: 6px 14px; border-radius: 999px; border: 1px solid #cbd5e1; background: #fff; color: #0e2a47; font-size: 0.82rem; font-weight: 600; cursor: pointer;">Perfumes</button>
-        <button onclick="filterCategory('gadgets-electronics')" class="cat-chip" style="padding: 6px 14px; border-radius: 999px; border: 1px solid #cbd5e1; background: #fff; color: #0e2a47; font-size: 0.82rem; font-weight: 600; cursor: pointer;">Gadgets</button>
-        <button onclick="filterCategory('leather-accessories')" class="cat-chip" style="padding: 6px 14px; border-radius: 999px; border: 1px solid #cbd5e1; background: #fff; color: #0e2a47; font-size: 0.82rem; font-weight: 600; cursor: pointer;">Leather</button>
+        <button onclick="filterCategory('', this)" class="cat-chip active" style="padding: 6px 14px; border-radius: 999px; border: 1px solid #0e2a47; background: #0e2a47; color: #fff; font-size: 0.82rem; font-weight: 700; cursor: pointer;">All</button>
       </div>
 
       <div style="display: flex; align-items: center; gap: 10px;">
@@ -98,7 +93,7 @@
   </div>
 
   <footer class="site-footer">
-    <div class="footer-bottom"><div class="footer-bottom-container"><div>© 2026 Wonderful Collection (wonderfulcollection.store) - Dhanmondi, Dhaka 🇧🇩</div></div></div>
+    <div class="footer-bottom"><div class="footer-bottom-container"><div>© 2026 Wonderful Collection (wonderfulcollection.store) - Dhaka, Bangladesh 🇧🇩</div></div></div>
   </footer>
 
   <script src="js/store.js"></script>
@@ -122,15 +117,31 @@
       }
     }
 
-    function filterCategory(catSlug) {
+    async function renderCategoryFilters() {
+      const categories = await Store.fetchCategories();
+      const filters = document.getElementById('category-filter-chips');
+      categories.forEach(category => {
+        const button = document.createElement('button');
+        button.className = 'cat-chip';
+        button.textContent = category.name;
+        button.style.cssText = 'padding: 6px 14px; border-radius: 999px; border: 1px solid #cbd5e1; background: #fff; color: #0e2a47; font-size: 0.82rem; font-weight: 600; cursor: pointer;';
+        button.addEventListener('click', () => filterCategory(category.slug, button));
+        filters.appendChild(button);
+      });
+    }
+
+    function filterCategory(catSlug, button) {
       currentCategory = catSlug;
       document.querySelectorAll('#category-filter-chips button').forEach(btn => {
         btn.style.background = '#fff';
         btn.style.color = '#0e2a47';
         btn.style.borderColor = '#cbd5e1';
+        btn.classList.remove('active');
       });
-      event.target.style.background = '#0e2a47';
-      event.target.style.color = '#fff';
+      button.style.background = '#0e2a47';
+      button.style.color = '#fff';
+      button.style.borderColor = '#0e2a47';
+      button.classList.add('active');
       loadShop();
     }
 
@@ -141,29 +152,32 @@
 
     function renderProductCard(product) {
       const isSaved = Store.isInWishlist(product.id);
-      const image = Array.isArray(product.images) ? product.images[0] : product.image;
+      const image = Store.productImage(product);
       const sale = product.sale_price ? `<span class="price-current">${Store.formatBDT(product.sale_price)}</span> <span class="price-original">${Store.formatBDT(product.regular_price)}</span>` : `<span class="price-current">${Store.formatBDT(product.regular_price)}</span>`;
       return `
         <div class="product-card">
           <div class="product-thumb-wrap">
-            <a href="product.html?id=${product.id}"><img src="${image}" alt="${product.name}"></a>
-            <button class="product-wishlist-btn ${isSaved ? 'active' : ''}" onclick='Store.toggleWishlist(${JSON.stringify(product).replace(/'/g, "&apos;")}); this.classList.toggle("active");'>♥</button>
+            <a href="product.html?id=${Number(product.id)}"><img src="${Store.escapeHtml(image)}" alt="${Store.escapeHtml(product.name)}" onerror="this.onerror=null;this.src='assets/product-placeholder.svg'"></a>
+            <button class="product-wishlist-btn ${isSaved ? 'active' : ''}" data-toggle-wishlist data-product="${Store.escapeHtml(JSON.stringify(product))}">♥</button>
           </div>
           <div class="product-body">
-            <div class="product-category-tag">${product.category_name || 'Collection'}</div>
-            <a href="product.html?id=${product.id}" class="product-title">${product.name}</a>
+            <div class="product-category-tag">${Store.escapeHtml(product.category_name || 'Collection')}</div>
+            <a href="product.html?id=${Number(product.id)}" class="product-title">${Store.escapeHtml(product.name)}</a>
             <div class="product-pricing">${sale}</div>
             <div class="product-meta-row">
-              <span class="stock-pill stock-in">● Stock: ${product.stock_quantity}</span>
-              <span>⚡ Dhanmondi Express</span>
+              <span class="stock-pill ${Number(product.stock_quantity) > 0 ? 'stock-in' : 'stock-low'}">● ${Number(product.stock_quantity) > 0 ? `Stock: ${Number(product.stock_quantity)}` : 'Sold Out'}</span>
+              <span>🚚 Delivery information</span>
             </div>
-            <button class="btn-add-cart" onclick='Store.addToCart(${JSON.stringify(product).replace(/'/g, "&apos;")})'>🛒 Add to Cart</button>
+            <button class="btn-add-cart" data-add-to-cart data-product="${Store.escapeHtml(JSON.stringify(product))}" ${Number(product.stock_quantity) > 0 ? '' : 'disabled'}>${Number(product.stock_quantity) > 0 ? '🛒 Add to Cart' : 'Sold Out'}</button>
           </div>
         </div>
       `;
     }
 
-    document.addEventListener('DOMContentLoaded', loadShop);
+    document.addEventListener('DOMContentLoaded', () => {
+      renderCategoryFilters();
+      loadShop();
+    });
   </script>
 </body>
 </html>

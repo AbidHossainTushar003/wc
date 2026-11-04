@@ -229,6 +229,9 @@ async function loadDashboard() {
 async function loadProducts() {
     const res = await adminFetch(`${API_BASE}/products`);
     const json = await res.json();
+    if (!res.ok || json.status !== 'success') {
+        throw new Error(json.error || 'Could not load products.');
+    }
     const tbody = document.querySelector('#products-table tbody');
     tbody.innerHTML = (json.data || []).map(p => `
         <tr>
@@ -244,24 +247,91 @@ async function loadProducts() {
 }
 
 async function showAddProductModal() {
-    const name = prompt("Enter Product Name:");
-    if (!name) return;
-    const price = prompt("Enter Regular Price (BDT):", "2500");
-    if (!price) return;
-    const catId = prompt("Enter Category ID (1=Men, 2=Women, 3=Perfume, 4=Gadgets, 5=Leather, 6=Home):", "1");
+    const form = document.getElementById('product-create-form');
+    const isOpening = form.style.display === 'none';
+    form.style.display = isOpening ? 'block' : 'none';
+    if (!isOpening) return;
 
-    await adminFetch(`${API_BASE}/products`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            name,
-            regular_price: price,
-            category_id: catId,
-            stock_quantity: 15
-        })
-    });
-    alert('Product added!');
-    loadProducts();
+    form.reset();
+    const status = document.getElementById('product-create-status');
+    status.textContent = '';
+    status.style.display = 'none';
+
+    try {
+        const response = await adminFetch(`${API_BASE}/categories`);
+        const result = await response.json();
+        if (!response.ok || result.status !== 'success') {
+            throw new Error(result.error || 'Could not load product categories.');
+        }
+
+        const categorySelect = document.getElementById('new-product-category');
+        categorySelect.replaceChildren(new Option('Choose a category', ''));
+        (result.data || []).forEach(category => {
+            categorySelect.add(new Option(category.name, category.id));
+        });
+        if (!result.data || result.data.length === 0) {
+            throw new Error('Create a category before adding products.');
+        }
+        document.getElementById('new-product-name').focus();
+    } catch (error) {
+        status.textContent = error.message || 'Could not load product categories.';
+        status.style.color = '#fca5a5';
+        status.style.display = 'block';
+    }
+}
+
+async function handleAddProduct(event) {
+    event.preventDefault();
+    const form = document.getElementById('product-create-form');
+    const status = document.getElementById('product-create-status');
+    const submit = document.getElementById('product-create-submit');
+    const price = Number(document.getElementById('new-product-price').value);
+    const salePriceInput = document.getElementById('new-product-sale-price').value;
+    const salePrice = salePriceInput === '' ? null : Number(salePriceInput);
+    let productCreated = false;
+
+    if (salePrice !== null && salePrice >= price) {
+        status.textContent = 'Sale price must be less than the regular price.';
+        status.style.color = '#fca5a5';
+        status.style.display = 'block';
+        return;
+    }
+
+    submit.disabled = true;
+    status.textContent = '';
+    status.style.display = 'none';
+    try {
+        const response = await adminFetch(`${API_BASE}/products`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                name: document.getElementById('new-product-name').value.trim(),
+                category_id: document.getElementById('new-product-category').value,
+                regular_price: price,
+                sale_price: salePrice,
+                stock_quantity: Number(document.getElementById('new-product-stock').value),
+                sku: document.getElementById('new-product-sku').value.trim() || null,
+                short_desc: document.getElementById('new-product-description').value.trim()
+            })
+        });
+        const result = await response.json();
+        if (!response.ok || result.status !== 'success') {
+            throw new Error(result.error || 'Could not add the product.');
+        }
+
+        productCreated = true;
+        form.reset();
+        await loadProducts();
+        form.style.display = 'none';
+    } catch (error) {
+        status.textContent = productCreated
+            ? `Product was added, but the product list could not be refreshed: ${error.message}`
+            : error.message || 'Could not add the product.';
+        status.style.color = '#fca5a5';
+        status.style.display = 'block';
+    } finally {
+        submit.disabled = false;
+    }
 }
 
 async function deleteProduct(id) {
@@ -362,7 +432,7 @@ async function loadCoupons() {
     const tbody = document.querySelector('#coupons-table tbody');
     tbody.innerHTML = (json.data || []).map(cp => `
         <tr>
-            <td style="font-weight: 800; color: #38bdf8;">${cp.code}</td>
+            <td style="font-weight: 800; color: #38bdf8;">${/dhanmondi/i.test(cp.code) ? 'Legacy coupon' : cp.code}</td>
             <td>${cp.type === 'percentage' ? cp.value + '%' : formatBDT(cp.value)}</td>
             <td>${formatBDT(cp.min_order)}</td>
             <td><span style="color: ${cp.is_active ? '#10b981' : '#ef4444'}; font-weight: 700;">● ${cp.is_active ? 'Active' : 'Disabled'}</span></td>

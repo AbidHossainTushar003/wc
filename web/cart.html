@@ -3,15 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Shopping Cart | Wonderful Collection Dhanmondi</title>
+  <title>Shopping Cart | Wonderful Collection Dhaka</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
 </head>
 <body>
   <div class="top-bar">
     <div class="top-bar-notice">
-      <span class="top-bar-badge">DHANMONDI HUB</span>
-      <span>⚡ Super-fast delivery within 2-4 hours across Dhanmondi, Dhaka!</span>
+      <span class="top-bar-badge">WONDERFUL COLLECTION</span>
+      <span>🚚 Delivery availability and estimates are shown at checkout.</span>
     </div>
     <div class="top-bar-links">
       <a href="track-order.html">📍 Track Order</a>
@@ -48,7 +48,7 @@
         <li><a href="category.html?cat=leather-accessories">Leather</a></li>
         <li><a href="category.html?cat=home-decor">Home Decor</a></li>
       </ul>
-      <div class="nav-dhanmondi-pill">📍 Dhanmondi, Dhaka</div>
+      <div class="nav-location-pill">📍 Dhaka, Bangladesh</div>
     </div>
   </nav>
 
@@ -61,7 +61,7 @@
   </main>
 
   <footer class="site-footer">
-    <div class="footer-bottom"><div class="footer-bottom-container"><div>© 2026 Wonderful Collection - Dhanmondi, Dhaka 🇧🇩</div></div></div>
+    <div class="footer-bottom"><div class="footer-bottom-container"><div>© 2026 Wonderful Collection - Dhaka, Bangladesh 🇧🇩</div></div></div>
   </footer>
 
   <script src="js/store.js"></script>
@@ -85,10 +85,11 @@
       const total = Math.max(0, subtotal - discount);
 
       container.innerHTML = `
-        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 32px; align-items: start;">
+        <div class="cart-layout" style="display: grid; grid-template-columns: 2fr 1fr; gap: 32px; align-items: start;">
           <!-- Cart Table -->
-          <div style="background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 24px; box-shadow: var(--shadow-sm);">
-            <table style="width: 100%; border-collapse: collapse; text-align: left;">
+          <div class="cart-table-card" style="background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 24px; box-shadow: var(--shadow-sm);">
+            <div class="cart-table-wrap">
+            <table class="cart-table" style="width: 100%; border-collapse: collapse; text-align: left;">
               <thead>
                 <tr style="border-bottom: 2px solid #f1f5f9; color: #64748b; font-size: 0.85rem; text-transform: uppercase;">
                   <th style="padding-bottom: 12px;">Product</th>
@@ -102,25 +103,26 @@
                 ${Store.state.cart.map(item => `
                   <tr style="border-bottom: 1px solid #f1f5f9;">
                     <td style="padding: 16px 0; display: flex; align-items: center; gap: 14px;">
-                      <img src="${item.image}" alt="${item.name}" style="width: 60px; height: 60px; border-radius: 8px; object-fit: cover;">
-                      <a href="product.html?id=${item.id}" style="font-weight: 700; color: #0e2a47;">${item.name}</a>
+                      <img src="${Store.escapeHtml(Store.productImage({ image: item.image }))}" alt="${Store.escapeHtml(item.name)}" onerror="this.onerror=null;this.src='assets/product-placeholder.svg'" style="width: 60px; height: 60px; border-radius: 8px; object-fit: cover;">
+                      <a href="product.html?id=${Number(item.id)}" style="font-weight: 700; color: #0e2a47;">${Store.escapeHtml(item.name)}</a>
                     </td>
                     <td style="padding: 16px 0; font-weight: 700;">${Store.formatBDT(item.price)}</td>
                     <td style="padding: 16px 0;">
                       <div style="display: inline-flex; border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden;">
-                        <button onclick="Store.updateCartQuantity(${item.id}, -1)" style="border: none; padding: 4px 10px; cursor: pointer; background: #f8fafc;">-</button>
-                        <span style="padding: 4px 10px; font-weight: 700;">${item.quantity}</span>
-                        <button onclick="Store.updateCartQuantity(${item.id}, 1)" style="border: none; padding: 4px 10px; cursor: pointer; background: #f8fafc;">+</button>
+                        <button onclick="Store.updateCartQuantity(${Number(item.id)}, -1)" style="border: none; padding: 4px 10px; cursor: pointer; background: #f8fafc;">-</button>
+                        <span style="padding: 4px 10px; font-weight: 700;">${Number(item.quantity)}</span>
+                        <button onclick="Store.updateCartQuantity(${Number(item.id)}, 1)" ${Number(item.stock_quantity) > 0 && Number(item.quantity) >= Number(item.stock_quantity) ? 'disabled' : ''} style="border: none; padding: 4px 10px; cursor: pointer; background: #f8fafc;">+</button>
                       </div>
                     </td>
                     <td style="padding: 16px 0; font-weight: 800; color: #f05423;">${Store.formatBDT(item.price * item.quantity)}</td>
                     <td style="padding: 16px 0;">
-                      <button onclick="Store.removeFromCart(${item.id})" style="border: none; background: none; color: #ef4444; cursor: pointer; font-size: 0.88rem;">✕</button>
+                      <button onclick="Store.removeFromCart(${Number(item.id)})" style="border: none; background: none; color: #ef4444; cursor: pointer; font-size: 0.88rem;">✕</button>
                     </td>
                   </tr>
                 `).join('')}
               </tbody>
             </table>
+            </div>
           </div>
 
           <!-- Order Summary -->
@@ -136,12 +138,12 @@
             <div style="border-top: 1px dashed #cbd5e1; border-bottom: 1px dashed #cbd5e1; padding: 16px 0; margin: 16px 0;">
               <div style="font-size: 0.85rem; font-weight: 700; margin-bottom: 8px;">Apply Promo Code:</div>
               <div style="display: flex; gap: 8px;">
-                <input type="text" id="cart-coupon-input" placeholder="e.g. DHANMONDI10" value="${Store.state.appliedCoupon ? Store.state.appliedCoupon.code : ''}" style="flex: 1; border: 1px solid #cbd5e1; padding: 8px 12px; border-radius: 6px; text-transform: uppercase;">
+                <input type="text" id="cart-coupon-input" placeholder="Enter promo code" value="${Store.escapeHtml(Store.state.appliedCoupon ? Store.state.appliedCoupon.code : '')}" style="flex: 1; border: 1px solid #cbd5e1; padding: 8px 12px; border-radius: 6px; text-transform: uppercase;">
                 <button onclick="applyCartCoupon()" style="background: #0e2a47; color: #fff; border: none; border-radius: 6px; padding: 8px 14px; font-weight: 700; cursor: pointer;">Apply</button>
               </div>
               ${Store.state.appliedCoupon ? `
                 <div style="color: #10b981; font-size: 0.82rem; font-weight: 600; margin-top: 6px;">
-                  ✓ Coupon "${Store.state.appliedCoupon.code}" applied (-${Store.formatBDT(discount)})
+                  ✓ Coupon applied (-${Store.formatBDT(discount)})
                 </div>
               ` : ''}
             </div>

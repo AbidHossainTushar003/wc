@@ -3,15 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>My Wishlist | Wonderful Collection Dhanmondi</title>
+  <title>My Wishlist | Wonderful Collection Dhaka</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
 </head>
 <body>
   <div class="top-bar">
     <div class="top-bar-notice">
-      <span class="top-bar-badge">DHANMONDI HUB</span>
-      <span>⚡ Super-fast delivery within 2-4 hours across Dhanmondi, Dhaka!</span>
+      <span class="top-bar-badge">WONDERFUL COLLECTION</span>
+      <span>⚡ Delivery availability and estimates are shown at checkout.</span>
     </div>
     <div class="top-bar-links">
       <a href="track-order.html">📍 Track Order</a>
@@ -48,7 +48,7 @@
         <li><a href="category.html?cat=leather-accessories">Leather</a></li>
         <li><a href="category.html?cat=home-decor">Home Decor</a></li>
       </ul>
-      <div class="nav-dhanmondi-pill">📍 Dhanmondi, Dhaka</div>
+      <div class="nav-location-pill">📍 Dhaka, Bangladesh</div>
     </div>
   </nav>
 
@@ -65,7 +65,7 @@
   </div>
 
   <footer class="site-footer">
-    <div class="footer-bottom"><div class="footer-bottom-container"><div>© 2026 Wonderful Collection - Dhanmondi, Dhaka 🇧🇩</div></div></div>
+    <div class="footer-bottom"><div class="footer-bottom-container"><div>© 2026 Wonderful Collection - Dhaka, Bangladesh 🇧🇩</div></div></div>
   </footer>
 
   <script src="js/store.js"></script>
@@ -87,15 +87,15 @@
       container.innerHTML = Store.state.wishlist.map(p => `
         <div class="product-card">
           <div class="product-thumb-wrap">
-            <a href="product.html?id=${p.id}"><img src="${p.image}" alt="${p.name}"></a>
-            <button class="product-wishlist-btn active" onclick='Store.toggleWishlist(${JSON.stringify(p).replace(/'/g, "&apos;")}); renderWishlistPage();' title="Remove">✕</button>
+            <a href="product.html?id=${Number(p.id)}"><img src="${Store.escapeHtml(Store.productImage(p))}" alt="${Store.escapeHtml(p.name)}" onerror="this.onerror=null;this.src='assets/product-placeholder.svg'"></a>
+            <button class="product-wishlist-btn active" data-toggle-wishlist data-product="${Store.escapeHtml(JSON.stringify(p))}" title="Remove">✕</button>
           </div>
           <div class="product-body">
-            <a href="product.html?id=${p.id}" class="product-title">${p.name}</a>
+            <a href="product.html?id=${Number(p.id)}" class="product-title">${Store.escapeHtml(p.name)}</a>
             <div class="product-pricing">
               <span class="price-current">${Store.formatBDT(p.price)}</span>
             </div>
-            <button class="btn-add-cart" onclick='Store.addToCart(${JSON.stringify(p).replace(/'/g, "&apos;")})'>🛒 Move to Cart</button>
+            <button class="btn-add-cart" data-add-to-cart data-product="${Store.escapeHtml(JSON.stringify(p))}" ${Number(p.stock_quantity) > 0 ? '' : 'disabled'}>${Number(p.stock_quantity) > 0 ? '🛒 Move to Cart' : 'Check Availability'}</button>
           </div>
         </div>
       `).join('');

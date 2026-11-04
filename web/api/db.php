@@ -114,7 +114,7 @@ class Database {
                 phone TEXT NOT NULL,
                 password_hash TEXT NOT NULL,
                 address TEXT,
-                area TEXT DEFAULT 'Dhanmondi',
+                area TEXT DEFAULT 'Dhaka',
                 city TEXT DEFAULT 'Dhaka',
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP
             );
@@ -210,7 +210,7 @@ class Database {
             ('store_moto', '🛍️ Wonderful Collection: Quality products, delivered across Bangladesh. 🇧🇩'),
             ('store_email', 'contact@wonderfulcollection.store'),
             ('store_phone', '+880 1560-024777'),
-            ('store_address', ''),
+            ('store_address', 'Dhaka, Bangladesh'),
             ('currency_symbol', '৳'),
             ('currency_code', 'BDT'),
             ('delivery_fee_dhanmondi', '60'),
@@ -219,7 +219,7 @@ class Database {
             ('free_delivery_min_amount', '2000'),
             ('bkash_number', '01560024777 (Personal)'),
             ('nagad_number', '01560024777 (Personal)'),
-            ('rocket_number', '01560024777 (Personal)');
+            ('rocket_number', '015600247777 (Personal)');
 
             INSERT OR IGNORE INTO categories (id, name, slug, description, image) VALUES
             (1, 'Men\'s Fashion', 'mens-fashion', 'Premium Panjabis, shirts, and traditional attire.', 'assets/category-placeholder.svg'),
@@ -230,41 +230,41 @@ class Database {
             (6, 'Home Decor & Living', 'home-decor', 'Aesthetic scented candles, art pieces, and modern home essentials.', 'assets/category-placeholder.svg');
 
             INSERT OR IGNORE INTO products (id, name, slug, category_id, regular_price, sale_price, stock_quantity, sku, short_desc, description, images, is_featured, is_trending) VALUES
-            (1, 'Royal Nawab Premium Cotton Panjabi - Navy Blue', 'royal-nawab-panjabi-navy', 1, 2800.00, 2350.00, 18, 'WC-PANJ-001', 'Handcrafted semi-fitted 100% organic Egyptian cotton Panjabi with intricate threadwork on collar and placket.', 'Experience exceptional elegance with our flagship Royal Nawab Panjabi. Tailored from 100% breathable organic Egyptian cotton, designed specifically for Dhaka\'s climate. Hand-embroidered mandarin collar, contrast buttons, and side pockets. Delivered right to your doorstep in Dhanmondi within 2-4 hours.', '[\"assets/product-placeholder.svg\"]', 1, 1),
+            (1, 'Royal Nawab Premium Cotton Panjabi - Navy Blue', 'royal-nawab-panjabi-navy', 1, 2800.00, 2350.00, 18, 'WC-PANJ-001', 'Handcrafted semi-fitted 100% organic Egyptian cotton Panjabi with intricate threadwork on collar and placket.', 'Experience exceptional elegance with our flagship Royal Nawab Panjabi. Tailored from 100% breathable organic Egyptian cotton, designed specifically for Dhaka\'s climate. Hand-embroidered mandarin collar, contrast buttons, and side pockets. Delivery options and estimated times are shown at checkout.', '[\"assets/product-placeholder.svg\"]', 1, 1),
             (2, 'Imperial Golden Oud & Amber Perfume (50ml)', 'imperial-golden-oud-amber', 3, 3500.00, 2990.00, 24, 'WC-PERF-002', 'Luxurious oriental fragrance featuring aged Cambodian agarwood, Madagascar vanilla, and warm amber.', 'Our signature bestseller. Imperial Golden Oud opens with sparkling bergamot and saffron, blending seamlessly into rich agarwood, Bulgarian rose, and base notes of warm amber. Unmatched projection that lasts 14+ hours.', '[\"assets/product-placeholder.svg\"]', 1, 1),
             (3, 'Handcrafted Full-Grain Leather Bi-Fold Wallet', 'full-grain-leather-wallet-brown', 5, 1650.00, 1350.00, 35, 'WC-LEATH-003', 'Crafted from authentic Hazaribagh full-grain cowhide leather with RFID blocking technology.', 'Sleek, minimalist, and built for durability. Handcrafted from vegetable-tanned authentic Bangladeshi leather that patinas beautifully over time.', '[\"assets/product-placeholder.svg\"]', 1, 0),
-            (4, 'Dhanmondi Blossom Designer Georgette 3-Piece', 'dhanmondi-blossom-georgette-3piece', 2, 4200.00, 3650.00, 12, 'WC-WOM-004', 'Heavy sequin and zari embroidered semi-stitched georgette kameez with digital printed silk dupatta.', 'Turn heads at any festive gathering in Dhaka. Crafted on premium weightless georgette fabric adorned with delicate floral thread embroidery and shimmering sequins.', '[\"assets/product-placeholder.svg\"]', 1, 1),
+            (4, 'Blossom Designer Georgette 3-Piece', 'blossom-georgette-3piece', 2, 4200.00, 3650.00, 12, 'WC-WOM-004', 'Heavy sequin and zari embroidered semi-stitched georgette kameez with digital printed silk dupatta.', 'Turn heads at any festive gathering. Crafted on premium weightless georgette fabric adorned with delicate floral thread embroidery and shimmering sequins.', '[\"assets/product-placeholder.svg\"]', 1, 1),
             (5, 'Pro ANC Wireless Earbuds - Matte Obsidian', 'pro-anc-wireless-earbuds-black', 4, 2900.00, 2450.00, 40, 'WC-TECH-005', 'Active Noise Cancelling up to 35dB, Quad-Mic ENC for clear calls on Dhaka streets, 32-hour battery.', 'Equipped with 13mm dynamic drivers for deep punchy bass, Bluetooth 5.3 low-latency connection, IPX5 water resistance, and fast Type-C charging.', '[\"assets/product-placeholder.svg\"]', 1, 1),
-            (6, 'Artisanal Soy Wax Scented Candle - Dhaka Rain', 'artisanal-candle-dhaka-rain', 6, 950.00, 790.00, 22, 'WC-HOME-006', 'Hand-poured 100% natural soy wax candle scented with petrichor, jasmine, and wet earthen sandalwood.', 'Relive the nostalgic beauty of sudden monsoon rain in Dhanmondi lake. Poured by hand into reusable amber glass jars using unbleached cotton wicks.', '[\"assets/product-placeholder.svg\"]', 0, 1),
+            (6, 'Artisanal Soy Wax Scented Candle - Dhaka Rain', 'artisanal-candle-dhaka-rain', 6, 950.00, 790.00, 22, 'WC-HOME-006', 'Hand-poured 100% natural soy wax candle scented with petrichor, jasmine, and wet earthen sandalwood.', 'Relive the nostalgic beauty of sudden monsoon rain. Poured by hand into reusable amber glass jars using unbleached cotton wicks.', '[\"assets/product-placeholder.svg\"]', 0, 1),
             (7, 'Executive Chronograph Quartz Watch - Rose Gold', 'executive-chronograph-watch-rosegold', 5, 3800.00, 3190.00, 15, 'WC-ACC-007', 'Precision Japanese quartz movement with genuine leather strap and sapphire-coated mineral glass.', 'A statement of refined taste. Clean architectural dial with date window, tachymeter bezel, 30m water resistance, and supple genuine leather strap.', '[\"assets/product-placeholder.svg\"]', 0, 1),
             (8, 'Ultra-Fine Kashmiri Pashmina Shawl - Ruby Wine', 'kashmiri-pashmina-shawl-ruby', 2, 3200.00, 2750.00, 8, 'WC-WOM-008', 'Featherlight softness with traditional Sozni needlework border, perfect for Dhaka winter evenings.', 'Woven from finest grade Himalayan wool, exquisitely soft and warm yet effortlessly lightweight.', '[\"assets/product-placeholder.svg\"]', 0, 0);
 
             INSERT OR IGNORE INTO customers (id, name, email, phone, password_hash, address, area, city) VALUES
-            (1, 'Tanvir Ahmed', 'tanvir.dhk@example.com', '01711223344', '$2y$12$DgMggvzrteoM9JD80oF61eeZHbVNeMESrHj2h.1DqtAv5Nvt6jcD2', 'House 14, Road 8, Dhanmondi', 'Dhanmondi', 'Dhaka'),
-            (2, 'Nusrat Jahan', 'nusrat.j@example.com', '01822334455', '$2y$12$DgMggvzrteoM9JD80oF61eeZHbVNeMESrHj2h.1DqtAv5Nvt6jcD2', 'Apt 4B, Concord Tower, Dhanmondi 27', 'Dhanmondi', 'Dhaka'),
+            (1, 'Tanvir Ahmed', 'tanvir.dhk@example.com', '01711223344', '$2y$12$DgMggvzrteoM9JD80oF61eeZHbVNeMESrHj2h.1DqtAv5Nvt6jcD2', 'Dhaka', 'Dhaka', 'Dhaka'),
+            (2, 'Nusrat Jahan', 'nusrat.j@example.com', '01822334455', '$2y$12$DgMggvzrteoM9JD80oF61eeZHbVNeMESrHj2h.1DqtAv5Nvt6jcD2', 'Dhaka', 'Dhaka', 'Dhaka'),
             (3, 'Rahim Chowdhury', 'rahim.chowdhury@example.com', '01933445566', '$2y$12$DgMggvzrteoM9JD80oF61eeZHbVNeMESrHj2h.1DqtAv5Nvt6jcD2', 'Flat 6C, Gulshan-2, Dhaka', 'Gulshan', 'Dhaka');
 
             INSERT OR IGNORE INTO orders (id, order_number, customer_id, customer_name, customer_phone, customer_email, delivery_address, delivery_area, delivery_fee, subtotal, discount, total, payment_method, payment_status, trx_id, order_status, tracking_code, notes) VALUES
-            (1, 'WC-10021', 1, 'Tanvir Ahmed', '01711223344', 'tanvir.dhk@example.com', 'House 14, Road 8, Dhanmondi, Dhaka', 'Dhanmondi', 60.00, 2350.00, 0.00, 2410.00, 'bKash', 'Paid', 'BKASH9823471', 'Processing', 'TRK-WC-7721', 'Deliver after 4 PM at Dhanmondi Lake.'),
-            (2, 'WC-10022', 2, 'Nusrat Jahan', '01822334455', 'nusrat.j@example.com', 'Apt 4B, Concord Tower, Dhanmondi 27', 'Dhanmondi', 60.00, 3650.00, 365.00, 3345.00, 'Cash on Delivery', 'Pending', NULL, 'Pending', 'TRK-WC-8842', 'Call before delivery.'),
+            (1, 'WC-10021', 1, 'Tanvir Ahmed', '01711223344', 'tanvir.dhk@example.com', 'Dhaka', 'Dhaka', 60.00, 2350.00, 0.00, 2410.00, 'bKash', 'Paid', 'BKASH9823471', 'Processing', 'TRK-WC-7721', 'Call before delivery.'),
+            (2, 'WC-10022', 2, 'Nusrat Jahan', '01822334455', 'nusrat.j@example.com', 'Dhaka', 'Dhaka', 60.00, 3650.00, 365.00, 3345.00, 'Cash on Delivery', 'Pending', NULL, 'Pending', 'TRK-WC-8842', 'Call before delivery.'),
             (3, 'WC-10020', 3, 'Rahim Chowdhury', '01933445566', 'rahim.chowdhury@example.com', 'Flat 6C, Gulshan-2, Dhaka', 'Gulshan', 80.00, 5440.00, 200.00, 5320.00, 'Nagad', 'Paid', 'NGD7716298', 'Delivered', 'TRK-WC-6619', 'Delivered with receipt.');
 
             INSERT OR IGNORE INTO order_items (order_id, product_id, product_name, price, quantity, total) VALUES
             (1, 1, 'Royal Nawab Premium Cotton Panjabi - Navy Blue', 2350.00, 1, 2350.00),
-            (2, 4, 'Dhanmondi Blossom Designer Georgette 3-Piece', 3650.00, 1, 3650.00),
+            (2, 4, 'Blossom Designer Georgette 3-Piece', 3650.00, 1, 3650.00),
             (3, 2, 'Imperial Golden Oud & Amber Perfume (50ml)', 2990.00, 1, 2990.00),
             (3, 5, 'Pro ANC Wireless Earbuds - Matte Obsidian', 2450.00, 1, 2450.00);
 
             INSERT OR IGNORE INTO coupons (code, type, value, min_order, max_discount, expiry_date, usage_limit, times_used, is_active) VALUES
-            ('DHANMONDI10', 'percentage', 10.00, 1000.00, 500.00, '2028-12-31', 500, 42, 1),
+            ('DHANMONDI10', 'percentage', 10.00, 1000.00, 500.00, '2028-12-31', 500, 42, 0),
             ('WONDERFUL100', 'fixed', 100.00, 1500.00, 100.00, '2028-12-31', 200, 19, 1),
             ('EIDSPECIAL', 'percentage', 15.00, 2500.00, 750.00, '2028-12-31', 300, 8, 1);
 
             INSERT OR IGNORE INTO reviews (product_id, customer_name, rating, comment) VALUES
-            (1, 'Fahim Morshed', 5, 'Super fast delivery to Dhanmondi Road 4. The fabric is 10/10 quality! Definitely ordering again.'),
+            (1, 'Fahim Morshed', 5, 'Fast delivery. The fabric is 10/10 quality! Definitely ordering again.'),
             (1, 'Sabbir Hossain', 5, 'Fitting is very comfortable for Dhaka weather. Color is exact navy blue as shown in pictures.'),
             (2, 'Dr. Ariful Islam', 5, 'The oud projection is unbelievable. Lasts over 12 hours easily. Authentic fragrance!'),
-            (4, 'Sadia Rahman', 5, 'Wore this to a family dawat in Dhanmondi, got so many compliments. Beautiful embroidery work.');
+            (4, 'Sadia Rahman', 5, 'Wore this to a family dawat and got so many compliments. Beautiful embroidery work.');
 
             INSERT OR IGNORE INTO admins (username, password_hash, full_name, role) VALUES
             ('admin', '$2y$12$l0nUHojhz2R6lYhkYzvOwejLKmJc.tCQbXMm7NmbWqewMxLUmZuiy', 'Wonderful Store Manager', 'Super Admin');

@@ -6,7 +6,7 @@
    - Light Accents: #F8FAFC / #EEF2F6
    - Slate & Muted: #64748B / #94A3B8
    - Success Green: #10B981
-   - Dhaka & Dhanmondi Signature Touches
+   - Dhaka Signature Touches
    ========================================================================== */
 
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Montserrat:wght@700;800;900&display=swap');
@@ -269,7 +269,7 @@ button, input, select, textarea {
   border-bottom-color: var(--accent-orange);
 }
 
-.nav-dhanmondi-pill {
+.nav-location-pill {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -1018,5 +1018,44 @@ button, input, select, textarea {
   .products-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 14px;
+  }
+}
+
+.cart-layout > *,
+.checkout-layout > * {
+  min-width: 0;
+}
+
+.cart-table-wrap {
+  overflow-x: auto;
+}
+
+.cart-table {
+  min-width: 540px;
+}
+
+.checkout-payment-option > div {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 760px) {
+  .cart-layout,
+  .checkout-layout {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 20px !important;
+  }
+
+  .cart-table-card,
+  .checkout-card {
+    padding: 18px !important;
+  }
+
+  .checkout-contact-row {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .checkout-summary {
+    position: static !important;
   }
 }

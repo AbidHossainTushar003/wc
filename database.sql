@@ -15,7 +15,7 @@ INSERT INTO `settings` (`key_name`, `value_data`) VALUES
 ('store_moto', '🛍️ Wonderful Collection: Quality products, delivered across Bangladesh. 🇧🇩'),
 ('store_email', 'contact@wonderfulcollection.store'),
 ('store_phone', '+880 1560-024777'),
-('store_address', ''),
+('store_address', 'Dhaka, Bangladesh'),
 ('currency_symbol', '৳'),
 ('currency_code', 'BDT'),
 ('delivery_fee_dhanmondi', '60'),
@@ -24,7 +24,7 @@ INSERT INTO `settings` (`key_name`, `value_data`) VALUES
 ('free_delivery_min_amount', '2000'),
 ('bkash_number', '01560024777 (Personal)'),
 ('nagad_number', '01560024777 (Personal)'),
-('rocket_number', '01560024777 (Personal)');
+('rocket_number', '015600247777 (Personal)');
 
 -- 2. Categories Table
 CREATE TABLE `categories` (
@@ -63,7 +63,7 @@ CREATE TABLE `customers` (
   `phone` VARCHAR(30) NOT NULL,
   `password_hash` VARCHAR(255) NOT NULL,
   `address` TEXT,
-  `area` VARCHAR(100) DEFAULT 'Dhanmondi',
+  `area` VARCHAR(100) DEFAULT 'Dhaka',
   `city` VARCHAR(100) DEFAULT 'Dhaka',
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

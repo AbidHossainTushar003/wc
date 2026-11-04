@@ -132,7 +132,7 @@ switch ($action) {
         $phone = trim(is_string($data['phone'] ?? null) ? $data['phone'] : '');
         $password = is_string($data['password'] ?? null) ? $data['password'] : '';
         $address = trim(is_string($data['address'] ?? null) ? $data['address'] : '');
-        $area = trim(is_string($data['area'] ?? null) ? $data['area'] : 'Dhanmondi');
+        $area = trim(is_string($data['area'] ?? null) ? $data['area'] : 'Dhaka');
 
         if ($name === '' || $email === '' || $phone === '' || $password === '') {
             jsonResponse(['error' => 'Name, email, phone, and password are required'], 422);
