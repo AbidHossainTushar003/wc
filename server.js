@@ -17,27 +17,27 @@ const DATA_FILE = path.join(__dirname, 'dev-data.json');
 const initialData = {
     settings: {
         store_name: "Wonderful Collection",
-        store_moto: "🛍️ Wonderful Collection: Your top online shopping service in Dhanmondi, Dhaka. Quality delivered. 🇧🇩",
+        store_moto: "🛍️ Wonderful Collection: Quality products, delivered across Bangladesh. 🇧🇩",
         store_email: "contact@wonderfulcollection.store",
-        store_phone: "+880 1712-345678",
-        store_address: "House 42, Road 7/A, Dhanmondi, Dhaka-1209, Bangladesh",
+        store_phone: "+880 1560-024777",
+        store_address: "",
         currency_symbol: "৳",
         currency_code: "BDT",
         delivery_fee_dhanmondi: "60",
         delivery_fee_dhaka: "80",
         delivery_fee_outside_dhaka: "130",
         free_delivery_min_amount: "2000",
-        bkash_number: "01712345678 (Merchant / Personal)",
-        nagad_number: "01812345678 (Merchant)",
-        rocket_number: "01912345678 (Personal)"
+        bkash_number: "01560024777 (Personal)",
+        nagad_number: "01560024777 (Personal)",
+        rocket_number: "01560024777 (Personal)"
     },
     categories: [
-        { id: 1, name: "Men's Fashion", slug: "mens-fashion", description: "Premium Panjabis, shirts, and traditional attire.", image: "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=500&q=80", product_count: 1 },
-        { id: 2, name: "Women's Fashion", slug: "womens-fashion", description: "Exquisite designer salwar kameez, sarees and kurtis.", image: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=500&q=80", product_count: 2 },
-        { id: 3, name: "Perfumes & Attar", slug: "perfumes-attar", description: "Long-lasting Arabian oud, concentrated attars, and luxury fragrances.", image: "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=500&q=80", product_count: 1 },
-        { id: 4, name: "Gadgets & Electronics", slug: "gadgets-electronics", description: "Smartwatches, wireless earbuds, and lifestyle tech accessories.", image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&q=80", product_count: 1 },
-        { id: 5, name: "Leather & Accessories", slug: "leather-accessories", description: "100% Genuine Bangladeshi leather wallets, belts, and luxury bags.", image: "https://images.unsplash.com/photo-1627123424574-724758594e93?w=500&q=80", product_count: 2 },
-        { id: 6, name: "Home Decor & Living", slug: "home-decor", description: "Aesthetic scented candles, art pieces, and modern home essentials.", image: "https://images.unsplash.com/photo-1602874801007-bd458bb1b8b8?w=500&q=80", product_count: 1 }
+        { id: 1, name: "Men's Fashion", slug: "mens-fashion", description: "Premium Panjabis, shirts, and traditional attire.", image: "assets/category-placeholder.svg", product_count: 1 },
+        { id: 2, name: "Women's Fashion", slug: "womens-fashion", description: "Exquisite designer salwar kameez, sarees and kurtis.", image: "assets/category-placeholder.svg", product_count: 2 },
+        { id: 3, name: "Perfumes & Attar", slug: "perfumes-attar", description: "Long-lasting Arabian oud, concentrated attars, and luxury fragrances.", image: "assets/category-placeholder.svg", product_count: 1 },
+        { id: 4, name: "Gadgets & Electronics", slug: "gadgets-electronics", description: "Smartwatches, wireless earbuds, and lifestyle tech accessories.", image: "assets/category-placeholder.svg", product_count: 1 },
+        { id: 5, name: "Leather & Accessories", slug: "leather-accessories", description: "100% Genuine Bangladeshi leather wallets, belts, and luxury bags.", image: "assets/category-placeholder.svg", product_count: 2 },
+        { id: 6, name: "Home Decor & Living", slug: "home-decor", description: "Aesthetic scented candles, art pieces, and modern home essentials.", image: "assets/category-placeholder.svg", product_count: 1 }
     ],
     products: [
         {
@@ -54,8 +54,8 @@ const initialData = {
             short_desc: "Handcrafted semi-fitted 100% organic Egyptian cotton Panjabi with intricate threadwork on collar and placket.",
             description: "Experience exceptional elegance with our flagship Royal Nawab Panjabi. Tailored from 100% breathable organic Egyptian cotton, designed specifically for Dhaka's climate. Hand-embroidered mandarin collar, contrast buttons, and side pockets. Delivered right to your doorstep in Dhanmondi within 2-4 hours.",
             images: [
-                "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=800&q=80",
-                "https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?w=800&q=80"
+                "assets/product-placeholder.svg",
+                "assets/product-placeholder.svg"
             ],
             is_featured: 1,
             is_trending: 1,
@@ -78,7 +78,7 @@ const initialData = {
             short_desc: "Luxurious oriental fragrance featuring aged Cambodian agarwood, Madagascar vanilla, and warm amber.",
             description: "Our signature bestseller. Imperial Golden Oud opens with sparkling bergamot and saffron, blending seamlessly into rich agarwood, Bulgarian rose, and base notes of warm amber. Unmatched projection that lasts 14+ hours.",
             images: [
-                "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=800&q=80"
+                "assets/product-placeholder.svg"
             ],
             is_featured: 1,
             is_trending: 1,
@@ -100,7 +100,7 @@ const initialData = {
             short_desc: "Crafted from authentic Hazaribagh full-grain cowhide leather with RFID blocking technology.",
             description: "Sleek, minimalist, and built for durability. Handcrafted from vegetable-tanned authentic Bangladeshi leather that patinas beautifully over time.",
             images: [
-                "https://images.unsplash.com/photo-1627123424574-724758594e93?w=800&q=80"
+                "assets/product-placeholder.svg"
             ],
             is_featured: 1,
             is_trending: 0,
@@ -120,7 +120,7 @@ const initialData = {
             short_desc: "Heavy sequin and zari embroidered semi-stitched georgette kameez with digital printed silk dupatta.",
             description: "Turn heads at any festive gathering in Dhaka. Crafted on premium weightless georgette fabric adorned with delicate floral thread embroidery and shimmering sequins.",
             images: [
-                "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800&q=80"
+                "assets/product-placeholder.svg"
             ],
             is_featured: 1,
             is_trending: 1,
@@ -142,7 +142,7 @@ const initialData = {
             short_desc: "Active Noise Cancelling up to 35dB, Quad-Mic ENC for clear calls on Dhaka streets, 32-hour battery.",
             description: "Equipped with 13mm dynamic drivers for deep punchy bass, Bluetooth 5.3 low-latency connection, IPX5 water resistance, and fast Type-C charging.",
             images: [
-                "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=800&q=80"
+                "assets/product-placeholder.svg"
             ],
             is_featured: 1,
             is_trending: 1,
@@ -162,7 +162,7 @@ const initialData = {
             short_desc: "Hand-poured 100% natural soy wax candle scented with petrichor, jasmine, and wet earthen sandalwood.",
             description: "Relive the nostalgic beauty of sudden monsoon rain in Dhanmondi lake. Poured by hand into reusable amber glass jars using unbleached cotton wicks.",
             images: [
-                "https://images.unsplash.com/photo-1602874801007-bd458bb1b8b8?w=800&q=80"
+                "assets/product-placeholder.svg"
             ],
             is_featured: 0,
             is_trending: 1,
@@ -182,7 +182,7 @@ const initialData = {
             short_desc: "Precision Japanese quartz movement with genuine leather strap and sapphire-coated mineral glass.",
             description: "A statement of refined taste. Clean architectural dial with date window, tachymeter bezel, 30m water resistance, and supple genuine leather strap.",
             images: [
-                "https://images.unsplash.com/photo-1524805444758-089113d48a6d?w=800&q=80"
+                "assets/product-placeholder.svg"
             ],
             is_featured: 0,
             is_trending: 1,
@@ -202,7 +202,7 @@ const initialData = {
             short_desc: "Featherlight softness with traditional Sozni needlework border, perfect for Dhaka winter evenings.",
             description: "Woven from finest grade Himalayan wool, exquisitely soft and warm yet effortlessly lightweight. Accented with timeless antique floral borders.",
             images: [
-                "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&q=80"
+                "assets/product-placeholder.svg"
             ],
             is_featured: 0,
             is_trending: 0,
@@ -410,7 +410,7 @@ const server = http.createServer(async (req, res) => {
                     sku: body.sku || 'WC-' + Math.random().toString(36).substring(2, 8).toUpperCase(),
                     short_desc: body.short_desc || '',
                     description: body.description || '',
-                    images: Array.isArray(body.images) ? body.images : [body.images || "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=800&q=80"],
+                    images: Array.isArray(body.images) ? body.images : [body.images || "assets/product-placeholder.svg"],
                     is_featured: body.is_featured ? 1 : 0,
                     is_trending: body.is_trending ? 1 : 0,
                     reviews: []
@@ -448,7 +448,7 @@ const server = http.createServer(async (req, res) => {
                     name: body.name,
                     slug: body.slug || body.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
                     description: body.description || '',
-                    image: body.image || 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=500&q=80',
+                    image: body.image || 'assets/product-placeholder.svg',
                     product_count: 0
                 };
                 store.categories.push(newCat);

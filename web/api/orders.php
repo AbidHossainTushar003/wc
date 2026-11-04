@@ -8,7 +8,7 @@ require_once __DIR__ . '/db.php';
 
 $pdo = Database::getConnection();
 $method = $_SERVER['REQUEST_METHOD'];
-if ($method !== 'POST') {
+if ($method !== 'POST' && !($method === 'GET' && isset($_GET['customer_id']) && !isset($_GET['id']))) {
     requireAdminToken($pdo);
 }
 
@@ -29,8 +29,12 @@ switch ($method) {
         }
 
         if (isset($_GET['customer_id'])) {
+            $customer = requireCustomerToken($pdo);
+            if ((int)$_GET['customer_id'] !== (int)$customer['id']) {
+                jsonResponse(['error' => 'You may only view your own orders'], 403);
+            }
             $stmt = $pdo->prepare('SELECT * FROM orders WHERE customer_id = ? ORDER BY id DESC');
-            $stmt->execute([(int)$_GET['customer_id']]);
+            $stmt->execute([(int)$customer['id']]);
             $orders = $stmt->fetchAll();
             foreach ($orders as &$order) {
                 $itemStmt = $pdo->prepare('SELECT * FROM order_items WHERE order_id = ?');
@@ -65,6 +69,11 @@ switch ($method) {
 
     case 'POST':
         $data = getRequestBody();
+        $customerId = null;
+        if (getAdminTokenFromRequest() !== null) {
+            $customer = requireCustomerToken($pdo);
+            $customerId = (int)$customer['id'];
+        }
         foreach (['customer_name', 'customer_phone', 'delivery_address'] as $requiredField) {
             if (!isset($data[$requiredField]) || !is_string($data[$requiredField]) || trim($data[$requiredField]) === '') {
                 jsonResponse(['error' => 'Please provide complete delivery details and at least one item.'], 422);
@@ -193,10 +202,11 @@ switch ($method) {
                     order_number, customer_id, customer_name, customer_phone, customer_email,
                     delivery_address, delivery_area, delivery_fee, subtotal, discount, total,
                     payment_method, payment_status, trx_id, order_status, tracking_code, notes
-                ) VALUES (?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending', ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending', ?, ?)
             ");
             $orderStmt->execute([
                 $orderNumber,
+                $customerId,
                 trim($data['customer_name']),
                 trim($data['customer_phone']),
                 $customerEmail,

@@ -98,7 +98,9 @@ switch ($method) {
         }
 
         $slug = !empty($data['slug']) ? $data['slug'] : strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $data['name']), '-')) . '-' . rand(100, 999);
-        $images = is_array($data['images']) ? json_encode($data['images']) : '["https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=800&q=80"]';
+        $images = isset($data['images']) && is_array($data['images'])
+            ? json_encode($data['images'])
+            : '["assets/product-placeholder.svg"]';
 
         $stmt = $pdo->prepare("
             INSERT INTO products (name, slug, category_id, regular_price, sale_price, stock_quantity, sku, short_desc, description, images, is_featured, is_trending) 

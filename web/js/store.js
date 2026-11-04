@@ -51,7 +51,9 @@ const Store = {
     addToCart(product, quantity = 1) {
         const existing = this.state.cart.find(item => item.id === product.id);
         const price = Number(product.sale_price || product.regular_price);
-        const image = Array.isArray(product.images) ? product.images[0] : (product.image || 'https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=500&q=80');
+        const image = Array.isArray(product.images) && product.images.length
+            ? product.images[0]
+            : (product.image || 'assets/product-placeholder.svg');
 
         if (existing) {
             existing.quantity += quantity;
@@ -313,9 +315,13 @@ const Store = {
 
     async placeOrder(orderPayload) {
         try {
+            const headers = { 'Content-Type': 'application/json' };
+            if (this.state.user && this.state.user.token) {
+                headers.Authorization = `Bearer ${this.state.user.token}`;
+            }
             const res = await fetch(`${this.API_BASE}/orders`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers,
                 body: JSON.stringify(orderPayload)
             });
             return await res.json();

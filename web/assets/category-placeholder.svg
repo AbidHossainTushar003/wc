@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" role="img" aria-labelledby="title">
+  <title id="title">Category photo needed</title>
+  <rect width="640" height="640" fill="#f1f5f9"/>
+  <circle cx="320" cy="285" r="132" fill="#fff" stroke="#cbd5e1" stroke-width="12"/>
+  <path d="M248 350v-42l72-78 72 78v42h-46v-56h-52v56z" fill="#f05423"/>
+  <text x="320" y="500" fill="#475569" font-family="Arial,sans-serif" font-size="27" text-anchor="middle">Category photo needed</text>
+</svg>

@@ -25,19 +25,26 @@ This project provides a unified full-stack e-commerce solution:
 
 ---
 
-## 🛠️ Step 1: Uploading to cPanel (`wonderfulcollection.store`)
+## 🛠️ Step 1: Build and upload the cPanel package
 
 1. **Log in to cPanel:**
    - Go to [https://server.shodns.in:2083](https://server.shodns.in:2083)
    - Username: `wonderfu`
 2. **Open File Manager:**
    - Navigate to `/home/wonderfu/public_html`
-3. **Upload Web Files:**
-   - Compress the contents of the `web/` directory into a `.zip` file (or upload directly).
-   - In cPanel File Manager, upload the zip into `public_html/` and click **Extract**.
+3. **Build the deployment archive in PowerShell from the project root:**
+   ```powershell
+   .\deploy\Build-Deployment.ps1
+   ```
+   - This creates `deploy\wonderful-deploy.zip` with the contents of `web/` at the archive root and a `config.local.php` template under `api/`.
+   - The script excludes development files, SQLite databases, SQL/Markdown files, Android files, and any local `config.local.php`.
+4. **Upload the archive:**
+   - In cPanel File Manager, upload `deploy\wonderful-deploy.zip` into `public_html/` and click **Extract**.
+   - Use [deploy/IMAGE_UPLOADS.md](./deploy/IMAGE_UPLOADS.md) to prepare and connect your own product/category photography; the storefront uses local illustrations until then.
    - Your `public_html/` directory should look like:
      ```
      /home/wonderfu/public_html/
+       ├── .htaccess
        ├── index.html
        ├── shop.html
        ├── product.html
@@ -54,9 +61,12 @@ This project provides a unified full-stack e-commerce solution:
        │    └── admin.js
        ├── assets/
        │    ├── logo.jpg
-       │    └── logo.svg
+       │    ├── logo.svg
+       │    ├── product-placeholder.svg
+       │    └── category-placeholder.svg
        └── api/
             ├── config.php
+            ├── config.local.php
             ├── db.php
             ├── products.php
             ├── orders.php
@@ -104,7 +114,7 @@ Before or during cPanel deployment, you can preview and test everything locally 
 
 1. Open PowerShell or Terminal in the project directory:
    ```powershell
-   cd C:\Users\Abidh\.gemini\antigravity\scratch\wonderful-collection
+   cd C:\Users\Abidh\Desktop\Wonderfulcollection
    ```
 2. Run the standalone development server (Node.js is already installed on your system):
    ```powershell
@@ -138,6 +148,6 @@ Before or during cPanel deployment, you can preview and test everything locally 
 - **Admin Portal (Web):** `https://wonderfulcollection.store/admin.html`
 - **Default Username:** `admin`
 - **Initial Admin Password:** use the one-time password provided in the deployment conversation; change it immediately after first login.
-- **Store Moto:** 🛍️ Wonderful Collection: Your top online shopping service in Dhanmondi, Dhaka. Quality delivered. 🇧🇩
+- **Store Moto:** Wonderful Collection: Quality products, delivered across Bangladesh.
 - **Fast Dhanmondi Delivery:** 2 to 4 hours (৳60 delivery fee, Free on orders ৳2,000+)
-- **Mobile Payments:** bKash & Nagad with TrxID verification
+- **Mobile Payments:** bKash, Nagad, and Rocket Personal accounts with TrxID verification

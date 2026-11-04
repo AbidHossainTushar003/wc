@@ -232,7 +232,7 @@ async function loadProducts() {
     const tbody = document.querySelector('#products-table tbody');
     tbody.innerHTML = (json.data || []).map(p => `
         <tr>
-            <td><img src="${Array.isArray(p.images) ? p.images[0] : p.image}" style="width: 44px; height: 44px; border-radius: 6px; object-fit: cover;"></td>
+            <td><img src="${Array.isArray(p.images) && p.images.length ? p.images[0] : (p.image || 'assets/product-placeholder.svg')}" style="width: 44px; height: 44px; border-radius: 6px; object-fit: cover;"></td>
             <td style="font-weight: 700; color: #f8fafc;">${p.name}</td>
             <td style="color: #94a3b8;">${p.category_name}</td>
             <td>${formatBDT(p.regular_price)}</td>
@@ -471,6 +471,7 @@ async function loadSettings() {
     document.getElementById('set_fee_dhaka').value = s.delivery_fee_dhaka || '80';
     document.getElementById('set_bkash').value = s.bkash_number || '';
     document.getElementById('set_nagad').value = s.nagad_number || '';
+    document.getElementById('set_rocket').value = s.rocket_number || '';
 }
 
 async function handleSaveSettings(e) {
@@ -480,7 +481,8 @@ async function handleSaveSettings(e) {
         delivery_fee_dhanmondi: document.getElementById('set_fee_dhanmondi').value,
         delivery_fee_dhaka: document.getElementById('set_fee_dhaka').value,
         bkash_number: document.getElementById('set_bkash').value,
-        nagad_number: document.getElementById('set_nagad').value
+        nagad_number: document.getElementById('set_nagad').value,
+        rocket_number: document.getElementById('set_rocket').value
     };
     await adminFetch(`${API_BASE}/settings`, {
         method: 'POST',

@@ -36,7 +36,7 @@ switch ($method) {
             $data['name'],
             $slug,
             $data['description'] ?? '',
-            $data['image'] ?? 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=500&q=80'
+            $data['image'] ?? 'assets/category-placeholder.svg'
         ]);
 
         jsonResponse(['status' => 'success', 'message' => 'Category created', 'id' => $pdo->lastInsertId()], 201);

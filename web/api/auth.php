@@ -15,6 +15,15 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $data = getRequestBody();
 $action = $_GET['action'] ?? ($data['action'] ?? 'login');
 
+function createCustomerSession(PDO $pdo, int $customerId): array {
+    $token = 'wc_usr_' . bin2hex(random_bytes(32));
+    $expiresAt = gmdate('Y-m-d H:i:s', time() + 2592000);
+    $pdo->prepare('DELETE FROM customer_tokens WHERE expires_at <= ?')->execute([gmdate('Y-m-d H:i:s')]);
+    $stmt = $pdo->prepare('INSERT INTO customer_tokens (token_hash, customer_id, expires_at) VALUES (?, ?, ?)');
+    $stmt->execute([hash('sha256', $token), $customerId, $expiresAt]);
+    return ['token' => $token, 'expires_at' => $expiresAt];
+}
+
 switch ($action) {
     case 'admin_login':
         $username = is_string($data['username'] ?? null) ? trim($data['username']) : '';
@@ -144,19 +153,22 @@ switch ($action) {
             VALUES (?, ?, ?, ?, ?, ?, 'Dhaka')
         ");
         $stmt->execute([$name, $email, $phone, $passHash, $address, $area]);
-        $custId = $pdo->lastInsertId();
+        $custId = (int)$pdo->lastInsertId();
+        $session = createCustomerSession($pdo, $custId);
 
         jsonResponse([
             'status' => 'success',
             'message' => 'Account created successfully!',
             'data' => [
+                'id' => $custId,
                 'customer_id' => $custId,
                 'name' => $name,
                 'email' => $email,
                 'phone' => $phone,
                 'address' => $address,
                 'area' => $area,
-                'token' => 'wc_usr_' . bin2hex(random_bytes(16))
+                'token' => $session['token'],
+                'token_expires_at' => $session['expires_at']
             ]
         ], 201);
         break;
@@ -191,7 +203,9 @@ switch ($action) {
             $rehash->execute([password_hash($password, PASSWORD_DEFAULT), (int)$customer['id']]);
         }
         unset($customer['password_hash']);
-        $customer['token'] = 'wc_usr_' . bin2hex(random_bytes(16));
+        $session = createCustomerSession($pdo, (int)$customer['id']);
+        $customer['token'] = $session['token'];
+        $customer['token_expires_at'] = $session['expires_at'];
 
         jsonResponse([
             'status' => 'success',

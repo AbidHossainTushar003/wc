@@ -49,6 +49,14 @@ class Database {
                         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
                     );
                     CREATE INDEX IF NOT EXISTS idx_admin_tokens_admin_id ON admin_tokens (admin_id);
+                    CREATE TABLE IF NOT EXISTS customer_tokens (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        token_hash TEXT UNIQUE NOT NULL,
+                        customer_id INTEGER NOT NULL,
+                        expires_at DATETIME NOT NULL,
+                        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                    );
+                    CREATE INDEX IF NOT EXISTS idx_customer_tokens_customer_id ON customer_tokens (customer_id);
                     CREATE TABLE IF NOT EXISTS login_attempts (
                         username_hash TEXT NOT NULL,
                         ip_hash TEXT NOT NULL,
@@ -110,6 +118,14 @@ class Database {
                 city TEXT DEFAULT 'Dhaka',
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP
             );
+            CREATE TABLE IF NOT EXISTS customer_tokens (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                token_hash TEXT UNIQUE NOT NULL,
+                customer_id INTEGER NOT NULL,
+                expires_at DATETIME NOT NULL,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            );
+            CREATE INDEX IF NOT EXISTS idx_customer_tokens_customer_id ON customer_tokens (customer_id);
             CREATE TABLE IF NOT EXISTS orders (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 order_number TEXT UNIQUE NOT NULL,
@@ -191,37 +207,37 @@ class Database {
         $pdo->exec("
             INSERT OR IGNORE INTO settings (key_name, value_data) VALUES
             ('store_name', 'Wonderful Collection'),
-            ('store_moto', '🛍️ Wonderful Collection: Your top online shopping service in Dhanmondi, Dhaka. Quality delivered. 🇧🇩'),
+            ('store_moto', '🛍️ Wonderful Collection: Quality products, delivered across Bangladesh. 🇧🇩'),
             ('store_email', 'contact@wonderfulcollection.store'),
-            ('store_phone', '+880 1712-345678'),
-            ('store_address', 'House 42, Road 7/A, Dhanmondi, Dhaka-1209, Bangladesh'),
+            ('store_phone', '+880 1560-024777'),
+            ('store_address', ''),
             ('currency_symbol', '৳'),
             ('currency_code', 'BDT'),
             ('delivery_fee_dhanmondi', '60'),
             ('delivery_fee_dhaka', '80'),
             ('delivery_fee_outside_dhaka', '130'),
             ('free_delivery_min_amount', '2000'),
-            ('bkash_number', '01712345678 (Merchant / Personal)'),
-            ('nagad_number', '01812345678 (Merchant)'),
-            ('rocket_number', '01912345678 (Personal)');
+            ('bkash_number', '01560024777 (Personal)'),
+            ('nagad_number', '01560024777 (Personal)'),
+            ('rocket_number', '01560024777 (Personal)');
 
             INSERT OR IGNORE INTO categories (id, name, slug, description, image) VALUES
-            (1, 'Men\'s Fashion', 'mens-fashion', 'Premium Panjabis, shirts, and traditional attire.', 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=500&q=80'),
-            (2, 'Women\'s Fashion', 'womens-fashion', 'Exquisite designer salwar kameez, sarees and kurtis.', 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=500&q=80'),
-            (3, 'Perfumes & Attar', 'perfumes-attar', 'Long-lasting Arabian oud, concentrated attars, and luxury fragrances.', 'https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=500&q=80'),
-            (4, 'Gadgets & Electronics', 'gadgets-electronics', 'Smartwatches, wireless earbuds, and lifestyle tech accessories.', 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&q=80'),
-            (5, 'Leather & Accessories', 'leather-accessories', '100% Genuine Bangladeshi leather wallets, belts, and luxury bags.', 'https://images.unsplash.com/photo-1627123424574-724758594e93?w=500&q=80'),
-            (6, 'Home Decor & Living', 'home-decor', 'Aesthetic scented candles, art pieces, and modern home essentials.', 'https://images.unsplash.com/photo-1602874801007-bd458bb1b8b8?w=500&q=80');
+            (1, 'Men\'s Fashion', 'mens-fashion', 'Premium Panjabis, shirts, and traditional attire.', 'assets/category-placeholder.svg'),
+            (2, 'Women\'s Fashion', 'womens-fashion', 'Exquisite designer salwar kameez, sarees and kurtis.', 'assets/category-placeholder.svg'),
+            (3, 'Perfumes & Attar', 'perfumes-attar', 'Long-lasting Arabian oud, concentrated attars, and luxury fragrances.', 'assets/category-placeholder.svg'),
+            (4, 'Gadgets & Electronics', 'gadgets-electronics', 'Smartwatches, wireless earbuds, and lifestyle tech accessories.', 'assets/category-placeholder.svg'),
+            (5, 'Leather & Accessories', 'leather-accessories', '100% Genuine Bangladeshi leather wallets, belts, and luxury bags.', 'assets/category-placeholder.svg'),
+            (6, 'Home Decor & Living', 'home-decor', 'Aesthetic scented candles, art pieces, and modern home essentials.', 'assets/category-placeholder.svg');
 
             INSERT OR IGNORE INTO products (id, name, slug, category_id, regular_price, sale_price, stock_quantity, sku, short_desc, description, images, is_featured, is_trending) VALUES
-            (1, 'Royal Nawab Premium Cotton Panjabi - Navy Blue', 'royal-nawab-panjabi-navy', 1, 2800.00, 2350.00, 18, 'WC-PANJ-001', 'Handcrafted semi-fitted 100% organic Egyptian cotton Panjabi with intricate threadwork on collar and placket.', 'Experience exceptional elegance with our flagship Royal Nawab Panjabi. Tailored from 100% breathable organic Egyptian cotton, designed specifically for Dhaka\'s climate. Hand-embroidered mandarin collar, contrast buttons, and side pockets. Delivered right to your doorstep in Dhanmondi within 2-4 hours.', '[\"https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=800&q=80\",\"https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?w=800&q=80\"]', 1, 1),
-            (2, 'Imperial Golden Oud & Amber Perfume (50ml)', 'imperial-golden-oud-amber', 3, 3500.00, 2990.00, 24, 'WC-PERF-002', 'Luxurious oriental fragrance featuring aged Cambodian agarwood, Madagascar vanilla, and warm amber.', 'Our signature bestseller. Imperial Golden Oud opens with sparkling bergamot and saffron, blending seamlessly into rich agarwood, Bulgarian rose, and base notes of warm amber. Unmatched projection that lasts 14+ hours.', '[\"https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=800&q=80\"]', 1, 1),
-            (3, 'Handcrafted Full-Grain Leather Bi-Fold Wallet', 'full-grain-leather-wallet-brown', 5, 1650.00, 1350.00, 35, 'WC-LEATH-003', 'Crafted from authentic Hazaribagh full-grain cowhide leather with RFID blocking technology.', 'Sleek, minimalist, and built for durability. Handcrafted from vegetable-tanned authentic Bangladeshi leather that patinas beautifully over time.', '[\"https://images.unsplash.com/photo-1627123424574-724758594e93?w=800&q=80\"]', 1, 0),
-            (4, 'Dhanmondi Blossom Designer Georgette 3-Piece', 'dhanmondi-blossom-georgette-3piece', 2, 4200.00, 3650.00, 12, 'WC-WOM-004', 'Heavy sequin and zari embroidered semi-stitched georgette kameez with digital printed silk dupatta.', 'Turn heads at any festive gathering in Dhaka. Crafted on premium weightless georgette fabric adorned with delicate floral thread embroidery and shimmering sequins.', '[\"https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800&q=80\"]', 1, 1),
-            (5, 'Pro ANC Wireless Earbuds - Matte Obsidian', 'pro-anc-wireless-earbuds-black', 4, 2900.00, 2450.00, 40, 'WC-TECH-005', 'Active Noise Cancelling up to 35dB, Quad-Mic ENC for clear calls on Dhaka streets, 32-hour battery.', 'Equipped with 13mm dynamic drivers for deep punchy bass, Bluetooth 5.3 low-latency connection, IPX5 water resistance, and fast Type-C charging.', '[\"https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=800&q=80\"]', 1, 1),
-            (6, 'Artisanal Soy Wax Scented Candle - Dhaka Rain', 'artisanal-candle-dhaka-rain', 6, 950.00, 790.00, 22, 'WC-HOME-006', 'Hand-poured 100% natural soy wax candle scented with petrichor, jasmine, and wet earthen sandalwood.', 'Relive the nostalgic beauty of sudden monsoon rain in Dhanmondi lake. Poured by hand into reusable amber glass jars using unbleached cotton wicks.', '[\"https://images.unsplash.com/photo-1602874801007-bd458bb1b8b8?w=800&q=80\"]', 0, 1),
-            (7, 'Executive Chronograph Quartz Watch - Rose Gold', 'executive-chronograph-watch-rosegold', 5, 3800.00, 3190.00, 15, 'WC-ACC-007', 'Precision Japanese quartz movement with genuine leather strap and sapphire-coated mineral glass.', 'A statement of refined taste. Clean architectural dial with date window, tachymeter bezel, 30m water resistance, and supple genuine leather strap.', '[\"https://images.unsplash.com/photo-1524805444758-089113d48a6d?w=800&q=80\"]', 0, 1),
-            (8, 'Ultra-Fine Kashmiri Pashmina Shawl - Ruby Wine', 'kashmiri-pashmina-shawl-ruby', 2, 3200.00, 2750.00, 8, 'WC-WOM-008', 'Featherlight softness with traditional Sozni needlework border, perfect for Dhaka winter evenings.', 'Woven from finest grade Himalayan wool, exquisitely soft and warm yet effortlessly lightweight.', '[\"https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&q=80\"]', 0, 0);
+            (1, 'Royal Nawab Premium Cotton Panjabi - Navy Blue', 'royal-nawab-panjabi-navy', 1, 2800.00, 2350.00, 18, 'WC-PANJ-001', 'Handcrafted semi-fitted 100% organic Egyptian cotton Panjabi with intricate threadwork on collar and placket.', 'Experience exceptional elegance with our flagship Royal Nawab Panjabi. Tailored from 100% breathable organic Egyptian cotton, designed specifically for Dhaka\'s climate. Hand-embroidered mandarin collar, contrast buttons, and side pockets. Delivered right to your doorstep in Dhanmondi within 2-4 hours.', '[\"assets/product-placeholder.svg\"]', 1, 1),
+            (2, 'Imperial Golden Oud & Amber Perfume (50ml)', 'imperial-golden-oud-amber', 3, 3500.00, 2990.00, 24, 'WC-PERF-002', 'Luxurious oriental fragrance featuring aged Cambodian agarwood, Madagascar vanilla, and warm amber.', 'Our signature bestseller. Imperial Golden Oud opens with sparkling bergamot and saffron, blending seamlessly into rich agarwood, Bulgarian rose, and base notes of warm amber. Unmatched projection that lasts 14+ hours.', '[\"assets/product-placeholder.svg\"]', 1, 1),
+            (3, 'Handcrafted Full-Grain Leather Bi-Fold Wallet', 'full-grain-leather-wallet-brown', 5, 1650.00, 1350.00, 35, 'WC-LEATH-003', 'Crafted from authentic Hazaribagh full-grain cowhide leather with RFID blocking technology.', 'Sleek, minimalist, and built for durability. Handcrafted from vegetable-tanned authentic Bangladeshi leather that patinas beautifully over time.', '[\"assets/product-placeholder.svg\"]', 1, 0),
+            (4, 'Dhanmondi Blossom Designer Georgette 3-Piece', 'dhanmondi-blossom-georgette-3piece', 2, 4200.00, 3650.00, 12, 'WC-WOM-004', 'Heavy sequin and zari embroidered semi-stitched georgette kameez with digital printed silk dupatta.', 'Turn heads at any festive gathering in Dhaka. Crafted on premium weightless georgette fabric adorned with delicate floral thread embroidery and shimmering sequins.', '[\"assets/product-placeholder.svg\"]', 1, 1),
+            (5, 'Pro ANC Wireless Earbuds - Matte Obsidian', 'pro-anc-wireless-earbuds-black', 4, 2900.00, 2450.00, 40, 'WC-TECH-005', 'Active Noise Cancelling up to 35dB, Quad-Mic ENC for clear calls on Dhaka streets, 32-hour battery.', 'Equipped with 13mm dynamic drivers for deep punchy bass, Bluetooth 5.3 low-latency connection, IPX5 water resistance, and fast Type-C charging.', '[\"assets/product-placeholder.svg\"]', 1, 1),
+            (6, 'Artisanal Soy Wax Scented Candle - Dhaka Rain', 'artisanal-candle-dhaka-rain', 6, 950.00, 790.00, 22, 'WC-HOME-006', 'Hand-poured 100% natural soy wax candle scented with petrichor, jasmine, and wet earthen sandalwood.', 'Relive the nostalgic beauty of sudden monsoon rain in Dhanmondi lake. Poured by hand into reusable amber glass jars using unbleached cotton wicks.', '[\"assets/product-placeholder.svg\"]', 0, 1),
+            (7, 'Executive Chronograph Quartz Watch - Rose Gold', 'executive-chronograph-watch-rosegold', 5, 3800.00, 3190.00, 15, 'WC-ACC-007', 'Precision Japanese quartz movement with genuine leather strap and sapphire-coated mineral glass.', 'A statement of refined taste. Clean architectural dial with date window, tachymeter bezel, 30m water resistance, and supple genuine leather strap.', '[\"assets/product-placeholder.svg\"]', 0, 1),
+            (8, 'Ultra-Fine Kashmiri Pashmina Shawl - Ruby Wine', 'kashmiri-pashmina-shawl-ruby', 2, 3200.00, 2750.00, 8, 'WC-WOM-008', 'Featherlight softness with traditional Sozni needlework border, perfect for Dhaka winter evenings.', 'Woven from finest grade Himalayan wool, exquisitely soft and warm yet effortlessly lightweight.', '[\"assets/product-placeholder.svg\"]', 0, 0);
 
             INSERT OR IGNORE INTO customers (id, name, email, phone, password_hash, address, area, city) VALUES
             (1, 'Tanvir Ahmed', 'tanvir.dhk@example.com', '01711223344', '$2y$12$DgMggvzrteoM9JD80oF61eeZHbVNeMESrHj2h.1DqtAv5Nvt6jcD2', 'House 14, Road 8, Dhanmondi', 'Dhanmondi', 'Dhaka'),
@@ -256,7 +272,7 @@ class Database {
     }
 }
 
-function getAdminTokenFromRequest(): ?string {
+function getBearerTokenFromRequest(): ?string {
     $authorization = $_SERVER['HTTP_AUTHORIZATION'] ?? ($_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '');
     if ($authorization === '' && function_exists('getallheaders')) {
         $headers = getallheaders();
@@ -267,6 +283,30 @@ function getAdminTokenFromRequest(): ?string {
         return null;
     }
     return $matches[1];
+}
+
+function requireCustomerToken(PDO $pdo): array {
+    $token = getBearerTokenFromRequest();
+    if ($token === null) {
+        jsonResponse(['error' => 'Customer authorization required'], 401);
+    }
+
+    $stmt = $pdo->prepare("
+        SELECT c.id, c.name, c.email
+        FROM customer_tokens t
+        INNER JOIN customers c ON c.id = t.customer_id
+        WHERE t.token_hash = ? AND t.expires_at > ?
+    ");
+    $stmt->execute([hash('sha256', $token), gmdate('Y-m-d H:i:s')]);
+    $customer = $stmt->fetch();
+    if (!$customer) {
+        jsonResponse(['error' => 'Customer authorization required'], 401);
+    }
+    return $customer;
+}
+
+function getAdminTokenFromRequest(): ?string {
+    return getBearerTokenFromRequest();
 }
 
 function requireAdminToken(PDO $pdo): array {

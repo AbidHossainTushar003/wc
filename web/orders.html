@@ -40,12 +40,28 @@
   <script src="js/store.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
-      const user = Store.state.user || { id: 1, name: 'Tanvir Ahmed' };
-      const res = await fetch(`/api/orders?customer_id=${user.id}`);
+      const container = document.getElementById('orders-list-view');
+      const user = Store.state.user;
+      if (!user || !user.id || !user.token) {
+        container.innerHTML = `
+          <div style="background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 48px 20px; text-align: center;">
+            <p style="color: #64748b; margin-bottom: 16px;">Sign in to view your order history.</p>
+            <a href="login.html" class="btn-primary">Sign In</a>
+          </div>
+        `;
+        return;
+      }
+
+      const res = await fetch(`/api/orders?customer_id=${encodeURIComponent(user.id)}`, {
+        headers: { Authorization: `Bearer ${user.token}` }
+      });
       const json = await res.json();
+      if (!res.ok) {
+        container.textContent = json.error || 'Could not load your order history. Please sign in again.';
+        return;
+      }
       const orders = json.data || [];
 
-      const container = document.getElementById('orders-list-view');
       if (!orders.length) {
         container.innerHTML = `
           <div style="background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 48px 20px; text-align: center;">
