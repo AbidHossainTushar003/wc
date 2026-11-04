@@ -24,7 +24,7 @@ This ledger tracks findings in `AUDIT_REPORT.md`. `OPEN` means not addressed yet
 | B-10 | FIXED | Login attempt upsert now selects SQL by PDO driver; MySQL failures do not fall through to SQLite syntax. MySQL integration remains unverified locally. |
 | S-02 | FIXED | Login attempts are isolated into hashed account and IP buckets: the IP may receive a 15-minute throttle, while account-level backoff is capped at two seconds and cannot lock the account. |
 | S-03 | PARTIAL | Web/API and Android login require a 6-digit TOTP; the seed admin is forced through a 15-minute scoped token to change password; codes are single-use. Admin login stays disabled until the owner adds a private `ADMIN_TOTP_SECRET` and enrolls an authenticator. |
-| S-04 | OPEN | Customer bearer token is stored in localStorage for up to 30 days. |
+| S-04 | FIXED | Customer bearer token is now session-scoped in `web/js/store.js`; legacy `wc_user` localStorage entries are removed on load/save. |
 | S-05 | OPEN | Admin role permissions are not consistently enforced. |
 | S-06 | OPEN | Manual mobile-money references are not verified or deduplicated. |
 | S-07 | OPEN | Image metadata and orphaned uploads are not cleaned up. |

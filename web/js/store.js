@@ -142,7 +142,10 @@ const Store = {
             this.state.cart = JSON.parse(localStorage.getItem('wc_cart') || '[]');
             this.state.wishlist = JSON.parse(localStorage.getItem('wc_wishlist') || '[]');
             this.state.appliedCoupon = JSON.parse(localStorage.getItem('wc_coupon') || 'null');
-            this.state.user = JSON.parse(localStorage.getItem('wc_user') || 'null');
+            if (localStorage.getItem('wc_user')) {
+                localStorage.removeItem('wc_user');
+            }
+            this.state.user = JSON.parse(sessionStorage.getItem('wc_user') || 'null');
         } catch (e) {
             console.error('Storage error:', e);
         }
@@ -153,7 +156,10 @@ const Store = {
             localStorage.setItem('wc_cart', JSON.stringify(this.state.cart));
             localStorage.setItem('wc_wishlist', JSON.stringify(this.state.wishlist));
             localStorage.setItem('wc_coupon', JSON.stringify(this.state.appliedCoupon));
-            localStorage.setItem('wc_user', JSON.stringify(this.state.user));
+            sessionStorage.setItem('wc_user', JSON.stringify(this.state.user));
+            if (localStorage.getItem('wc_user')) {
+                localStorage.removeItem('wc_user');
+            }
             this.updateBadgeCounters();
         } catch (e) {
             console.error('Save state error:', e);
