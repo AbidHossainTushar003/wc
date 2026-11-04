@@ -2,6 +2,9 @@ web/api/config.local.php
 web/data.sqlite
 *.sqlite
 deploy/wonderful-deploy.zip
+.env
+.env.*
+!.env.example
 admin-android/.gradle/
 admin-android/.kotlin/
 admin-android/.idea/

@@ -12,6 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     jsonResponse(['error' => 'Method not allowed'], 405);
 }
 
+enforceApiRateLimit($pdo, 'order_tracking', 20, 900);
 $data = getRequestBody();
 $query = trim(is_string($data['order'] ?? null) ? $data['order'] : (is_string($data['tracking_code'] ?? null) ? $data['tracking_code'] : ''));
 $phone = trim(is_string($data['phone'] ?? null) ? $data['phone'] : '');

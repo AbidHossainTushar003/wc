@@ -46,14 +46,39 @@ function cleanInput($data) {
     return htmlspecialchars(strip_tags(trim((string)$data)), ENT_QUOTES, 'UTF-8');
 }
 
-$localConfig = __DIR__ . '/config.local.php';
-if (!is_file($localConfig)) {
-    error_log('Wonderful Collection API is missing api/config.local.php');
-    jsonResponse(['error' => 'Application configuration is unavailable'], 500);
+function getMailFromAddress(): string {
+    $mailFrom = defined('MAIL_FROM') ? MAIL_FROM : getenv('MAIL_FROM');
+    return is_string($mailFrom) ? trim($mailFrom) : '';
 }
-require_once $localConfig;
 
-if (!defined('DB_HOST') || !defined('DB_NAME') || !defined('DB_USER') || !defined('DB_PASS') || !defined('DEV_MODE')) {
+if (!defined('DB_HOST') && !defined('DB_NAME') && !defined('DB_USER') && !defined('DB_PASS')) {
+    $envConfig = [
+        'DB_HOST' => getenv('DB_HOST'),
+        'DB_NAME' => getenv('DB_NAME'),
+        'DB_USER' => getenv('DB_USER'),
+        'DB_PASS' => getenv('DB_PASS')
+    ];
+    $hasEnvironmentConfig = !in_array(false, $envConfig, true)
+        && !in_array('', $envConfig, true);
+
+    if ($hasEnvironmentConfig) {
+        foreach ($envConfig as $key => $value) {
+            define($key, $value);
+        }
+        define('DEV_MODE', filter_var(getenv('DEV_MODE') ?: 'false', FILTER_VALIDATE_BOOLEAN));
+    } else {
+        $localConfig = __DIR__ . '/config.local.php';
+        if (is_file($localConfig)) {
+            require_once $localConfig;
+        }
+    }
+}
+
+$requiredConfig = ['DB_HOST', 'DB_NAME', 'DB_USER', 'DB_PASS', 'DEV_MODE'];
+$missingConfig = array_filter($requiredConfig, static function ($key) {
+    return !defined($key) || (is_string(constant($key)) && trim(constant($key)) === '');
+});
+if ($missingConfig) {
     error_log('Wonderful Collection API configuration is incomplete');
     jsonResponse(['error' => 'Application configuration is unavailable'], 500);
 }

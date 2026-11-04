@@ -41,6 +41,7 @@ switch ($action) {
         $stmt->execute([$username]);
         $admin = $stmt->fetch();
         if (!$admin || !password_verify($password, $admin['password_hash'])) {
+            logSecurityEvent('admin_login_failed');
             if (recordLoginFailure($pdo)) {
                 header('Retry-After: 900');
                 jsonResponse(['error' => 'Too many login attempts. Try again in 15 minutes.'], 429);
@@ -126,7 +127,245 @@ switch ($action) {
         jsonResponse(['status' => 'success', 'message' => 'Admin logged out']);
         break;
 
+    case 'customer_logout':
+        requireCustomerToken($pdo);
+        $token = getBearerTokenFromRequest();
+        $stmt = $pdo->prepare('DELETE FROM customer_tokens WHERE token_hash = ?');
+        $stmt->execute([hash('sha256', $token)]);
+        jsonResponse(['status' => 'success', 'message' => 'You have signed out.']);
+        break;
+
+    case 'customer_update_profile':
+        $customer = requireCustomerToken($pdo);
+        $name = trim(is_string($data['name'] ?? null) ? $data['name'] : '');
+        $phone = trim(is_string($data['phone'] ?? null) ? $data['phone'] : '');
+        $area = trim(is_string($data['area'] ?? null) ? $data['area'] : '');
+        $address = trim(is_string($data['address'] ?? null) ? $data['address'] : '');
+        if ($name === '' || strlen($name) > 150 || strlen($phone) > 30
+            || strlen($area) > 100 || strlen($address) > 4000
+            || preg_match('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/', $name . $phone . $area . $address)
+            || !preg_match('/^\+?[0-9][0-9\s()-]{6,28}$/', $phone)) {
+            jsonResponse(['error' => 'Enter a valid name, phone number, area, and address.'], 422);
+        }
+
+        $updateProfile = $pdo->prepare('UPDATE customers SET name = ?, phone = ?, area = ?, address = ? WHERE id = ?');
+        $updateProfile->execute([$name, $phone, $area, $address, (int)$customer['id']]);
+        jsonResponse(['status' => 'success', 'message' => 'Profile updated successfully.']);
+        break;
+
+    case 'customer_delete_account':
+        $customer = requireCustomerToken($pdo);
+        $password = is_string($data['password'] ?? null) ? $data['password'] : '';
+        if ($password === '' || strlen($password) > 72) {
+            jsonResponse(['error' => 'Enter your current password to delete this account.'], 422);
+        }
+
+        $passwordStmt = $pdo->prepare('SELECT password_hash FROM customers WHERE id = ?');
+        $passwordStmt->execute([(int)$customer['id']]);
+        $passwordHash = $passwordStmt->fetchColumn();
+        if (!$passwordHash || !password_verify($password, $passwordHash)) {
+            logSecurityEvent('customer_account_delete_denied');
+            jsonResponse(['error' => 'Current password is incorrect.'], 401);
+        }
+
+        try {
+            $pdo->beginTransaction();
+            $anonymizeOrders = $pdo->prepare("
+                UPDATE orders
+                SET customer_id = NULL,
+                    customer_name = 'Deleted customer',
+                    customer_phone = '',
+                    customer_email = NULL,
+                    delivery_address = 'Deleted',
+                    notes = NULL
+                WHERE customer_id = ?
+            ");
+            $anonymizeOrders->execute([(int)$customer['id']]);
+            $deleteCustomer = $pdo->prepare('DELETE FROM customers WHERE id = ?');
+            $deleteCustomer->execute([(int)$customer['id']]);
+            $pdo->commit();
+            logSecurityEvent('customer_account_deleted');
+        } catch (PDOException $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            error_log('Wonderful Collection account deletion failed.');
+            jsonResponse(['error' => 'Could not delete the account. Please try again.'], 500);
+        }
+
+        jsonResponse(['status' => 'success', 'message' => 'Your account has been deleted.']);
+        break;
+
+    case 'request_password_reset':
+        enforceApiRateLimit($pdo, 'password_reset_request', 5, 3600);
+        $email = trim(is_string($data['email'] ?? null) ? $data['email'] : '');
+        if ($email === '' || strlen($email) > 150 || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            jsonResponse(['error' => 'Enter a valid email address.'], 422);
+        }
+
+        $mailFrom = getMailFromAddress();
+        if (!$mailFrom || !filter_var($mailFrom, FILTER_VALIDATE_EMAIL)) {
+            logSecurityEvent('password_reset_mail_unconfigured');
+            jsonResponse(['error' => 'Password reset is temporarily unavailable. Please contact store support.'], 503);
+        }
+
+        $customerStmt = $pdo->prepare('SELECT id FROM customers WHERE email = ?');
+        $customerStmt->execute([$email]);
+        $customerId = $customerStmt->fetchColumn();
+        if ($customerId !== false) {
+            $token = bin2hex(random_bytes(32));
+            $now = gmdate('Y-m-d H:i:s');
+            $expiresAt = gmdate('Y-m-d H:i:s', time() + 3600);
+            $pdo->prepare('DELETE FROM password_reset_tokens WHERE customer_id = ? OR expires_at <= ?')
+                ->execute([(int)$customerId, $now]);
+            $insertToken = $pdo->prepare('INSERT INTO password_reset_tokens (customer_id, token_hash, expires_at) VALUES (?, ?, ?)');
+            $insertToken->execute([(int)$customerId, hash('sha256', $token), $expiresAt]);
+
+            $resetUrl = 'https://wonderfulcollection.store/reset-password.html?token=' . rawurlencode($token);
+            $message = "A password reset was requested for your Wonderful Collection account.\n\n"
+                . "Use this one-time link within 1 hour:\n" . $resetUrl . "\n\n"
+                . "If you did not request this, you can ignore this message.";
+            $headers = "From: Wonderful Collection <" . $mailFrom . ">\r\n"
+                . "Content-Type: text/plain; charset=UTF-8\r\n";
+            if (!mail($email, 'Reset your Wonderful Collection password', $message, $headers)) {
+                $pdo->prepare('DELETE FROM password_reset_tokens WHERE token_hash = ?')->execute([hash('sha256', $token)]);
+                logSecurityEvent('password_reset_delivery_failed');
+            }
+        }
+
+        jsonResponse(['status' => 'success', 'message' => 'If an account exists for that email, password reset instructions have been sent.']);
+        break;
+
+    case 'reset_password':
+        enforceApiRateLimit($pdo, 'password_reset_complete', 10, 900);
+        $token = is_string($data['token'] ?? null) ? trim($data['token']) : '';
+        $newPassword = is_string($data['password'] ?? null) ? $data['password'] : '';
+        if (!preg_match('/^[a-f0-9]{64}$/i', $token) || strlen($newPassword) < 12 || strlen($newPassword) > 72) {
+            jsonResponse(['error' => 'Use a valid reset link and a password between 12 and 72 characters.'], 422);
+        }
+
+        try {
+            $pdo->beginTransaction();
+            $resetQuery = 'SELECT customer_id FROM password_reset_tokens WHERE token_hash = ? AND expires_at > ?';
+            if ($pdo->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql') {
+                $resetQuery .= ' FOR UPDATE';
+            }
+            $resetStmt = $pdo->prepare($resetQuery);
+            $resetStmt->execute([hash('sha256', $token), gmdate('Y-m-d H:i:s')]);
+            $resetRecord = $resetStmt->fetch();
+            if (!$resetRecord) {
+                $pdo->rollBack();
+                jsonResponse(['error' => 'This password reset link is invalid or has expired.'], 400);
+            }
+
+            $updatePassword = $pdo->prepare('UPDATE customers SET password_hash = ? WHERE id = ?');
+            $updatePassword->execute([password_hash($newPassword, PASSWORD_DEFAULT), (int)$resetRecord['customer_id']]);
+            $pdo->prepare('DELETE FROM password_reset_tokens WHERE customer_id = ?')
+                ->execute([(int)$resetRecord['customer_id']]);
+            $pdo->prepare('DELETE FROM customer_tokens WHERE customer_id = ?')
+                ->execute([(int)$resetRecord['customer_id']]);
+            $pdo->commit();
+            logSecurityEvent('password_reset_completed');
+        } catch (PDOException $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            error_log('Wonderful Collection password reset failed.');
+            jsonResponse(['error' => 'Could not reset the password. Please try again.'], 500);
+        }
+
+        jsonResponse(['status' => 'success', 'message' => 'Your password has been updated. Sign in with the new password.']);
+        break;
+
+    case 'verify_email':
+        enforceApiRateLimit($pdo, 'email_verification', 10, 900);
+        $token = is_string($data['token'] ?? null) ? trim($data['token']) : '';
+        if (!preg_match('/^[a-f0-9]{64}$/i', $token)) {
+            jsonResponse(['error' => 'This verification link is invalid or has expired.'], 400);
+        }
+
+        $now = gmdate('Y-m-d H:i:s');
+        $verificationStmt = $pdo->prepare("
+            SELECT customer_id FROM customer_email_verifications
+            WHERE token_hash = ? AND expires_at > ? AND verified_at IS NULL
+        ");
+        $verificationStmt->execute([hash('sha256', $token), $now]);
+        $customerId = $verificationStmt->fetchColumn();
+        if ($customerId === false) {
+            jsonResponse(['error' => 'This verification link is invalid or has expired.'], 400);
+        }
+
+        $verify = $pdo->prepare("
+            UPDATE customer_email_verifications
+            SET token_hash = NULL, expires_at = NULL, verified_at = ?
+            WHERE customer_id = ? AND token_hash = ? AND verified_at IS NULL
+        ");
+        $verify->execute([$now, (int)$customerId, hash('sha256', $token)]);
+        if ($verify->rowCount() !== 1) {
+            jsonResponse(['error' => 'This verification link is invalid or has already been used.'], 409);
+        }
+        logSecurityEvent('customer_email_verified');
+        jsonResponse(['status' => 'success', 'message' => 'Email verified. You can now sign in.']);
+        break;
+
+    case 'resend_verification':
+        enforceApiRateLimit($pdo, 'email_verification_resend', 5, 3600);
+        $email = trim(is_string($data['email'] ?? null) ? $data['email'] : '');
+        if ($email === '' || strlen($email) > 150 || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            jsonResponse(['error' => 'Enter a valid email address.'], 422);
+        }
+
+        $mailFrom = getMailFromAddress();
+        if ($mailFrom === '' || !filter_var($mailFrom, FILTER_VALIDATE_EMAIL)) {
+            logSecurityEvent('email_delivery_unconfigured');
+            jsonResponse(['error' => 'Verification email delivery is temporarily unavailable. Please try again later.'], 503);
+        }
+
+        $pendingStmt = $pdo->prepare("
+            SELECT c.id, c.email FROM customers c
+            INNER JOIN customer_email_verifications v ON v.customer_id = c.id
+            WHERE c.email = ? AND v.verified_at IS NULL
+        ");
+        $pendingStmt->execute([$email]);
+        $pendingCustomer = $pendingStmt->fetch();
+        if ($pendingCustomer) {
+            $token = bin2hex(random_bytes(32));
+            $expiresAt = gmdate('Y-m-d H:i:s', time() + 86400);
+            $updateToken = $pdo->prepare("
+                UPDATE customer_email_verifications
+                SET token_hash = ?, expires_at = ?
+                WHERE customer_id = ? AND verified_at IS NULL
+            ");
+            $updateToken->execute([
+                hash('sha256', $token),
+                $expiresAt,
+                (int)$pendingCustomer['id']
+            ]);
+            if ($updateToken->rowCount() !== 1) {
+                jsonResponse([
+                    'status' => 'success',
+                    'message' => 'If an unverified account exists for that email, a new verification link has been sent.'
+                ]);
+            }
+            $verificationUrl = 'https://wonderfulcollection.store/verify-email.html?token=' . rawurlencode($token);
+            $mailBody = "Verify your Wonderful Collection account within 24 hours:\n\n"
+                . $verificationUrl . "\n\nIf you did not create this account, ignore this message.";
+            $mailHeaders = "From: Wonderful Collection <" . $mailFrom . ">\r\n"
+                . "Content-Type: text/plain; charset=UTF-8\r\n";
+            if (!mail($pendingCustomer['email'], 'Verify your Wonderful Collection account', $mailBody, $mailHeaders)) {
+                logSecurityEvent('email_verification_delivery_failed');
+                jsonResponse(['error' => 'Verification email could not be sent. Please try again later.'], 503);
+            }
+        }
+
+        jsonResponse([
+            'status' => 'success',
+            'message' => 'If an unverified account exists for that email, a new verification link has been sent.'
+        ]);
+        break;
+
     case 'register':
+        enforceApiRateLimit($pdo, 'register', 5, 3600);
         $name = trim(is_string($data['name'] ?? null) ? $data['name'] : '');
         $email = trim(is_string($data['email'] ?? null) ? $data['email'] : '');
         $phone = trim(is_string($data['phone'] ?? null) ? $data['phone'] : '');
@@ -137,8 +376,19 @@ switch ($action) {
         if ($name === '' || $email === '' || $phone === '' || $password === '') {
             jsonResponse(['error' => 'Name, email, phone, and password are required'], 422);
         }
-        if (strlen($password) < 8 || strlen($password) > 72) {
-            jsonResponse(['error' => 'Password must be between 8 and 72 characters'], 422);
+        if (strlen($name) > 150 || strlen($email) > 150 || strlen($phone) > 30
+            || strlen($address) > 4000 || strlen($area) > 100
+            || preg_match('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/', $name . $phone . $address . $area)) {
+            jsonResponse(['error' => 'One or more account fields are invalid or too long.'], 422);
+        }
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            jsonResponse(['error' => 'Please provide a valid email address.'], 422);
+        }
+        if (!preg_match('/^\+?[0-9][0-9\s()-]{6,28}$/', $phone)) {
+            jsonResponse(['error' => 'Please provide a valid phone number.'], 422);
+        }
+        if (strlen($password) < 12 || strlen($password) > 72) {
+            jsonResponse(['error' => 'Password must be between 12 and 72 characters.'], 422);
         }
 
         $check = $pdo->prepare('SELECT id FROM customers WHERE email = ?');
@@ -147,28 +397,54 @@ switch ($action) {
             jsonResponse(['error' => 'An account with this email already exists'], 409);
         }
 
+        $mailFrom = getMailFromAddress();
+        if (!$mailFrom || !filter_var($mailFrom, FILTER_VALIDATE_EMAIL)) {
+            logSecurityEvent('email_delivery_unconfigured');
+            jsonResponse(['error' => 'Account registration is temporarily unavailable. Please contact store support.'], 503);
+        }
+
         $passHash = password_hash($password, PASSWORD_DEFAULT);
-        $stmt = $pdo->prepare("
-            INSERT INTO customers (name, email, phone, password_hash, address, area, city)
-            VALUES (?, ?, ?, ?, ?, ?, 'Dhaka')
-        ");
-        $stmt->execute([$name, $email, $phone, $passHash, $address, $area]);
-        $custId = (int)$pdo->lastInsertId();
-        $session = createCustomerSession($pdo, $custId);
+        $verificationToken = bin2hex(random_bytes(32));
+        $verificationExpiresAt = gmdate('Y-m-d H:i:s', time() + 86400);
+        try {
+            $pdo->beginTransaction();
+            $stmt = $pdo->prepare("
+                INSERT INTO customers (name, email, phone, password_hash, address, area, city)
+                VALUES (?, ?, ?, ?, ?, ?, 'Dhaka')
+            ");
+            $stmt->execute([$name, $email, $phone, $passHash, $address, $area]);
+            $custId = (int)$pdo->lastInsertId();
+            $verification = $pdo->prepare("
+                INSERT INTO customer_email_verifications (customer_id, token_hash, expires_at)
+                VALUES (?, ?, ?)
+            ");
+            $verification->execute([$custId, hash('sha256', $verificationToken), $verificationExpiresAt]);
+            $verificationUrl = 'https://wonderfulcollection.store/verify-email.html?token=' . rawurlencode($verificationToken);
+            $mailBody = "Verify your Wonderful Collection account within 24 hours:\n\n"
+                . $verificationUrl . "\n\nIf you did not create this account, ignore this message.";
+            $mailHeaders = "From: Wonderful Collection <" . $mailFrom . ">\r\n"
+                . "Content-Type: text/plain; charset=UTF-8\r\n";
+            if (!mail($email, 'Verify your Wonderful Collection account', $mailBody, $mailHeaders)) {
+                throw new RuntimeException('Verification email delivery failed.');
+            }
+            $pdo->commit();
+        } catch (Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            logSecurityEvent('email_verification_delivery_failed');
+            jsonResponse(['error' => 'Could not create the account or send a verification email. Please try again later.'], 503);
+        }
 
         jsonResponse([
             'status' => 'success',
-            'message' => 'Account created successfully!',
+            'message' => 'Account created. Check your email and verify it within 24 hours before signing in.',
             'data' => [
                 'id' => $custId,
                 'customer_id' => $custId,
                 'name' => $name,
                 'email' => $email,
-                'phone' => $phone,
-                'address' => $address,
-                'area' => $area,
-                'token' => $session['token'],
-                'token_expires_at' => $session['expires_at']
+                'phone' => $phone
             ]
         ], 201);
         break;
@@ -186,10 +462,15 @@ switch ($action) {
             jsonResponse(['error' => 'Too many login attempts. Try again in 15 minutes.'], 429);
         }
 
-        $stmt = $pdo->prepare('SELECT * FROM customers WHERE email = ?');
+        $stmt = $pdo->prepare("
+            SELECT c.* FROM customers c
+            INNER JOIN customer_email_verifications v ON v.customer_id = c.id
+            WHERE c.email = ? AND v.verified_at IS NOT NULL
+        ");
         $stmt->execute([$email]);
         $customer = $stmt->fetch();
         if (!$customer || !password_verify($password, $customer['password_hash'])) {
+            logSecurityEvent('customer_login_failed');
             if (recordLoginFailure($pdo)) {
                 header('Retry-After: 900');
                 jsonResponse(['error' => 'Too many login attempts. Try again in 15 minutes.'], 429);

@@ -20,7 +20,7 @@ const initialData = {
         store_moto: "🛍️ Wonderful Collection: Quality products, delivered across Bangladesh. 🇧🇩",
         store_email: "contact@wonderfulcollection.store",
         store_phone: "+880 1560-024777",
-        store_address: "",
+        store_address: "Dhaka, Bangladesh",
         currency_symbol: "৳",
         currency_code: "BDT",
         delivery_fee_dhanmondi: "60",
@@ -29,7 +29,7 @@ const initialData = {
         free_delivery_min_amount: "2000",
         bkash_number: "01560024777 (Personal)",
         nagad_number: "01560024777 (Personal)",
-        rocket_number: "01560024777 (Personal)"
+        rocket_number: "015600247777 (Personal)"
     },
     categories: [
         { id: 1, name: "Men's Fashion", slug: "mens-fashion", description: "Premium Panjabis, shirts, and traditional attire.", image: "assets/category-placeholder.svg", product_count: 1 },

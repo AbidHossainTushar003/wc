@@ -68,6 +68,7 @@ switch ($method) {
         break;
 
     case 'POST':
+        enforceApiRateLimit($pdo, 'checkout', 10, 900);
         $data = getRequestBody();
         $customerId = null;
         if (getAdminTokenFromRequest() !== null) {
@@ -83,6 +84,10 @@ switch ($method) {
             || strlen(trim($data['customer_phone'])) > 30
             || strlen(trim($data['delivery_address'])) > 4000) {
             jsonResponse(['error' => 'One or more delivery fields are too long.'], 422);
+        }
+        if (preg_match('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/', $data['customer_name'] . $data['customer_phone'] . $data['delivery_address'])
+            || !preg_match('/^\+?[0-9][0-9\s()-]{6,28}$/', trim($data['customer_phone']))) {
+            jsonResponse(['error' => 'Please provide valid delivery details and phone number.'], 422);
         }
         if (!isset($data['items']) || !is_array($data['items']) || count($data['items']) === 0 || count($data['items']) > 50) {
             jsonResponse(['error' => 'Please provide between 1 and 50 order items.'], 422);
@@ -112,7 +117,10 @@ switch ($method) {
         if (!in_array($deliveryZone, ['dhaka', 'outside_dhaka'], true)) {
             jsonResponse(['error' => 'Invalid delivery zone.'], 422);
         }
-        $deliveryArea = is_string($data['delivery_area'] ?? null) ? trim($data['delivery_area']) : 'Inside Dhaka';
+        if (isset($data['delivery_area']) && (!is_string($data['delivery_area']) || strlen($data['delivery_area']) > 80)) {
+            jsonResponse(['error' => 'Invalid delivery area.'], 422);
+        }
+        $deliveryArea = $deliveryZone === 'outside_dhaka' ? 'Outside Dhaka' : 'Inside Dhaka';
         $paymentMethod = $data['payment_method'] ?? 'Cash on Delivery';
         if (!in_array($paymentMethod, ['Cash on Delivery', 'bKash', 'Nagad', 'Rocket'], true)) {
             jsonResponse(['error' => 'Invalid payment method.'], 422);
@@ -125,6 +133,9 @@ switch ($method) {
         }
         if ($customerEmail !== '' && !filter_var($customerEmail, FILTER_VALIDATE_EMAIL)) {
             jsonResponse(['error' => 'Please provide a valid email address.'], 422);
+        }
+        if (preg_match('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/', $trxId . $notes)) {
+            jsonResponse(['error' => 'One or more order fields contain invalid characters.'], 422);
         }
 
         $deliverySetting = $deliveryZone === 'outside_dhaka' ? 'delivery_fee_outside_dhaka' : 'delivery_fee_dhaka';
@@ -308,8 +319,11 @@ switch ($method) {
             $params[] = $data['payment_status'];
         }
         if (isset($data['notes'])) {
+            if (!is_string($data['notes']) || strlen($data['notes']) > 2000) {
+                jsonResponse(['error' => 'Order notes must be 2,000 characters or fewer.'], 422);
+            }
             $fields[] = 'notes = ?';
-            $params[] = is_string($data['notes']) ? $data['notes'] : '';
+            $params[] = trim($data['notes']);
         }
         if (!$fields) {
             jsonResponse(['error' => 'No fields provided for update'], 400);
@@ -318,6 +332,12 @@ switch ($method) {
         $params[] = (int)$data['id'];
         $stmt = $pdo->prepare('UPDATE orders SET ' . implode(', ', $fields) . ' WHERE id = ?');
         $stmt->execute($params);
+        if (isset($data['order_status'])) {
+            logSecurityEvent('order_status_updated');
+        }
+        if (isset($data['payment_status'])) {
+            logSecurityEvent('order_payment_status_updated');
+        }
         jsonResponse(['status' => 'success', 'message' => 'Order updated successfully']);
         break;
 

@@ -24,6 +24,7 @@ switch ($method) {
 
         // 1. Coupon validation for customer checkout
         if (isset($data['action']) && $data['action'] === 'validate') {
+            enforceApiRateLimit($pdo, 'coupon_validation', 20, 900);
             $code = is_string($data['code'] ?? null) ? strtoupper(trim($data['code'])) : '';
             $subtotalInput = $data['subtotal'] ?? 0;
             if (!is_numeric($subtotalInput) || (float)$subtotalInput < 0) {
