@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>My Profile | Wonderful Collection Dhaka</title>
+  <meta name="robots" content="noindex, nofollow">
   <link rel="stylesheet" href="css/style.css">
   <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
 </head>
@@ -21,7 +22,7 @@
 
   <header class="site-header">
     <div class="header-container">
-      <a href="index.html" class="brand-logo-wrap"><img src="assets/logo.jpg" alt="Wonderful Collection" class="brand-logo-img"></a>
+      <a href="index.html" class="brand-logo-wrap"><img width="741" height="265" src="assets/logo.jpg" alt="Wonderful Collection" class="brand-logo-img"></a>
       <div class="header-actions">
         <a href="orders.html" class="header-action-btn"><span class="icon">📦</span><span>My Orders</span></a>
         <a href="cart.html" class="header-action-btn open-cart-btn"><span class="icon">🛍️</span><span>Cart</span></a>
@@ -70,6 +71,12 @@
         </button>
       </form>
     </div>
+
+    <section style="background: #fff; border: 1px solid #fecaca; border-radius: 16px; padding: 24px; margin-top: 24px;">
+      <h2 style="font-size: 1.15rem; color: #991b1b; margin: 0 0 8px;">Delete account</h2>
+      <p style="color: #64748b; margin-bottom: 16px;">This permanently removes your account and anonymizes personal details attached to past orders. Order totals and items are retained for store records.</p>
+      <button type="button" class="btn-secondary" onclick="deleteCustomerAccount()" style="color: #b91c1c; border-color: #fecaca;">Delete My Account</button>
+    </section>
   </main>
 
   <footer class="site-footer">
@@ -91,20 +98,77 @@
       document.getElementById('prof_address').value = user.address || '';
     });
 
-    function handleSaveProfile(e) {
+    async function handleSaveProfile(e) {
       e.preventDefault();
-      Store.state.user.name = document.getElementById('prof_name').value.trim();
-      Store.state.user.phone = document.getElementById('prof_phone').value.trim();
-      Store.state.user.area = document.getElementById('prof_area').value.trim();
-      Store.state.user.address = document.getElementById('prof_address').value.trim();
-      Store.saveState();
-      Store.showToast('Profile updated successfully! ✨');
+      const payload = {
+        action: 'customer_update_profile',
+        name: document.getElementById('prof_name').value.trim(),
+        phone: document.getElementById('prof_phone').value.trim(),
+        area: document.getElementById('prof_area').value.trim(),
+        address: document.getElementById('prof_address').value.trim()
+      };
+      try {
+        const response = await fetch('/api/auth?action=customer_update_profile', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${Store.state.user.token}`
+          },
+          body: JSON.stringify(payload)
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || 'Could not update your profile.');
+        Object.assign(Store.state.user, payload);
+        Store.saveState();
+        Store.showToast('Profile updated successfully! ✨');
+      } catch (error) {
+        Store.showToast(error.message || 'Could not connect to the account service.');
+      }
     }
 
-    function logoutCustomer() {
-      Store.state.user = null;
-      Store.saveState();
-      window.location.href = 'index.html';
+    async function logoutCustomer() {
+      const user = Store.state.user;
+      try {
+        if (user && user.token) {
+          const response = await fetch('/api/auth?action=customer_logout', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${user.token}` }
+          });
+          if (!response.ok && response.status !== 401) {
+            alert('Your browser session is cleared, but the server could not revoke the token. Contact store support if this device is shared.');
+          }
+        }
+      } catch (error) {
+        alert('Your browser session is cleared, but the server could not revoke the token. Sign out again when online, especially on a shared device.');
+      } finally {
+        Store.state.user = null;
+        Store.saveState();
+        window.location.href = 'index.html';
+      }
+    }
+
+    async function deleteCustomerAccount() {
+      if (!confirm('Delete your account and anonymize its order contact details? This cannot be undone.')) return;
+      const password = prompt('Enter your current password to confirm account deletion:');
+      if (!password) return;
+      try {
+        const response = await fetch('/api/auth?action=customer_delete_account', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${Store.state.user.token}`
+          },
+          body: JSON.stringify({ password })
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || 'Could not delete the account.');
+        Store.state.user = null;
+        Store.saveState();
+        alert('Your account was deleted and its order contact details were anonymized.');
+        window.location.href = 'index.html';
+      } catch (error) {
+        Store.showToast(error.message || 'Could not connect to the account service.');
+      }
     }
   </script>
 </body>

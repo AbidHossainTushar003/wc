@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>My Orders | Wonderful Collection Dhaka</title>
+  <meta name="robots" content="noindex, nofollow">
   <link rel="stylesheet" href="css/style.css">
   <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
 </head>
@@ -20,7 +21,7 @@
 
   <header class="site-header">
     <div class="header-container">
-      <a href="index.html" class="brand-logo-wrap"><img src="assets/logo.jpg" alt="Wonderful Collection" class="brand-logo-img"></a>
+      <a href="index.html" class="brand-logo-wrap"><img width="741" height="265" src="assets/logo.jpg" alt="Wonderful Collection" class="brand-logo-img"></a>
       <div class="header-actions">
         <a href="profile.html" class="header-action-btn"><span class="icon">👤</span><span>Profile</span></a>
         <a href="cart.html" class="header-action-btn open-cart-btn"><span class="icon">🛍️</span><span>Cart</span></a>
@@ -80,36 +81,43 @@
         Cancelled: '#ef4444'
       };
 
-      container.innerHTML = orders.map(ord => `
+      container.innerHTML = orders.map(ord => {
+        const orderStatus = String(ord.order_status || '');
+        const statusColor = Object.prototype.hasOwnProperty.call(statusColors, orderStatus)
+          ? statusColors[orderStatus]
+          : '#64748b';
+        const orderNumber = String(ord.order_number || '');
+        return `
         <div style="background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 24px; box-shadow: var(--shadow-sm); margin-bottom: 20px;">
           <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 14px; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
             <div>
-              <div style="font-size: 1.1rem; font-weight: 800; color: #0e2a47;">${ord.order_number}</div>
+              <div style="font-size: 1.1rem; font-weight: 800; color: #0e2a47;">${Store.escapeHtml(orderNumber)}</div>
               <div style="font-size: 0.8rem; color: #64748b;">Placed on: ${new Date(ord.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
             </div>
             <div style="display: flex; align-items: center; gap: 12px;">
-              <span style="background: ${statusColors[ord.order_status] || '#64748b'}20; color: ${statusColors[ord.order_status] || '#64748b'}; padding: 4px 12px; border-radius: 999px; font-weight: 800; font-size: 0.82rem;">
-                ● ${ord.order_status}
+              <span style="background: ${statusColor}20; color: ${statusColor}; padding: 4px 12px; border-radius: 999px; font-weight: 800; font-size: 0.82rem;">
+                ● ${Store.escapeHtml(orderStatus)}
               </span>
-              <a href="track-order.html?order=${ord.order_number}" class="btn-secondary" style="padding: 6px 12px; font-size: 0.82rem; color: #0e2a47; border-color: #cbd5e1;">Track</a>
+              <a href="track-order.html?order=${encodeURIComponent(orderNumber)}" class="btn-secondary" style="padding: 6px 12px; font-size: 0.82rem; color: #0e2a47; border-color: #cbd5e1;">Track</a>
             </div>
           </div>
 
           <div style="margin-bottom: 14px;">
             ${(ord.items || []).map(it => `
               <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 6px;">
-                <span>${it.product_name} &times; ${it.quantity}</span>
+                <span>${Store.escapeHtml(it.product_name)} &times; ${Number(it.quantity) || 0}</span>
                 <span style="font-weight: 700;">${Store.formatBDT(it.price * it.quantity)}</span>
               </div>
             `).join('')}
           </div>
 
           <div style="border-top: 1px dashed #e2e8f0; padding-top: 12px; display: flex; justify-content: space-between; align-items: center; font-size: 0.95rem;">
-            <span style="color: #64748b;">Total: <strong style="color: #f05423; font-size: 1.1rem;">${Store.formatBDT(ord.total)}</strong> (${ord.payment_method})</span>
+            <span style="color: #64748b;">Total: <strong style="color: #f05423; font-size: 1.1rem;">${Store.formatBDT(ord.total)}</strong> (${Store.escapeHtml(ord.payment_method)})</span>
             <span style="font-size: 0.82rem; color: #64748b;">Delivery to: ${Store.escapeHtml(String(ord.delivery_area || '').replace(/dhanmondi/gi, 'Dhaka'))}</span>
           </div>
         </div>
-      `).join('');
+      `;
+      }).join('');
     });
   </script>
 </body>

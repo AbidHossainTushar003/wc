@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Verify Your Email | Wonderful Collection</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-container" style="justify-content: center;">
+      <a href="index.html" class="brand-logo-wrap"><img width="741" height="265" src="assets/logo.jpg" alt="Wonderful Collection" class="brand-logo-img"></a>
+    </div>
+  </header>
+
+  <main class="page-container" style="max-width: 480px; text-align: center;">
+    <section style="background: #fff; border-radius: 20px; border: 1px solid #e2e8f0; padding: 40px 32px; box-shadow: var(--shadow-md); margin-top: 24px;">
+      <h1 style="font-size: 1.8rem; font-weight: 800; color: #0e2a47; margin-bottom: 12px;">Verify your email</h1>
+      <p id="verification-message" role="status" aria-live="polite" style="color: #64748b; margin-bottom: 24px;">Checking your verification link…</p>
+      <a id="signin-link" href="login.html" class="btn-primary" style="display: none; justify-content: center; padding: 14px;">Continue to sign in</a>
+    </section>
+  </main>
+
+  <script>
+    (async function verifyEmail() {
+      const message = document.getElementById('verification-message');
+      const signInLink = document.getElementById('signin-link');
+      const token = new URLSearchParams(window.location.search).get('token') || '';
+      window.history.replaceState(null, '', 'verify-email.html');
+
+      if (!/^[a-f0-9]{64}$/i.test(token)) {
+        message.textContent = 'This verification link is invalid or has expired. Please register again or contact store support.';
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/auth?action=verify_email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token })
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || 'Email verification failed.');
+        message.textContent = result.message || 'Email verified. You can now sign in.';
+        signInLink.style.display = 'inline-flex';
+      } catch (error) {
+        message.textContent = error.message || 'Could not connect to the account service.';
+        signInLink.style.display = 'inline-flex';
+      }
+    }());
+  </script>
+</body>
+</html>

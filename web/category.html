@@ -4,6 +4,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Category | Wonderful Collection Dhaka</title>
+  <meta name="description" content="Browse product categories and shop Wonderful Collection online in Bangladesh.">
+  <link id="category-canonical" rel="canonical" href="https://wonderfulcollection.store/category.html">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Shop Categories | Wonderful Collection">
+  <meta property="og:description" content="Browse product categories and shop Wonderful Collection online in Bangladesh.">
+  <meta property="og:url" content="https://wonderfulcollection.store/category.html">
+  <meta property="og:image" content="https://wonderfulcollection.store/assets/logo.svg">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Shop Categories | Wonderful Collection">
+  <meta name="twitter:description" content="Browse product categories and shop Wonderful Collection online in Bangladesh.">
+  <meta name="twitter:image" content="https://wonderfulcollection.store/assets/logo.svg">
+  <script id="category-breadcrumb-jsonld" type="application/ld+json"></script>
   <link rel="stylesheet" href="css/style.css">
   <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
 </head>
@@ -21,11 +33,11 @@
 
   <header class="site-header">
     <div class="header-container">
-      <a href="index.html" class="brand-logo-wrap"><img src="assets/logo.jpg" alt="Wonderful Collection" class="brand-logo-img"></a>
+      <a href="index.html" class="brand-logo-wrap"><img width="741" height="265" src="assets/logo.jpg" alt="Wonderful Collection" class="brand-logo-img"></a>
       <div class="header-search">
         <form action="search.html" method="GET" class="search-input-wrap">
           <input type="text" name="q" class="search-input" placeholder="Search..." required>
-          <button type="submit" class="search-btn"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></button>
+          <button type="submit" class="search-btn" aria-label="Search products"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></button>
         </form>
       </div>
       <div class="header-actions">
@@ -81,14 +93,37 @@
       const catSlug = urlParams.get('cat') || categories[0]?.slug;
       const currentCat = categories.find(c => c.slug === catSlug);
       const grid = document.getElementById('category-products-grid');
+      const canonical = document.getElementById('category-canonical');
 
       if (!currentCat) {
+        document.title = 'Category Not Found | Wonderful Collection';
+        canonical.href = 'https://wonderfulcollection.store/shop.html';
         document.getElementById('cat-header-title').textContent = 'Category not found';
         document.getElementById('cat-header-desc').textContent = 'Browse all available products instead.';
         grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 48px; color: #64748b;"><a href="shop.html">Browse all products</a></div>';
         return;
       }
 
+      const description = String(currentCat.description || `Shop ${currentCat.name} products from Wonderful Collection in Bangladesh.`)
+        .replace(/\s+/g, ' ')
+        .slice(0, 160);
+      document.title = `${currentCat.name} (${currentCat.slug}) | Wonderful Collection`;
+      document.querySelector('meta[name="description"]').content = description;
+      canonical.href = `https://wonderfulcollection.store/category.html?cat=${encodeURIComponent(currentCat.slug)}`;
+      document.querySelector('meta[property="og:title"]').content = document.title;
+      document.querySelector('meta[property="og:description"]').content = description;
+      document.querySelector('meta[property="og:url"]').content = canonical.href;
+      document.querySelector('meta[name="twitter:title"]').content = document.title;
+      document.querySelector('meta[name="twitter:description"]').content = description;
+      document.getElementById('category-breadcrumb-jsonld').textContent = JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://wonderfulcollection.store/' },
+          { '@type': 'ListItem', position: 2, name: 'Shop', item: 'https://wonderfulcollection.store/shop.html' },
+          { '@type': 'ListItem', position: 3, name: currentCat.name, item: canonical.href }
+        ]
+      }).replace(/</g, '\\u003c');
       document.getElementById('cat-header-title').textContent = currentCat.name;
       if (currentCat.description) document.getElementById('cat-header-desc').textContent = currentCat.description;
 

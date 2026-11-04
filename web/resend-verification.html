@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Resend Verification Email | Wonderful Collection</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-container" style="justify-content: center;">
+      <a href="index.html" class="brand-logo-wrap"><img width="741" height="265" src="assets/logo.jpg" alt="Wonderful Collection" class="brand-logo-img"></a>
+    </div>
+  </header>
+
+  <main class="page-container" style="max-width: 480px; text-align: center;">
+    <section style="background: #fff; border-radius: 20px; border: 1px solid #e2e8f0; padding: 40px 32px; box-shadow: var(--shadow-md); margin-top: 24px;">
+      <h1 style="font-size: 1.8rem; font-weight: 800; color: #0e2a47; margin-bottom: 12px;">Resend verification email</h1>
+      <p style="color: #64748b; margin-bottom: 24px;">Enter the email address used to create your account.</p>
+      <form id="resend-form">
+        <label for="verification-email" style="display: block; text-align: left; font-weight: 700; margin-bottom: 6px;">Email address</label>
+        <input id="verification-email" name="email" type="email" autocomplete="email" maxlength="150" required style="width: 100%; border: 1px solid #cbd5e1; padding: 12px 14px; border-radius: 8px; margin-bottom: 16px;">
+        <button id="resend-button" type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 14px;">Send verification link</button>
+      </form>
+      <p id="resend-message" role="status" aria-live="polite" style="min-height: 1.5em; margin-top: 16px; color: #475569;"></p>
+      <a href="login.html" style="font-size: 0.88rem; font-weight: 700; color: #f05423;">Back to sign in</a>
+    </section>
+  </main>
+
+  <script>
+    document.getElementById('resend-form').addEventListener('submit', async event => {
+      event.preventDefault();
+      const button = document.getElementById('resend-button');
+      const message = document.getElementById('resend-message');
+      button.disabled = true;
+      message.textContent = 'Sending…';
+      try {
+        const response = await fetch('/api/auth?action=resend_verification', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: document.getElementById('verification-email').value.trim() })
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || 'Could not send a verification link.');
+        message.textContent = result.message || 'If an unverified account exists for that email, a new link has been sent.';
+      } catch (error) {
+        message.textContent = error.message || 'Could not connect to the account service.';
+      } finally {
+        button.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

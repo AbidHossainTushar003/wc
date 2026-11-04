@@ -3,7 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Customer Login & Register | Wonderful Collection Dhaka</title>
+  <title>Sign In or Register | Wonderful Collection Dhaka</title>
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="description" content="Sign in to your Wonderful Collection account or create one to manage your orders and delivery details.">
   <link rel="stylesheet" href="css/style.css">
   <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
 </head>
@@ -17,13 +19,14 @@
 
   <header class="site-header">
     <div class="header-container" style="justify-content: center;">
-      <a href="index.html" class="brand-logo-wrap"><img src="assets/logo.jpg" alt="Wonderful Collection" class="brand-logo-img"></a>
+      <a href="index.html" class="brand-logo-wrap"><img width="741" height="265" src="assets/logo.jpg" alt="Wonderful Collection" class="brand-logo-img"></a>
     </div>
   </header>
 
   <main class="page-container" style="max-width: 540px;">
     <div style="background: #fff; border-radius: 20px; border: 1px solid #e2e8f0; padding: 36px 32px; box-shadow: var(--shadow-md);">
-      
+      <h1 style="font-size: 1.7rem; font-weight: 800; color: #0e2a47; margin: 0 0 20px;">Sign in or create your account</h1>
+
       <!-- Tab switcher -->
       <div style="display: flex; border-bottom: 2px solid #f1f5f9; margin-bottom: 28px;">
         <button id="tab-login" onclick="switchAuthTab('login')" style="flex: 1; padding: 12px; background: none; border: none; font-weight: 800; font-size: 1.1rem; color: #f05423; border-bottom: 3px solid #f05423; cursor: pointer;">
@@ -52,6 +55,10 @@
         </button>
       </form>
 
+      <p id="auth-message" role="status" aria-live="polite" style="min-height: 1.5em; margin: 16px 0 0; color: #475569;"></p>
+      <p style="font-size: 0.85rem; text-align: center; margin: 8px 0 0;">
+        <a href="resend-verification.html" style="color: #f05423; font-weight: 600;">Need a new email verification link?</a>
+      </p>
       <!-- Register Form -->
       <form id="register-form" onsubmit="handleRegister(event)" style="display: none;">
         <div style="margin-bottom: 14px;">
@@ -80,7 +87,7 @@
         </div>
         <div style="margin-bottom: 24px;">
           <label style="display: block; font-size: 0.88rem; font-weight: 700; margin-bottom: 6px;">Choose Password *</label>
-          <input type="password" id="reg_password" required minlength="8" maxlength="72" placeholder="8–72 characters" style="width: 100%; border: 1px solid #cbd5e1; padding: 10px 14px; border-radius: 8px;">
+          <input type="password" id="reg_password" required minlength="12" maxlength="72" autocomplete="new-password" placeholder="12–72 characters" style="width: 100%; border: 1px solid #cbd5e1; padding: 10px 14px; border-radius: 8px;">
         </div>
         <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 14px; font-size: 1.05rem;">
           Create My Account 🎉
@@ -118,6 +125,8 @@
       e.preventDefault();
       const email = document.getElementById('login_email').value.trim();
       const password = document.getElementById('login_password').value;
+      const submit = e.submitter;
+      if (submit) submit.disabled = true;
 
       try {
         const res = await fetch('/api/auth', {
@@ -132,10 +141,12 @@
           Store.showToast('Welcome back, ' + data.data.name + '!');
           setTimeout(() => window.location.href = 'profile.html', 800);
         } else {
-          alert(data.error || 'Login failed.');
+          document.getElementById('auth-message').textContent = data.error || 'Login failed.';
         }
       } catch (err) {
-        alert('Could not connect to authentication server.');
+        document.getElementById('auth-message').textContent = 'Could not connect to authentication server.';
+      } finally {
+        if (submit) submit.disabled = false;
       }
     }
 
@@ -149,6 +160,8 @@
         area: document.getElementById('reg_area').value,
         password: document.getElementById('reg_password').value
       };
+      const submit = e.submitter;
+      if (submit) submit.disabled = true;
 
       try {
         const res = await fetch('/api/auth', {
@@ -157,16 +170,17 @@
           body: JSON.stringify(payload)
         });
         const data = await res.json();
-        if (data.status === 'success') {
-          Store.state.user = data.data;
-          Store.saveState();
-          Store.showToast('Account created successfully!');
-          setTimeout(() => window.location.href = 'profile.html', 800);
+        if (res.ok && data.status === 'success') {
+          document.getElementById('auth-message').textContent = data.message;
+          document.getElementById('login_email').value = payload.email;
+          switchAuthTab('login');
         } else {
-          alert(data.error || 'Registration failed.');
+          document.getElementById('auth-message').textContent = data.error || 'Registration failed.';
         }
       } catch (err) {
-        alert('Could not connect to authentication server.');
+        document.getElementById('auth-message').textContent = 'Could not connect to authentication server.';
+      } finally {
+        if (submit) submit.disabled = false;
       }
     }
   </script>

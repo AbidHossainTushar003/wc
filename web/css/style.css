@@ -2,7 +2,7 @@
    Wonderful Collection - Main Design System & Style
    Primary Brand Palette:
    - Deep Navy: #0B2545 / #0E2A47
-   - Energetic Orange: #F05423 / #FF5722
+   - Accessible Orange: #C2410C / #9A3412
    - Light Accents: #F8FAFC / #EEF2F6
    - Slate & Muted: #64748B / #94A3B8
    - Success Green: #10B981
@@ -14,8 +14,8 @@
 :root {
   --primary-navy: #0e2a47;
   --primary-navy-dark: #071727;
-  --accent-orange: #f05423;
-  --accent-orange-hover: #d84315;
+  --accent-orange: #c2410c;
+  --accent-orange-hover: #9a3412;
   --accent-orange-light: #fff3f0;
   --text-dark: #1e293b;
   --text-muted: #64748b;
@@ -130,8 +130,8 @@ button, input, select, textarea {
 }
 
 .brand-logo-img {
+  width: 134px;
   height: 48px;
-  width: auto;
   object-fit: contain;
 }
 
@@ -519,6 +519,156 @@ button, input, select, textarea {
   margin-bottom: 48px;
 }
 
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.product-card-skeleton .product-thumb-wrap {
+  background: #e2e8f0;
+}
+
+.skeleton-block {
+  display: block;
+  border-radius: 6px;
+  background: #e2e8f0;
+}
+
+.product-skeleton-category {
+  width: 48%;
+  height: 10px;
+  margin-bottom: 12px;
+}
+
+.product-skeleton-title {
+  width: 94%;
+  height: 13px;
+  margin-bottom: 7px;
+}
+
+.product-skeleton-title-short {
+  width: 68%;
+  height: 13px;
+  margin-bottom: 8px;
+}
+
+.product-skeleton-price {
+  width: 44%;
+  height: 22px;
+}
+
+.product-skeleton-meta {
+  width: 100%;
+  height: 14px;
+  margin-bottom: 14px;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 12px;
+}
+
+.product-skeleton-button {
+  height: 38px;
+  border: 0;
+  background: #e2e8f0;
+}
+
+.product-loading-main {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 48px;
+  margin-bottom: 56px;
+}
+
+.product-loading-image {
+  height: 440px;
+  margin-bottom: 16px;
+  border-radius: 16px;
+}
+
+.product-loading-info {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.product-loading-category {
+  width: 42%;
+  height: 14px;
+}
+
+.product-loading-title {
+  width: 88%;
+  height: 34px;
+}
+
+.product-loading-price {
+  width: 36%;
+  height: 34px;
+  margin-bottom: 4px;
+}
+
+.product-loading-notice {
+  height: 76px;
+  border-radius: 8px;
+}
+
+.product-loading-description {
+  height: 66px;
+}
+
+.product-loading-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.product-loading-action {
+  width: 120px;
+  height: 46px;
+  border-radius: 8px;
+}
+
+.product-loading-features {
+  height: 92px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.product-loading-details {
+  min-height: 260px;
+  padding: 32px;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  background: #fff;
+}
+
+.product-loading-details-title {
+  width: 52%;
+  height: 24px;
+  margin-bottom: 18px;
+}
+
+.product-loading-details-copy {
+  width: 100%;
+  height: 68px;
+  margin-bottom: 28px;
+}
+
+.product-loading-reviews-title {
+  width: 40%;
+  height: 20px;
+  margin-bottom: 18px;
+}
+
+.product-loading-review {
+  width: 76%;
+  height: 42px;
+}
+
 .product-card {
   background: var(--bg-card);
   border-radius: var(--radius-lg);
@@ -679,11 +829,11 @@ button, input, select, textarea {
 }
 
 .stock-in {
-  color: #10b981;
+  color: #047857;
 }
 
 .stock-low {
-  color: #f59e0b;
+  color: #a16207;
 }
 
 .product-card-actions {
@@ -832,7 +982,7 @@ button, input, select, textarea {
   padding: 20px 24px;
   border-top: 1px solid rgba(255,255,255,0.06);
   font-size: 0.85rem;
-  color: #64748b;
+  color: #94a3b8;
 }
 
 .footer-bottom-container {

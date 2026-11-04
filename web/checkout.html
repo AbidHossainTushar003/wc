@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Checkout | Wonderful Collection Dhaka</title>
+  <meta name="robots" content="noindex, nofollow">
   <link rel="stylesheet" href="css/style.css">
   <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
 </head>
@@ -21,7 +22,7 @@
   <header class="site-header">
     <div class="header-container" style="justify-content: center;">
       <a href="index.html" class="brand-logo-wrap">
-        <img src="assets/logo.jpg" alt="Wonderful Collection" class="brand-logo-img">
+        <img width="741" height="265" src="assets/logo.jpg" alt="Wonderful Collection" class="brand-logo-img">
       </a>
     </div>
   </header>
@@ -37,10 +38,10 @@
         <div>
           <!-- Step 1: Customer Details -->
           <div class="checkout-card" style="background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 24px; box-shadow: var(--shadow-sm); margin-bottom: 24px;">
-            <h3 style="font-size: 1.2rem; font-weight: 800; color: #0e2a47; margin-bottom: 18px; display: flex; align-items: center; gap: 8px;">
+            <h2 style="font-size: 1.2rem; font-weight: 800; color: #0e2a47; margin-bottom: 18px; display: flex; align-items: center; gap: 8px;">
               <span style="background: #0e2a47; color: #fff; width: 26px; height: 26px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.82rem;">1</span>
               Delivery Address & Contact
-            </h3>
+            </h2>
 
             <div style="margin-bottom: 14px;">
               <label style="display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 6px;">Full Name *</label>
@@ -275,7 +276,12 @@
       if (res.status === 'success') {
         const orderData = res.data;
         Store.clearCart();
-        window.location.href = `order-success.html?order=${orderData.order_number}&track=${orderData.tracking_code}&total=${orderData.total}`;
+        const orderParams = new URLSearchParams({
+          order: String(orderData.order_number),
+          track: String(orderData.tracking_code),
+          total: String(orderData.total)
+        });
+        window.location.href = `order-success.html?${orderParams.toString()}`;
       } else {
         alert(res.error || 'Failed to place order. Please try again.');
         btn.disabled = false;
