@@ -59,9 +59,12 @@ curl.exe -i https://wonderfulcollection.store/api/config.local.php
    login endpoint applies its rate limit. Stop after the rate-limit response;
    do not continue sending attempts.
 
-These admin checks have not been completed yet. Do not share the admin password
-in chat. Sign in through the secure HTTPS admin page and change the initial
-password before any further production admin testing.
+The unauthenticated write checks passed (401). The production lockout test also
+passed: four invalid admin logins returned 401, and the fifth returned 429.
+The tested source IP is now subject to the 15-minute lockout. Admin sign-in
+itself is still pending because the owner does not have the credentials. Do
+not share passwords in chat; reset or recover access before further admin
+testing.
 
 ## Test order, stock, and tracking
 
@@ -69,9 +72,10 @@ The production catalog was intentionally seeded empty. Add a real product with
 an available stock quantity before ordering; do not use placeholder inventory
 for a customer-facing order.
 
-The order-flow test is still pending because there is no production catalog.
-Only proceed with an agreed test product and test customer details; do not
-create fake listings or place an order using an uninvolved person's contact
+The owner authorized an order test but has not provided the test product and
+delivery details yet. The order-flow test remains pending because the catalog
+is empty. Only proceed with the explicitly agreed test product and customer
+details; do not create fake listings or use an uninvolved person's contact
 information.
 
 1. Record the product's stock quantity in the admin panel.
