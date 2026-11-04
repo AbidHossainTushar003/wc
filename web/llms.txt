@@ -1,0 +1,16 @@
+# Wonderful Collection
+
+> Online lifestyle and personal-care shopping with delivery across Bangladesh.
+
+## Public pages
+- [Home](https://wonderfulcollection.store/)
+- [Shop](https://wonderfulcollection.store/shop.html)
+- [About](https://wonderfulcollection.store/about.html)
+- [Shipping policy](https://wonderfulcollection.store/shipping-policy.html)
+- [Returns and refunds](https://wonderfulcollection.store/refund-policy.html)
+- [Frequently asked questions](https://wonderfulcollection.store/faq.html)
+- [Contact](https://wonderfulcollection.store/contact.html)
+- [Privacy policy](https://wonderfulcollection.store/privacy.html)
+- [Terms and conditions](https://wonderfulcollection.store/terms.html)
+
+Product availability and prices may change; confirm current details on the store before ordering.
