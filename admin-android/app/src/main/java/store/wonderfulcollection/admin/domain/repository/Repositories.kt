@@ -10,7 +10,19 @@ import store.wonderfulcollection.admin.domain.model.*
 interface ProductRepository {
     suspend fun getProducts(category: String? = null, query: String? = null): Result<List<Product>>
     suspend fun getProductById(id: Long): Result<Product>
-    suspend fun createProduct(name: String, price: Double, categoryId: Long, stock: Int): Result<Long>
+    suspend fun createProduct(
+        name: String,
+        shortDescription: String,
+        description: String,
+        regularPrice: Double,
+        salePrice: Double?,
+        categoryId: Long,
+        stock: Int,
+        sku: String?,
+        isFeatured: Boolean,
+        isTrending: Boolean,
+        imageFiles: List<ProductImageFile>
+    ): Result<Long>
     suspend fun deleteProduct(id: Long): Result<Unit>
 }
 
@@ -48,4 +60,3 @@ interface SettingsRepository {
     suspend fun getSettings(): Result<StoreSettings>
     suspend fun updateSettings(settings: Map<String, String>): Result<Unit>
 }
-

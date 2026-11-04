@@ -62,12 +62,42 @@ class ProductRepositoryImpl(private val api: ApiClient) : ProductRepository {
         }
     }
 
-    override suspend fun createProduct(name: String, price: Double, categoryId: Long, stock: Int): Result<Long> {
+    override suspend fun createProduct(
+        name: String,
+        shortDescription: String,
+        description: String,
+        regularPrice: Double,
+        salePrice: Double?,
+        categoryId: Long,
+        stock: Int,
+        sku: String?,
+        isFeatured: Boolean,
+        isTrending: Boolean,
+        imageFiles: List<ProductImageFile>
+    ): Result<Long> {
+        val imageUrls = if (imageFiles.isEmpty()) {
+            Result.success(emptyList())
+        } else {
+            api.uploadProductImages(imageFiles)
+        }
+        if (imageUrls.isFailure) {
+            return Result.failure(imageUrls.exceptionOrNull() ?: Exception("Could not upload product images"))
+        }
+
         val body = JSONObject().apply {
             put("name", name)
-            put("regular_price", price)
+            put("short_desc", shortDescription)
+            put("regular_price", regularPrice)
+            if (salePrice != null) put("sale_price", salePrice) else put("sale_price", JSONObject.NULL)
             put("category_id", categoryId)
             put("stock_quantity", stock)
+            if (!sku.isNullOrBlank()) put("sku", sku)
+            put("description", description)
+            put("is_featured", if (isFeatured) 1 else 0)
+            put("is_trending", if (isTrending) 1 else 0)
+            val jsonArr = JSONArray()
+            imageUrls.getOrThrow().forEach { jsonArr.put(it) }
+            put("images", jsonArr)
         }
         return api.post("products", body).map { json ->
             json.optLong("id", System.currentTimeMillis())
@@ -120,7 +150,7 @@ class OrderRepositoryImpl(private val api: ApiClient) : OrderRepository {
                         total = obj.optDouble("total"),
                         paymentMethod = obj.optString("payment_method"),
                         paymentStatus = obj.optString("payment_status"),
-                        trxId = obj.optString("trx_id", null),
+                        trxId = if (obj.has("trx_id") && !obj.isNull("trx_id")) obj.optString("trx_id") else null,
                         orderStatus = obj.optString("order_status", "Pending"),
                         trackingCode = obj.optString("tracking_code"),
                         notes = obj.optString("notes"),
@@ -323,4 +353,3 @@ class SettingsRepositoryImpl(private val api: ApiClient) : SettingsRepository {
         return api.post("settings", body).map { }
     }
 }
-

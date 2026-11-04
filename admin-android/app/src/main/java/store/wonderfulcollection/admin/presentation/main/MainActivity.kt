@@ -1,6 +1,9 @@
 package store.wonderfulcollection.admin.presentation.main
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.text.InputType
 import android.view.ViewGroup
@@ -20,6 +23,7 @@ import store.wonderfulcollection.admin.presentation.coupons.CouponsActivity
 import store.wonderfulcollection.admin.presentation.customers.CustomersActivity
 import store.wonderfulcollection.admin.presentation.dashboard.DashboardActivity
 import store.wonderfulcollection.admin.presentation.inventory.InventoryActivity
+import store.wonderfulcollection.admin.presentation.orders.OrderNotificationHelper
 import store.wonderfulcollection.admin.presentation.orders.OrdersActivity
 import store.wonderfulcollection.admin.presentation.products.ProductsActivity
 import store.wonderfulcollection.admin.presentation.reports.ReportsActivity
@@ -40,6 +44,13 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        OrderNotificationHelper.createChannel(this)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 101)
+            }
+        }
 
         setupGridClicks()
         setupTopBarActions()

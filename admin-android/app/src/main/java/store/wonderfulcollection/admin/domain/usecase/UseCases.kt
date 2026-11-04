@@ -27,10 +27,30 @@ class GetProductsUseCase(
 class CreateProductUseCase(
     private val productRepository: ProductRepository
 ) {
-    suspend operator fun invoke(name: String, price: Double, categoryId: Long, stock: Int): Result<Long> {
+    suspend operator fun invoke(
+        name: String,
+        shortDescription: String,
+        description: String,
+        regularPrice: Double,
+        salePrice: Double?,
+        categoryId: Long,
+        stock: Int,
+        sku: String?,
+        isFeatured: Boolean,
+        isTrending: Boolean,
+        imageFiles: List<ProductImageFile>
+    ): Result<Long> {
         if (name.isBlank()) return Result.failure(IllegalArgumentException("Product name cannot be empty"))
-        if (price <= 0) return Result.failure(IllegalArgumentException("Price must be greater than zero"))
-        return productRepository.createProduct(name, price, categoryId, stock)
+        if (regularPrice <= 0) return Result.failure(IllegalArgumentException("Regular price must be greater than zero"))
+        if (salePrice != null && (salePrice <= 0 || salePrice >= regularPrice)) {
+            return Result.failure(IllegalArgumentException("Sale price must be greater than zero and less than regular price"))
+        }
+        if (categoryId <= 0) return Result.failure(IllegalArgumentException("Choose a product category"))
+        if (stock < 0) return Result.failure(IllegalArgumentException("Stock cannot be negative"))
+        return productRepository.createProduct(
+            name, shortDescription, description, regularPrice, salePrice, categoryId, stock, sku,
+            isFeatured, isTrending, imageFiles
+        )
     }
 }
 
@@ -93,4 +113,3 @@ class GetSettingsUseCase(
         return settingsRepository.getSettings()
     }
 }
-

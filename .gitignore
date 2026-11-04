@@ -3,4 +3,8 @@ web/data.sqlite
 *.sqlite
 deploy/wonderful-deploy.zip
 admin-android/.gradle/
-admin-android/build/
+admin-android/.kotlin/
+admin-android/.idea/
+admin-android/.artifacts/
+admin-android/local.properties
+admin-android/**/build/

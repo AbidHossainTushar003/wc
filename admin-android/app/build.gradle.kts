@@ -6,6 +6,7 @@ plugins {
 android {
     namespace = "store.wonderfulcollection.admin"
     compileSdk = 34
+    buildToolsVersion = "34.0.0"
 
     defaultConfig {
         applicationId = "store.wonderfulcollection.admin"

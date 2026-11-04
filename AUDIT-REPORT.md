@@ -38,7 +38,7 @@ The local storefront falls back to its bundled placeholder for invalid device-lo
 - Rocket number: `015600247777` (owner confirmed the 12-digit number is intentional).
 - Public display location: Dhaka, Bangladesh.
 - Dhanmondi-specific delivery copy was replaced with neutral delivery wording. Inside/Outside Dhaka checkout options and rates remain unchanged.
-- No old `01712345678` or `Wonderful@2026!` value was found in the searched source/data files.
+- No old phone number or previously used database-password value was found in the searched source/data files.
 - Public storefront content is neutralized; historical customer/order addresses and internal compatibility identifiers are intentionally preserved.
 
 ## Fixes made locally

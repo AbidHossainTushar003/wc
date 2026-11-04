@@ -16,6 +16,11 @@ data class Product(
     val isTrending: Boolean
 )
 
+data class ProductImageFile(
+    val mimeType: String,
+    val bytes: ByteArray
+)
+
 data class Order(
     val id: Long,
     val orderNumber: String,
@@ -111,4 +116,3 @@ data class StoreSettings(
     val bkashNumber: String,
     val nagadNumber: String
 )
-
