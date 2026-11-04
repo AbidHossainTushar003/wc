@@ -22,7 +22,8 @@ switch ($method) {
                     'announcement_text',
                     'delivery_fee_dhanmondi',
                     'delivery_fee_dhaka',
-                    'delivery_fee_outside_dhaka'
+                    'delivery_fee_outside_dhaka',
+                    'free_delivery_min_amount'
                 )
             ");
             $stmt->execute();
@@ -36,7 +37,8 @@ switch ($method) {
                     'announcement_text' => $settings['announcement_text'] ?? 'Delivery availability and estimates are shown at checkout.',
                     'delivery_fee_dhanmondi' => $settings['delivery_fee_dhanmondi'] ?? '60',
                     'delivery_fee_dhaka' => $settings['delivery_fee_dhaka'] ?? '80',
-                    'delivery_fee_outside_dhaka' => $settings['delivery_fee_outside_dhaka'] ?? '130'
+                    'delivery_fee_outside_dhaka' => $settings['delivery_fee_outside_dhaka'] ?? '130',
+                    'free_delivery_min_amount' => $settings['free_delivery_min_amount'] ?? '2000'
                 ]
             ]);
         }
@@ -56,6 +58,13 @@ switch ($method) {
         $data = getRequestBody();
         if (empty($data)) {
             jsonResponse(['error' => 'No settings provided to update'], 400);
+        }
+        if (array_key_exists('announcement_text', $data)) {
+            $announcement = $data['announcement_text'];
+            if (!is_string($announcement) || preg_match('/\A.{0,240}\z/usD', $announcement) !== 1) {
+                jsonResponse(['error' => 'Announcement text must be valid text no longer than 240 characters.'], 422);
+            }
+            $data['announcement_text'] = trim($announcement);
         }
 
         $driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);

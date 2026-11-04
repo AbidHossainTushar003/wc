@@ -12,7 +12,7 @@ This ledger tracks findings in `AUDIT_REPORT.md`. `OPEN` means not addressed yet
 | M-06 | OPEN | Analytics and hosted error monitoring are not configured. |
 | M-07 | OPEN | Product review submission feature is absent. |
 | M-08 | OPEN | Backup scheduling and offsite retention require hosting setup. |
-| B-01 | OPEN | Free-delivery threshold is not applied. |
+| B-01 | FIXED | API and checkout preview apply the configured free-delivery threshold to server-calculated Dhaka/Dhanmondi subtotal; outside-Dhaka fee remains. |
 | B-02 | OPEN | Delivery zone is selected by the customer and not independently verified. |
 | B-03 | OPEN | Product price validation is insufficient. |
 | B-04 | OPEN | Order status transitions are not restricted. |

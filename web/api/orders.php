@@ -153,6 +153,9 @@ switch ($method) {
         $deliveryFee = $deliveryFeeValue === false
             ? ['dhanmondi' => 60.00, 'dhaka' => 80.00, 'outside_dhaka' => 130.00][$deliveryZone]
             : max(0, (float)$deliveryFeeValue);
+        $freeDeliveryStmt = $pdo->prepare('SELECT value_data FROM settings WHERE key_name = ?');
+        $freeDeliveryStmt->execute(['free_delivery_min_amount']);
+        $freeDeliveryThreshold = $freeDeliveryStmt->fetchColumn();
 
         $pdo->beginTransaction();
         try {
@@ -184,6 +187,13 @@ switch ($method) {
                 ];
             }
             $subtotal = round($subtotal, 2);
+            if ($deliveryZone !== 'outside_dhaka'
+                && $freeDeliveryThreshold !== false
+                && is_numeric($freeDeliveryThreshold)
+                && (float)$freeDeliveryThreshold > 0
+                && $subtotal >= (float)$freeDeliveryThreshold) {
+                $deliveryFee = 0.0;
+            }
 
             $discount = 0.0;
             $coupon = null;

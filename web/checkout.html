@@ -182,6 +182,7 @@
       dhaka: 80,
       outside_dhaka: 130
     };
+    let freeDeliveryMinimum = 2000;
 
     async function initCheckout() {
       if (!Store.state.cart.length) {
@@ -238,6 +239,10 @@
           dhaka: Number(result.data.delivery_fee_dhaka),
           outside_dhaka: Number(result.data.delivery_fee_outside_dhaka)
         };
+        const threshold = Number(result.data.free_delivery_min_amount);
+        if (Number.isFinite(threshold) && threshold > 0) {
+          freeDeliveryMinimum = threshold;
+        }
         const area = document.getElementById('delivery_area');
         area.options[0].text = `Dhanmondi — ${Store.formatBDT(deliveryFees.dhanmondi)}`;
         area.options[1].text = `Inside Dhaka — ${Store.formatBDT(deliveryFees.dhaka)}`;
@@ -276,8 +281,9 @@
 
     function updateDeliveryFee() {
       const area = document.getElementById('delivery_area').value;
-      const fee = deliveryFees[area] ?? deliveryFees.dhaka;
       const subtotal = Store.getCartSubtotal();
+      const baseFee = deliveryFees[area] ?? deliveryFees.dhaka;
+      const fee = area !== 'outside_dhaka' && subtotal >= freeDeliveryMinimum ? 0 : baseFee;
       const discount = Store.state.appliedCoupon ? Store.state.appliedCoupon.discount : 0;
       const total = Math.max(0, subtotal - discount + fee);
 
