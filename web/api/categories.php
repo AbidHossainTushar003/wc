@@ -16,7 +16,8 @@ switch ($method) {
         $stmt = $pdo->query("
             SELECT c.*, COUNT(p.id) AS product_count 
             FROM categories c 
-            LEFT JOIN products p ON c.id = p.category_id 
+            LEFT JOIN products p ON c.id = p.category_id AND p.is_archived = 0
+            WHERE c.is_archived = 0
             GROUP BY c.id 
             ORDER BY c.name ASC
         ");
@@ -65,10 +66,10 @@ switch ($method) {
             jsonResponse(['error' => 'Missing category ID'], 400);
         }
 
-        $stmt = $pdo->prepare("DELETE FROM categories WHERE id = ?");
+        $stmt = $pdo->prepare("UPDATE categories SET is_archived = 1 WHERE id = ? AND is_archived = 0");
         $stmt->execute([(int)$id]);
 
-        jsonResponse(['status' => 'success', 'message' => 'Category deleted']);
+        jsonResponse(['status' => 'success', 'message' => 'Category archived']);
         break;
 
     default:

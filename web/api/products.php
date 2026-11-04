@@ -20,7 +20,7 @@ switch ($method) {
                 SELECT p.*, c.name AS category_name, c.slug AS category_slug 
                 FROM products p 
                 LEFT JOIN categories c ON p.category_id = c.id 
-                WHERE p.id = ?
+                WHERE p.id = ? AND p.is_archived = 0
             ");
             $stmt->execute([(int)$_GET['id']]);
             $product = $stmt->fetch();
@@ -44,7 +44,7 @@ switch ($method) {
             SELECT p.*, c.name AS category_name, c.slug AS category_slug 
             FROM products p 
             LEFT JOIN categories c ON p.category_id = c.id 
-            WHERE 1=1
+            WHERE p.is_archived = 0
         ";
         $params = [];
 
@@ -176,10 +176,10 @@ switch ($method) {
             jsonResponse(['error' => 'Missing product ID'], 400);
         }
 
-        $stmt = $pdo->prepare("DELETE FROM products WHERE id = ?");
+        $stmt = $pdo->prepare("UPDATE products SET is_archived = 1 WHERE id = ? AND is_archived = 0");
         $stmt->execute([(int)$id]);
 
-        jsonResponse(['status' => 'success', 'message' => 'Product deleted successfully']);
+        jsonResponse(['status' => 'success', 'message' => 'Product archived successfully']);
         break;
 
     default:

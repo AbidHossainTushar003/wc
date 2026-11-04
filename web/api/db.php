@@ -40,6 +40,8 @@ class Database {
                 if ($isNew) {
                     self::initSQLiteDatabase(self::$instance);
                 }
+                self::ensureSQLiteColumn(self::$instance, 'categories', 'is_archived', 'INTEGER NOT NULL DEFAULT 0');
+                self::ensureSQLiteColumn(self::$instance, 'products', 'is_archived', 'INTEGER NOT NULL DEFAULT 0');
                 self::$instance->exec("
                     CREATE TABLE IF NOT EXISTS admin_tokens (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -106,6 +108,7 @@ class Database {
                 slug TEXT UNIQUE NOT NULL,
                 description TEXT,
                 image TEXT,
+                is_archived INTEGER NOT NULL DEFAULT 0,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP
             );
             CREATE TABLE IF NOT EXISTS products (
@@ -122,6 +125,7 @@ class Database {
                 images TEXT NOT NULL,
                 is_featured INTEGER DEFAULT 0,
                 is_trending INTEGER DEFAULT 0,
+                is_archived INTEGER NOT NULL DEFAULT 0,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP
             );
             CREATE TABLE IF NOT EXISTS customers (
@@ -302,6 +306,16 @@ class Database {
             INSERT OR IGNORE INTO admins (username, password_hash, full_name, role) VALUES
             ('admin', '$2y$12$l0nUHojhz2R6lYhkYzvOwejLKmJc.tCQbXMm7NmbWqewMxLUmZuiy', 'Wonderful Store Manager', 'Super Admin');
         ");
+    }
+
+    private static function ensureSQLiteColumn(PDO $pdo, string $table, string $column, string $definition): void {
+        $columns = $pdo->query('PRAGMA table_info(' . $table . ')')->fetchAll();
+        foreach ($columns as $existingColumn) {
+            if ($existingColumn['name'] === $column) {
+                return;
+            }
+        }
+        $pdo->exec('ALTER TABLE ' . $table . ' ADD COLUMN ' . $column . ' ' . $definition);
     }
 }
 

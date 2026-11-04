@@ -34,6 +34,7 @@ CREATE TABLE `categories` (
   `slug` VARCHAR(150) UNIQUE NOT NULL,
   `description` TEXT,
   `image` VARCHAR(255) DEFAULT NULL,
+  `is_archived` TINYINT(1) NOT NULL DEFAULT 0,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -52,6 +53,7 @@ CREATE TABLE `products` (
   `images` TEXT NOT NULL,
   `is_featured` TINYINT(1) DEFAULT 0,
   `is_trending` TINYINT(1) DEFAULT 0,
+  `is_archived` TINYINT(1) NOT NULL DEFAULT 0,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (`category_id`) REFERENCES `categories`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -107,13 +109,13 @@ CREATE TABLE `orders` (
 CREATE TABLE `order_items` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `order_id` INT NOT NULL,
-  `product_id` INT NOT NULL,
+  `product_id` INT DEFAULT NULL,
   `product_name` VARCHAR(255) NOT NULL,
   `price` DECIMAL(10,2) NOT NULL,
   `quantity` INT NOT NULL DEFAULT 1,
   `total` DECIMAL(10,2) NOT NULL,
   FOREIGN KEY (`order_id`) REFERENCES `orders`(`id`) ON DELETE CASCADE,
-  FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON DELETE CASCADE
+  FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 7. Coupons Table

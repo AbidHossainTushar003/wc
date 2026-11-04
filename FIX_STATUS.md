@@ -16,7 +16,7 @@ This ledger tracks findings in `AUDIT_REPORT.md`. `OPEN` means not addressed yet
 | B-02 | OPEN | Delivery zone is selected by the customer and not independently verified. |
 | B-03 | OPEN | Product price validation is insufficient. |
 | B-04 | FIXED | Order transitions now follow Pending → Processing → Shipped → Delivered, with cancellation only before shipment; checkout locks product and coupon rows during server-side calculation. |
-| B-05 | OPEN | Product/category deletion may cascade into order history. |
+| B-05 | PARTIAL | Product/category APIs now archive records; schema and idempotent migration preserve order-item snapshots with `ON DELETE SET NULL`. Owner must run the migration before deploying these API changes. |
 | B-06 | OPEN | Checkout idempotency and coupon-use reversal are missing. |
 | B-07 | OPEN | Admin UI can report success when order updates fail. |
 | B-08 | OPEN | Checkout does not confirm server-side price changes before placement. |
@@ -41,6 +41,7 @@ This ledger tracks findings in `AUDIT_REPORT.md`. `OPEN` means not addressed yet
 
 - **M-01:** Provide the real sellable catalog, category images, and optimized product photographs; do not launch with placeholder listings.
 - **M-02:** Back up the live database and run the migration; provide verified opening balances for each cash/bank account before recording financial transactions.
+- **B-05:** The same migration adds archive columns and changes the historical product reference to `ON DELETE SET NULL`; run it against a backed-up database before deploying the APIs.
 - **M-03/M-04:** Provide a verified cPanel sender and owner notification address; configure SPF, DKIM, and DMARC for the sending domain. Customer order email requires customers to supply a valid address.
 - **S-03:** Provision a private TOTP secret in `api/config.local.php` and enroll the admin authenticator app before admin login can be enabled.
 - **D-02:** Hosting support must purge the proxy cache, bypass `/api/*`, and enforce HTTP-to-HTTPS redirect at the proxy.
