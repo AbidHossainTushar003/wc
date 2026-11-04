@@ -50,6 +50,7 @@ The local storefront falls back to its bundled placeholder for invalid device-lo
 - Show an error toast when catalog/product/category APIs fail instead of silently presenting an empty catalog.
 - Make the cart and checkout layouts responsive; the five-column cart table scrolls within its card on narrow screens.
 - Updated the approved contact/payment details and neutral delivery/location copy. Preserved the existing checkout shipping tiers and historical customer/order addresses.
+- Refreshed the cPanel and image-upload guides to remove stale delivery branding and list the live catalog's photo follow-ups.
 
 ## Verification
 
@@ -58,7 +59,8 @@ The local storefront falls back to its bundled placeholder for invalid device-lo
 - Browser check at a 375px viewport found no horizontal overflow on cart or checkout. An invalid `content://` cart image used the local placeholder; the stock-limited quantity control was disabled; the confirmed Rocket number and neutral delivery copy rendered.
 - Earlier focused browser checks confirmed dynamic category navigation, sold-out UI, cart quantity capping, API error toasts, and escaped cart values.
 - Production paths `/data.sqlite` and `/database.sql` returned 404; `/api/config.local.php` and `/assets/products/` returned 403.
-- PHP CLI is unavailable here, so PHP lint was not run. No production order, customer, product, or payment was created.
+- The production SQL seeds only one bcrypt-hashed admin; customer, product, category, coupon, and review tables start empty, and admin token/login-attempt tables are present. MySQL 8 is installed locally, but its service rejects access without a local database account, so an import test could not be run. PHP CLI is unavailable, so PHP lint was not run.
+- No production order, customer, product, or payment was created.
 
 ## Remaining work / deployment status
 

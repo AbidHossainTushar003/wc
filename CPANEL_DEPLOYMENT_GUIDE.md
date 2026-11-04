@@ -4,7 +4,7 @@
 **cPanel User:** `wonderfu`  
 **Home Directory:** `/home/wonderfu`  
 **Public Root:** `/home/wonderfu/public_html`  
-**Brand:** 🛍️ Wonderful Collection — Dhanmondi, Dhaka, Bangladesh 🇧🇩  
+**Brand:** 🛍️ Wonderful Collection — Dhaka, Bangladesh 🇧🇩
 
 ---
 
@@ -31,10 +31,10 @@ This project provides a unified full-stack e-commerce solution:
 The archive is built locally from the project root with:
 
 ```powershell
-.\deploy\Build-Deployment.ps1
+.\deploy\Build-Deployment.ps1 -Force
 ```
 
-This creates `deploy\wonderful-deploy.zip` with `index.html` at the archive root and an `api/config.local.php` template. Keep the ZIP on your computer until the File Manager upload step. Do not send cPanel passwords or session links in chat.
+This overwrites the generated `deploy\wonderful-deploy.zip` with `index.html` at the archive root and an `api/config.local.php` template. Keep the ZIP on your computer until the File Manager upload step. Do not send cPanel passwords or session links in chat.
 
 1. **Create the MySQL database and user**
    - Sign in to cPanel at [https://server.shodns.in:2083](https://server.shodns.in:2083).
@@ -126,5 +126,5 @@ Before or during cPanel deployment, you can preview and test everything locally 
 - **Default Username:** `admin`
 - **Initial Admin Password:** use the one-time password provided in the deployment conversation; change it immediately after first login.
 - **Store Moto:** Wonderful Collection: Quality products, delivered across Bangladesh.
-- **Fast Dhanmondi Delivery:** 2 to 4 hours (৳60 delivery fee, Free on orders ৳2,000+)
-- **Mobile Payments:** bKash, Nagad, and Rocket Personal accounts with TrxID verification
+- **Delivery:** Availability, fees, and estimates are shown at checkout. Current options are Inside Dhaka (৳80) and Outside Dhaka (৳130).
+- **Mobile Payments:** bKash, Nagad, and Rocket Personal accounts with TrxID verification.
