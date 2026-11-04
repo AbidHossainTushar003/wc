@@ -183,11 +183,11 @@ BEGIN
   END IF;
   ALTER TABLE `order_items` MODIFY COLUMN `product_id` INT DEFAULT NULL;
   SELECT COUNT(*) INTO fk_count
-  FROM information_schema.TABLE_CONSTRAINTS
-  WHERE CONSTRAINT_SCHEMA = DATABASE()
+  FROM information_schema.KEY_COLUMN_USAGE
+  WHERE TABLE_SCHEMA = DATABASE()
     AND TABLE_NAME = 'order_items'
-    AND CONSTRAINT_NAME = 'fk_order_items_product'
-    AND CONSTRAINT_TYPE = 'FOREIGN KEY';
+    AND COLUMN_NAME = 'product_id'
+    AND REFERENCED_TABLE_NAME = 'products';
   IF fk_count = 0 THEN
     ALTER TABLE `order_items`
       ADD CONSTRAINT `fk_order_items_product`
