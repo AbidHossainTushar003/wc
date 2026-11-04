@@ -14,6 +14,13 @@ curl.exe -I http://wonderfulcollection.store/
 The products and categories requests should return HTTP 200 with JSON. The HTTP
 request should redirect to HTTPS.
 
+**Deployment follow-up:** cPanel's **Domains → Force HTTPS Redirect** is now
+enabled for the domain, but live HTTP probes still return HTTP 200 from an
+upstream Nginx cache (including stale HTML on `/api/products`) instead of a
+redirect. Do not send credentials or bearer tokens over HTTP. Ask the hosting
+provider to clear or correct the HTTP cache/redirect at the Nginx proxy, then
+repeat the HTTP checks above. This redirect is not yet verified.
+
 ## Admin API rejects requests without a token
 
 Each request below should return HTTP 401. These calls intentionally contain
