@@ -21,6 +21,12 @@ redirect. Do not send credentials or bearer tokens over HTTP. Ask the hosting
 provider to clear or correct the HTTP cache/redirect at the Nginx proxy, then
 repeat the HTTP checks above. This redirect is not yet verified.
 
+**Hosting support contacted:** ChepHost support ticket `FPB-032495` was
+submitted requesting a purge/fix of the HTTP proxy cache, HTTPS redirects at
+the proxy layer, and no caching for `/api/*`. Re-run the HTTP checks after the
+provider responds; the issue remains open until those requests redirect to
+HTTPS.
+
 ## Admin API rejects requests without a token
 
 Each request below should return HTTP 401. These calls intentionally contain
@@ -53,11 +59,20 @@ curl.exe -i https://wonderfulcollection.store/api/config.local.php
    login endpoint applies its rate limit. Stop after the rate-limit response;
    do not continue sending attempts.
 
+These admin checks have not been completed yet. Do not share the admin password
+in chat. Sign in through the secure HTTPS admin page and change the initial
+password before any further production admin testing.
+
 ## Test order, stock, and tracking
 
 The production catalog was intentionally seeded empty. Add a real product with
 an available stock quantity before ordering; do not use placeholder inventory
 for a customer-facing order.
+
+The order-flow test is still pending because there is no production catalog.
+Only proceed with an agreed test product and test customer details; do not
+create fake listings or place an order using an uninvolved person's contact
+information.
 
 1. Record the product's stock quantity in the admin panel.
 2. Place a small test order through the storefront.
