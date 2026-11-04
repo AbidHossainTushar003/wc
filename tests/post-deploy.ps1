@@ -281,7 +281,8 @@ try {
         }
     }
 
-    foreach ($httpUrl in @('http://wonderfulcollection.store/', 'http://wonderfulcollection.store/api/products')) {
+    $httpOrigin = 'http://' + $script:BaseUri.Host
+    foreach ($httpUrl in @("$httpOrigin/", "$httpOrigin/api/products")) {
         try {
             $redirect = Invoke-TestRequest -Path $httpUrl -Method 'HEAD'
             $locationIsHttps = $redirect.Location -match '^https://'

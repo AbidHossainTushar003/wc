@@ -1,113 +1,225 @@
-# cPanel deployment runbook
+# Wonderful Collection staging-first release runbook
 
-This package contains only the contents of `web/`; `index.html` is at the ZIP
-root. It intentionally excludes database dumps and `api/config.local.php`.
-Never put database passwords in chat, Git, or the ZIP.
+**Release package:** `deploy/wonderful-deploy-phase16-20261104.zip`
+**SHA-256:** `184BAA7A7885600EB0E829967C52119E30C4FFDDEC5E8B88989305AD52DF02F4`
+**Contents:** web files only; `index.html` is at the ZIP root. The package excludes
+`.sqlite`, `.sql`, `.md`, `api/config.local.php`, and development files.
 
-## 1. Back up before upload
+Do not upload to production until every staging check below passes. Never send
+passwords, tokens, database credentials, or the TOTP secret in chat or commit
+them to Git.
 
-1. In cPanel, open **Files → Backup Wizard → Back Up → Full Backup** (or
-   **Files → Backup → Download a Full Account Backup**, depending on the
-   available cPanel layout). Save the backup outside `public_html`, then
-   download a copy to an encrypted device/location.
-2. Open **Databases → phpMyAdmin**, select the production database, choose
-   **Export → Custom**, include structure and data, choose SQL and gzip if
-   available, and download the export to the same protected backup location.
-3. Keep the existing live `api/config.local.php` private and backed up outside
-   `public_html`. Do not include it in Git or the deployment ZIP.
+## 1. Back up production first
 
-## 2. Run the live SQL migration before uploading the ZIP
+1. In cPanel, open **Files → Backup Wizard → Back Up → Full Backup** (or the
+   equivalent **Backup** page). Save it outside `public_html` and keep an
+   encrypted copy in a separate, owner-controlled location.
+2. In **Databases → phpMyAdmin**, select the production database, choose
+   **Export → Custom**, include structure and data, choose SQL (gzip if
+   available), and save the export with the full-account backup.
+3. In **Files → File Manager**, make a private copy of
+   `public_html/api/config.local.php` outside the document root. Do not put
+   this file in Git or the release ZIP.
+4. Record the current production files and PHP version. Do not modify the live
+   database or upload the release during this step.
 
-Before any file upload, back up the live database and run the additive migration in
-`migrations/2026-11-04-fixes.sql` against the production database. Use
-**phpMyAdmin → Import** for the file or the MySQL client from cPanel Terminal.
-Do not re-import `database.sql` and do not drop any tables. The migration is
-idempotent and safe to re-run.
+## 2. Create staging and a separate database
 
-## 3. Build and verify the package on Windows
+1. In cPanel, use **Domains → Create A New Domain** (or **Subdomains**, if that
+   is the control-panel layout) to create the staging hostname chosen by the
+   owner. Set its document root to a separate directory, not
+   `/home/wonderfu/public_html`.
+2. Enable AutoSSL for that hostname and confirm HTTPS works before proceeding.
+   The test script refuses plain HTTP and unlisted hosts.
+3. Under **Databases → MySQL Databases**, create a staging database and user.
+   cPanel prefixes names with `wonderfu_`; grant the staging user **ALL
+   PRIVILEGES** to that staging database only.
+4. In **Databases → phpMyAdmin**, export production structure/data and import
+   it into the staging database. Never point staging `config.local.php` at the
+   production database.
+5. Set staging mail to an owner-controlled test inbox. Do not send test
+   notifications to customers. Leave courier integration disabled.
 
-From the repository root, run:
+## 3. Check staging schema, then migrate staging
 
-```powershell
-.\deploy\Build-Deployment.ps1 -OutputPath .\deploy\wonderful-deploy-batch4-20261104.zip
+1. Select the staging database in phpMyAdmin and run
+   `tests/schema-check.sql` from the SQL tab. Review all result sets:
+   - Resolve every missing table/column before continuing.
+   - Confirm a unique index covers `idempotency_key`.
+   - Resolve duplicate `(payment_method, trx_id)` rows before adding its unique
+     index.
+   - Confirm `order_items.product_id` uses `ON DELETE SET NULL`.
+2. Import or paste `migrations/2026-11-04-fixes.sql` into the **staging**
+   database. Run each `ALTER TABLE` statement separately. If phpMyAdmin reports
+   a duplicate column, it is already present; continue. For the unique
+   idempotency index, skip the statement when schema-check already shows an
+   equivalent unique index. A duplicate-key error on the TrxID index requires
+   resolving the duplicate records; do not ignore it.
+3. Re-run `tests/schema-check.sql`. Continue only when the expected schema and
+   indexes are present. The migration is additive; rollback is by restoring
+   the full pre-migration database backup, not by guessing at reverse DDL.
+
+## 4. Upload the release to staging
+
+1. On Windows, verify the local package hash before upload:
+
+   ```powershell
+   Get-FileHash .\deploy\wonderful-deploy-phase16-20261104.zip -Algorithm SHA256
+   ```
+
+   It must match the SHA-256 printed at the top of this runbook.
+2. In cPanel, open **Files → File Manager** and navigate to the staging
+   document root. Upload `wonderful-deploy-phase16-20261104.zip`, select it,
+   choose **Extract**, and extract into that document root. Confirm `index.html`
+   appears directly at the root, with no extra `web/` directory.
+3. The ZIP does not contain `api/config.local.php`; do not overwrite or delete
+   the staging config when extracting. If no staging config exists, create
+   `api/config.local.php` in File Manager and enter only the staging values:
+
+   ```php
+   <?php
+   define('DB_HOST', 'localhost');
+   define('DB_NAME', 'wonderfu_<staging_database>');
+   define('DB_USER', 'wonderfu_<staging_user>');
+   define('DB_PASS', '<staging_database_password>');
+   define('DEV_MODE', false);
+   define('MAIL_FROM', '<verified_sender_address>');
+   define('MAIL_TO', '<owner_controlled_staging_test_inbox>');
+   define('ADMIN_TOTP_SECRET', '<locally_generated_base32_secret>');
+   ```
+
+   Use the real cPanel-generated DB values locally; the angle-bracket strings
+   above are placeholders, not literal values. The supported config keys are
+   `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASS`, `DEV_MODE`, `MAIL_FROM`,
+   `MAIL_TO`, `ADMIN_TOTP_SECRET`, and `COURIER_WEBHOOK_SECRET`. `DB_*` and
+   `DEV_MODE` are required; missing/empty required config returns a clean JSON
+   500. Missing mail settings disables store email delivery. **Do not define
+   `COURIER_WEBHOOK_SECRET` on staging or production until a courier provider
+   and shared signing secret are approved.** The courier callback stays
+   disabled without it.
+4. Keep `api/config.local.php` outside Git, set it to `600` or `640` if
+   supported, and do not leave a backup or credentials under the public
+   document root.
+
+## 5. Configure and enroll admin MFA before sign-in
+
+Admin login intentionally returns **HTTP 503** until a valid
+`ADMIN_TOTP_SECRET` is configured. Do not attempt admin login before this step.
+
+1. Generate a 20-byte Base32 secret on your own Windows machine. This prints
+   the secret only in your local terminal:
+
+   ```powershell
+   python -c "import base64,secrets; print(base64.b32encode(secrets.token_bytes(20)).decode().rstrip('='))"
+   ```
+
+   Copy it directly into the staging `api/config.local.php` using cPanel File
+   Manager. Do not send it to the agent, save it in the repository, or put it
+   in the ZIP.
+2. In your authenticator app, add an account manually (no QR enrollment page
+   exists). Use the account name **Wonderful Collection Admin**, paste the
+   same Base32 secret, and select time-based TOTP with six digits. Keep a
+   protected offline backup of the secret.
+3. Open the staging admin page over HTTPS. Sign in with the owner-held initial
+   admin credentials and the current six-digit authenticator code. The seeded
+   admin is required to change its password before using admin features.
+   Choose a unique password of at least 14 characters in your password
+   manager, complete the prompted change, then sign out and verify a fresh
+   login with the new password and a new TOTP code.
+4. **MFA recovery:** if the authenticator is lost, generate a new secret
+   locally, replace `ADMIN_TOTP_SECRET` in the staging or production
+   `api/config.local.php` through **Files → File Manager**, and enroll the new
+   value in the authenticator app. Keep the existing secret/config backup
+   private until the replacement login succeeds. If a device may be
+   compromised, after regaining access change the admin password; the password
+   change revokes that admin's existing tokens. Do not remove the MFA setting
+   as a recovery shortcut.
+
+## 6. Check PHP version, syntax, and required extensions
+
+In cPanel, open **Software → MultiPHP Manager** and note the PHP version
+assigned to the staging hostname. In **Software → Select PHP Version** (or
+**MultiPHP INI Editor**), ensure `fileinfo` and `pdo_mysql` are enabled.
+
+In **Advanced → Terminal**, use the matching cPanel EA-PHP CLI binary. Replace
+`81` below with the version selected in MultiPHP Manager (for example, `82`):
+
+```bash
+EA_PHP=/opt/cpanel/ea-php81/root/usr/bin/php
+"$EA_PHP" -v
+"$EA_PHP" -m | grep -iE '^(fileinfo|pdo_mysql)$'
+DOCROOT=/home/wonderfu/<staging_document_root>
+find "$DOCROOT" -type f -name '*.php' -print0 | xargs -0 -n1 "$EA_PHP" -l
 ```
 
-The script checks that the ZIP has root `index.html` and `.htaccess` and
-contains no `.sqlite`, `.sql`, `.md`, or `config.local.php` files. It does not
-include `server.js`, `dev-data.json`, or `admin-android`.
+Confirm both `fileinfo` and `pdo_mysql` appear. Every PHP file must report
+`No syntax errors detected`; stop if a module or lint check fails.
 
-## 4. Upload and extract
+## 7. Run staging smoke and stock tests
 
-1. In cPanel, open **Files → File Manager** and navigate to
-   `/home/wonderfu/public_html`.
-2. Click **Upload**, choose `wonderful-deploy-phase8-20261104.zip`, and wait
-   until the upload completes.
-3. Return to File Manager, select the ZIP, click **Extract**, and set the
-   extraction destination to `/home/wonderfu/public_html`. Confirm that
-   `index.html` appears directly in `public_html`, not inside an extra
-   `web/` directory. Before confirming extraction, verify that the archive
-   does not contain `api/config.local.php`; existing config must not be
-   overwritten. Allow existing public files to be replaced.
-4. If this is the first deployment and `api/config.local.php` does not exist,
-   use **File Manager → public_html → api → + File** to create it from the
-   private template kept in the repository at
-   `deploy/config.local.php.template`. Edit it locally in File Manager with
-   the real database values; do not send them in chat or commit them. The
-   required values are `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASS`, `DEV_MODE`,
-   `MAIL_FROM`, `MAIL_TO`, `ADMIN_TOTP_SECRET`, and
-   `COURIER_WEBHOOK_SECRET`. Keep `ADMIN_TOTP_SECRET` and
-   `COURIER_WEBHOOK_SECRET` private and non-empty only after you have the real
-   values from the owner/provider. The courier webhook stays disabled until
-   `COURIER_WEBHOOK_SECRET` is set to a secret shared with the provider. The
-   callback must send `X-Courier-Signature` with the lowercase hexadecimal
-   HMAC-SHA256 of the exact raw JSON body. Confirm that signature contract with
-   the provider before configuring it; never use the blank template value as a
-   secret.
-5. In File Manager, select the ZIP and click **Delete** after extraction and
-   checks are complete.
+1. From Windows PowerShell, explicitly allow only the staging hostname and run
+   the post-deploy checks. Enter the staging admin bearer token at the secure
+   prompt; do not put it in a file or pass it over HTTP:
 
-## 5. Check files and permissions
+   ```powershell
+   $env:WC_STAGING_HOST = '<staging-hostname-only>'
+   .\tests\post-deploy.ps1 -BaseUri "https://$env:WC_STAGING_HOST"
+   Remove-Item Env:\WC_STAGING_HOST
+   ```
 
-1. In File Manager, confirm `public_html/.htaccess` exists and that
-   `public_html/assets/products/.htaccess` exists. The latter must remain in
-   the product image directory to prevent script execution there.
-2. Set directories to `755` and regular files to `644`. Set
-   `api/config.local.php` to `600` or `640` if supported by the host.
-3. Do not copy the repository's placeholder config template over a working
-   production config. This package deliberately excludes local credentials.
+   Replace the placeholder with the actual staging hostname. The script checks
+   unauthenticated admin writes, public product JSON, protected files, upload
+   MIME rejection, announcement escaping, and HTTP-to-HTTPS redirects for the
+   selected staging host. It asks for explicit `RUN` before temporarily
+   changing the staging announcement and restores the original value.
+2. Complete `tests/stock-test.md` on a disposable staging product: record
+   stock, place an order, verify the decrement, cancel once and verify
+   restoration, cancel again and verify no second restoration, then confirm a
+   cancelled order cannot be reopened.
+3. Complete the checkout price-confirmation procedure in
+   `tests/checkout-price-confirmation.md`, including the changed-price,
+   cancellation, re-confirmation, and server-calculated total checks.
+4. Fill the PASS/FAIL results in `verify.md`. Confirm admin login/password
+   change, HTTPS-only behavior, images, error handling, and mail to the staging
+   test inbox. Do not fulfill staging orders.
 
-## 6. Smoke test
+## 8. Production release (only after staging passes)
 
-1. Test `https://wonderfulcollection.store/` and
-   `https://wonderfulcollection.store/api/products`.
-2. From Windows PowerShell, run `tests/post-deploy.ps1`. Enter the token at
-   its secure prompt or set `WC_ADMIN_TOKEN` in the current process; never put
-   it in a file. The temporary announcement test requires explicit `RUN`
-   confirmation and restores the previous text.
-3. Run the remaining checklist in `verify.md` and the stock/cancellation
-   procedure in `tests/stock-test.md` only after resolving the existing test
-   order marked **DO NOT FULFILL**.
-4. Test HTTP redirects only after the provider confirms ticket `FPB-032495`.
-   Do not send credentials or bearer tokens over HTTP.
+1. Make a fresh full-account backup and production database export immediately
+   before the maintenance window. Keep the production `api/config.local.php`
+   backed up privately.
+2. Repeat the schema check and migration against production, using the same
+   duplicate/index precautions as staging. Do not re-import `database.sql`.
+3. Upload the exact ZIP whose SHA-256 matches this runbook to
+   `/home/wonderfu/public_html`; extract it there. Confirm `index.html` is at
+   the web root and the archive did not overwrite
+   `/home/wonderfu/public_html/api/config.local.php`.
+4. Preserve production DB values and the enrolled `ADMIN_TOTP_SECRET` in
+   `api/config.local.php`; keep `DEV_MODE` false and leave
+   `COURIER_WEBHOOK_SECRET` undefined. Set directory permissions to `755`,
+   regular files to `644`, and `config.local.php` to `600` or `640`.
+5. Repeat the EA-PHP lint/module checks and the post-deploy/stock checks using
+   `https://wonderfulcollection.store`. Run order-changing tests only with an
+   owner-approved, clearly marked test order. Never fulfill it.
+6. Do not enable HSTS until the host's HTTP-to-HTTPS redirect is verified.
+   Ticket `FPB-032495` remains a host-side dependency; do not send credentials
+   or tokens over HTTP.
 
 ## Rollback
 
-Take a fresh backup before rollback. The deployed source snapshot is tagged
-`deployed-2026-11-04` (commit `af9d2258bbdf85f64484f1d87e0e5f382de50530`).
-The prior full package is `deploy/wonderful-deploy-20261104.zip`; it contains
-the previous files with `index.html` at its root.
+Prefer the pre-release file backup and database export made in step 1. Stop
+checkout/admin writes before restoring. Restore the backed-up application files
+while preserving the real `api/config.local.php`, then restore permissions and
+retest HTTPS, public products, and admin MFA.
 
-1. In **Files → File Manager**, make a private copy of the current
-   `api/config.local.php` outside `public_html` before extracting the previous
-   ZIP. That older ZIP contains a placeholder `api/config.local.php`; never
-   leave that placeholder active on production.
-2. Upload `wonderful-deploy-20261104.zip`, extract it to
-   `/home/wonderfu/public_html`, and restore the backed-up real config file to
-   `public_html/api/config.local.php`. Reapply the config permission (`600` or
-   `640`) and general directory/file permissions (`755`/`644`).
-3. If a rollback requires restoring database contents, stop and get owner
-   approval first; use the protected pre-deployment SQL export or ask the host
-   to restore the full-account backup. Do not import an old database dump
-   without approval.
-4. Retest HTTPS pages, the public API, and admin authentication over HTTPS.
-   The tag and ZIP are rollback references only; no rollback has been made.
+The migration is additive. Leave its extra tables/columns in place when rolling
+back code unless a database rollback is necessary. If restoring the database,
+use the complete pre-migration export only after preserving or reconciling all
+orders and other writes made since that export; restoring it will discard those
+later changes. Never re-import `database.sql` over a live database.
+
+The repository tag `deployed-2026-11-04` and the older
+`deploy/wonderful-deploy-20261104.zip` are historical references, not verified
+copies of the current production tree. Prefer the actual pre-release backup;
+do not use an older ZIP as a rollback source until its contents are confirmed
+to match the intended previous deployment.
