@@ -17,7 +17,8 @@ This project provides a unified full-stack e-commerce solution:
    - PHP REST API (`/api/`) compatible with cPanel shared hosting (PHP 8.x + MySQL PDO)
    - Zero-dependency Node.js dev server (`server.js`) for instant local testing on your PC
 2. **Database Schema (`database.sql`):**
-   - Pre-seeded tables for Products, Categories, Orders, Customers, Coupons, Inventory, Reviews, and Store Settings
+   - MySQL schema for Products, Categories, Orders, Customers, Coupons, Inventory, Reviews, and Store Settings
+   - Seeds store settings and the hashed admin account only; catalog and sample tables start empty
 3. **Admin Android Application (`/admin-android`):**
    - Native Kotlin Android App
    - Built with **SOLID Principles** & **Clean Architecture / MVVM**
@@ -25,90 +26,65 @@ This project provides a unified full-stack e-commerce solution:
 
 ---
 
-## 🛠️ Step 1: Build and upload the cPanel package
+## Phase 3: cPanel Deployment Checklist
 
-1. **Log in to cPanel:**
-   - Go to [https://server.shodns.in:2083](https://server.shodns.in:2083)
-   - Username: `wonderfu`
-2. **Open File Manager:**
-   - Navigate to `/home/wonderfu/public_html`
-3. **Build the deployment archive in PowerShell from the project root:**
-   ```powershell
-   .\deploy\Build-Deployment.ps1
-   ```
-   - This creates `deploy\wonderful-deploy.zip` with the contents of `web/` at the archive root and a `config.local.php` template under `api/`.
-   - The script excludes development files, SQLite databases, SQL/Markdown files, Android files, and any local `config.local.php`.
-4. **Upload the archive:**
-   - In cPanel File Manager, upload `deploy\wonderful-deploy.zip` into `public_html/` and click **Extract**.
-   - Use [deploy/IMAGE_UPLOADS.md](./deploy/IMAGE_UPLOADS.md) to prepare and connect your own product/category photography; the storefront uses local illustrations until then.
-   - Your `public_html/` directory should look like:
-     ```
-     /home/wonderfu/public_html/
-       ├── .htaccess
-       ├── index.html
-       ├── shop.html
-       ├── product.html
-       ├── category.html
-       ├── cart.html
-       ├── checkout.html
-       ├── order-success.html
-       ├── track-order.html
-       ├── admin.html
-       ├── css/
-       │    └── style.css
-       ├── js/
-       │    ├── store.js
-       │    └── admin.js
-       ├── assets/
-       │    ├── logo.jpg
-       │    ├── logo.svg
-       │    ├── product-placeholder.svg
-       │    └── category-placeholder.svg
-       └── api/
-            ├── config.php
-            ├── config.local.php
-            ├── db.php
-            ├── products.php
-            ├── orders.php
-            ├── inventory.php
-            ├── categories.php
-            ├── coupons.php
-            ├── customers.php
-            ├── reports.php
-            ├── settings.php
-            ├── auth.php
-            └── track.php
-     ```
+The archive is built locally from the project root with:
 
----
+```powershell
+.\deploy\Build-Deployment.ps1
+```
 
-## 🗄️ Step 2: Setting up MySQL in cPanel
+This creates `deploy\wonderful-deploy.zip` with `index.html` at the archive root and an `api/config.local.php` template. Keep the ZIP on your computer until the File Manager upload step. Do not send cPanel passwords or session links in chat.
 
-1. In cPanel, click **MySQL Databases**.
-2. **Create Database:** e.g. `wonderfu_ecommerce`
-3. **Create User:** use a unique, strong password generated in your password manager.
-4. **Add User to Database:** Assign **ALL PRIVILEGES** to `wonderfu_admin` on `wonderfu_ecommerce`.
-5. **Import Schema via phpMyAdmin:**
-   - Open **phpMyAdmin** from cPanel.
-   - Select `wonderfu_ecommerce` from the left sidebar.
-   - Click the **Import** tab at the top.
-   - Choose `database.sql` from your project folder and click **Import** (or **Go**).
-6. **Configure API Credentials:**
-   - Create `/home/wonderfu/public_html/api/config.local.php` in cPanel File Manager.
-   - Set the database constants in that local-only file:
+1. **Create the MySQL database and user**
+   - Sign in to cPanel at [https://server.shodns.in:2083](https://server.shodns.in:2083).
+   - From the cPanel home page, open **Databases → MySQL® Databases**.
+   - Under **Create New Database**, enter a suffix such as `store`; cPanel adds the `wonderfu_` prefix. Record the full database name it displays.
+   - Under **MySQL Users → Add New User**, create a user with a unique password. Record the full prefixed username and keep the password private.
+   - Under **Add User To Database**, select that user and database, click **Add**, select **ALL PRIVILEGES**, then click **Make Changes**.
+
+2. **Import the production schema**
+   - Return to cPanel home and open **Databases → phpMyAdmin**.
+   - Select the newly created, empty database in the left sidebar.
+   - Open **Import → Choose File**, select the project-root `database.sql` from your computer, keep the format as **SQL**, and click **Import** (or **Go**).
+   - Confirm phpMyAdmin reports success and shows the tables. The SQL initializes an empty database and does not drop tables; do not import it into a database already containing application tables.
+
+3. **Select PHP and verify required extensions**
+   - From cPanel home, open **Software → MultiPHP Manager**.
+   - Check the `wonderfulcollection.store` row, select **PHP 8.1** or later from **PHP Version**, and click **Apply**.
+   - If cPanel provides **Software → Select PHP Version**, open its **Extensions** tab and enable `pdo_mysql`, `mbstring`, and `json`, then click **Apply**.
+   - **MultiPHP INI Editor** changes PHP configuration directives; it does not enable missing extensions. If **Select PHP Version** is unavailable or an extension is missing, ask the hosting provider to enable it for this domain.
+
+4. **Upload and configure the site**
+   - From cPanel home, open **Files → File Manager**, then open `/home/wonderfu/public_html`.
+   - Click **Upload**, choose `deploy\wonderful-deploy.zip`, return to File Manager, select the ZIP, and click **Extract**. Extract into `public_html` itself, not a nested folder.
+   - Confirm `/home/wonderfu/public_html/index.html` exists at the web-root level, then delete `wonderful-deploy.zip` from File Manager.
+   - Open `public_html/api/config.local.php` in File Manager's editor and replace the database-name, database-user, and password placeholders:
      ```php
      define('DB_HOST', 'localhost');
-     define('DB_NAME', 'wonderfu_<your_database>');
-     define('DB_USER', 'wonderfu_<your_user>');
-     define('DB_PASS', '<your_database_password>');
+     define('DB_NAME', 'wonderfu_<full_database_name>');
+     define('DB_USER', 'wonderfu_<full_database_user>');
+     define('DB_PASS', '<database_password>');
      define('DEV_MODE', false);
      ```
+   - Use the exact full prefixed names shown in MySQL Databases. Keep the password in cPanel only; escape `'` and `\` if either appears inside the PHP single-quoted password value. Save the file.
 
-> SQLite fallback is available only when `DEV_MODE` is explicitly enabled in a local development configuration. Production returns a clean JSON 500 if MySQL is unavailable.
+5. **Set file permissions**
+   - In File Manager, set directories (including `api`, `assets`, `css`, and `js`) to **755** and ordinary files to **644**.
+   - Set `api/config.local.php` to **600**; use **640** only if the PHP handler needs group-read access. Do not use `777`.
+
+6. **Confirm SSL and HTTPS**
+   - From cPanel home, open **Security → SSL/TLS Status** and confirm `wonderfulcollection.store` has a valid certificate.
+   - If it is not covered, run **AutoSSL** from that page if available, or ask the host to issue/enable the certificate.
+   - Visit `https://wonderfulcollection.store` and confirm it loads securely and HTTP redirects to HTTPS.
+
+7. **Initialize the real catalog**
+   - Sign in at `https://wonderfulcollection.store/admin.html` using username `admin` and the one-time initial password already provided; change it immediately.
+   - The production database intentionally starts without products, categories, coupons, or reviews. Add real categories and products in the admin panel before accepting customer orders. See [deploy/IMAGE_UPLOADS.md](./deploy/IMAGE_UPLOADS.md) for local image placeholders and image path guidance.
 
 ---
 
-## ⚡ Step 3: Testing Locally with Node.js
+## Optional: Testing Locally with Node.js
 
 Before or during cPanel deployment, you can preview and test everything locally on Windows:
 
@@ -128,11 +104,11 @@ Before or during cPanel deployment, you can preview and test everything locally 
 
 ---
 
-## 📱 Step 4: Running the Admin Android App
+## Optional: Running the Admin Android App
 
 1. Open **Android Studio**.
 2. Choose **Open Project** and select:
-   `C:\Users\Abidh\.gemini\antigravity\scratch\wonderful-collection\admin-android`
+   `C:\Users\Abidh\Desktop\Wonderfulcollection\admin-android`
 3. **Configure API Base URL:**
    - For Production (pointing to your live store):
      `https://wonderfulcollection.store/api`
@@ -143,7 +119,7 @@ Before or during cPanel deployment, you can preview and test everything locally 
 
 ---
 
-## 🎯 Admin Credentials & Defaults
+## Admin Credentials & Defaults
 
 - **Admin Portal (Web):** `https://wonderfulcollection.store/admin.html`
 - **Default Username:** `admin`
