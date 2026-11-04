@@ -162,7 +162,9 @@ switch ($method) {
         try {
             $subtotal = 0.0;
             $lineItems = [];
-            $productStmt = $pdo->prepare('SELECT id, name, regular_price, sale_price, stock_quantity FROM products WHERE id = ?');
+            ksort($quantities, SORT_NUMERIC);
+            $lockClause = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql' ? ' FOR UPDATE' : '';
+            $productStmt = $pdo->prepare('SELECT id, name, regular_price, sale_price, stock_quantity FROM products WHERE id = ?' . $lockClause);
             foreach ($quantities as $productId => $quantity) {
                 $productStmt->execute([(int)$productId]);
                 $product = $productStmt->fetch();
@@ -200,7 +202,7 @@ switch ($method) {
             $coupon = null;
             $couponCode = is_string($data['coupon_code'] ?? null) ? strtoupper(trim($data['coupon_code'])) : '';
             if ($couponCode !== '') {
-                $couponStmt = $pdo->prepare('SELECT * FROM coupons WHERE UPPER(code) = ? AND is_active = 1');
+                $couponStmt = $pdo->prepare('SELECT * FROM coupons WHERE UPPER(code) = ? AND is_active = 1' . $lockClause);
                 $couponStmt->execute([$couponCode]);
                 $coupon = $couponStmt->fetch();
                 if (!$coupon
@@ -407,10 +409,17 @@ switch ($method) {
             }
 
             $currentStatus = $order['order_status'];
-            if ($currentStatus === 'Cancelled'
-                && isset($data['order_status'])
-                && $data['order_status'] !== 'Cancelled') {
-                throw new DomainException('A cancelled order cannot be reopened.');
+            $transitions = [
+                'Pending' => ['Processing', 'Cancelled'],
+                'Processing' => ['Shipped', 'Cancelled'],
+                'Shipped' => ['Delivered'],
+                'Delivered' => [],
+                'Cancelled' => []
+            ];
+            if (isset($data['order_status'])
+                && $data['order_status'] !== $currentStatus
+                && !in_array($data['order_status'], $transitions[$currentStatus] ?? [], true)) {
+                throw new DomainException('This order status transition is not allowed.');
             }
 
             if (isset($data['order_status'])
