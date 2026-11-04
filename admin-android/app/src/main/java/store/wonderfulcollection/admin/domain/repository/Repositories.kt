@@ -23,6 +23,14 @@ interface ProductRepository {
         isTrending: Boolean,
         imageFiles: List<ProductImageFile>
     ): Result<Long>
+    suspend fun updateProduct(
+        id: Long,
+        name: String,
+        shortDescription: String,
+        regularPrice: Double,
+        salePrice: Double?,
+        stock: Int
+    ): Result<Unit>
     suspend fun deleteProduct(id: Long): Result<Unit>
 }
 

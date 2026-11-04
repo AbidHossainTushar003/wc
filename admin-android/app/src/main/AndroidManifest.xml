@@ -13,7 +13,7 @@
         android:roundIcon="@drawable/ic_launcher"
         android:supportsRtl="true"
         android:theme="@style/Theme.WonderfulAdmin"
-        android:usesCleartextTraffic="true">
+        android:usesCleartextTraffic="${usesCleartextTraffic}">
 
         <!-- Main 3x3 Grid Dashboard matching Image 2 -->
         <activity
@@ -39,4 +39,3 @@
     </application>
 
 </manifest>
-

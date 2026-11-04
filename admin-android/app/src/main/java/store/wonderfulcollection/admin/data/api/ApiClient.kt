@@ -18,7 +18,7 @@ import java.net.URLEncoder
  * Uses native Java HttpURLConnection + Kotlin Coroutines Dispatchers.IO.
  */
 class ApiClient(
-    var baseUrl: String = "https://wonderfulcollection.store/api",
+    var baseUrl: String = "http://10.0.2.2:3000/api",
 ) {
     var adminToken: String? = null
         private set

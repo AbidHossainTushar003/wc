@@ -1,5 +1,6 @@
 package store.wonderfulcollection.admin.presentation.orders
 
+import android.R
 import android.app.Application
 import android.content.Context
 import android.os.Bundle
@@ -7,12 +8,16 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.view.Gravity
 import android.view.View
+import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
 import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
 import android.widget.ScrollView
+import android.widget.Spinner
 import android.widget.TextView
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
@@ -245,6 +250,7 @@ class OrdersActivity : AppCompatActivity() {
                                 val lp = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
                                 lp.setMargins(0, 0, 0, 16)
                                 layoutParams = lp
+                                setOnClickListener { showEditOrderDialog(o) }
                             }
 
                             val statusColor = when (o.orderStatus) {
@@ -342,5 +348,45 @@ class OrdersActivity : AppCompatActivity() {
         }
 
         viewModel.loadOrders()
+    }
+
+    private fun showEditOrderDialog(order: Order) {
+        val formLayout = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(32, 24, 32, 24)
+        }
+
+        val tvInfo = TextView(this).apply {
+            text = "Order: ${order.orderNumber}\nCustomer: ${order.customerName} (${order.customerPhone})\nCurrent Status: ${order.orderStatus}"
+            setTextColor(0xFF38BDF8.toInt())
+            textSize = 14f
+            setPadding(0, 0, 0, 16)
+        }
+        formLayout.addView(tvInfo)
+
+        val statuses = arrayOf("Pending", "Processing", "Shipped", "Delivered", "Cancelled")
+        val spinnerStatus = Spinner(this).apply {
+            adapter = ArrayAdapter(
+                this@OrdersActivity,
+                R.layout.simple_spinner_dropdown_item,
+                statuses
+            )
+            setSelection(statuses.indexOfFirst { it.equals(order.orderStatus, true) }.coerceAtLeast(0))
+        }
+        formLayout.addView(spinnerStatus)
+
+        val dialog = AlertDialog.Builder(this)
+            .setTitle("Update Order Status")
+            .setView(formLayout)
+            .setPositiveButton("Save Status", null)
+            .setNegativeButton("Cancel", null)
+            .show()
+
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+            val selectedStatus = statuses[spinnerStatus.selectedItemPosition]
+            dialog.dismiss()
+            viewModel.updateStatus(order.id, selectedStatus)
+            Toast.makeText(this, "Order ${order.orderNumber} status updated to $selectedStatus.", Toast.LENGTH_SHORT).show()
+        }
     }
 }

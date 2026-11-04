@@ -75,6 +75,22 @@ class ProductsViewModel(
         _productsState.value = Resource.Success(filtered)
     }
 
+    fun updateProduct(
+        id: Long,
+        name: String,
+        shortDescription: String,
+        regularPrice: Double,
+        salePrice: Double?,
+        stock: Int,
+        onComplete: (Result<Unit>) -> Unit
+    ) {
+        viewModelScope.launch {
+            val result = ServiceLocator.productRepository.updateProduct(id, name, shortDescription, regularPrice, salePrice, stock)
+            result.onSuccess { loadProducts() }
+            onComplete(result)
+        }
+    }
+
     fun addProduct(
         name: String,
         shortDescription: String,
@@ -234,6 +250,7 @@ class ProductsActivity : AppCompatActivity() {
                                 val lp = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
                                 lp.setMargins(0, 0, 0, 16)
                                 layoutParams = lp
+                                setOnClickListener { showEditProductDialog(p) }
                             }
 
                             val nameTv = TextView(this).apply {
@@ -309,6 +326,83 @@ class ProductsActivity : AppCompatActivity() {
                 return@launch
             }
             showProductForm(categories)
+        }
+    }
+
+    private fun showEditProductDialog(product: Product) {
+        val formLayout = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(32, 24, 32, 24)
+        }
+
+        val etName = EditText(this).apply {
+            hint = "Product Name"
+            setText(product.name)
+            inputType = InputType.TYPE_CLASS_TEXT
+        }
+        val etShortDesc = EditText(this).apply {
+            hint = "Short description"
+            setText(product.shortDesc)
+            inputType = InputType.TYPE_CLASS_TEXT
+        }
+        val etRegularPrice = EditText(this).apply {
+            hint = "Regular Price"
+            setText(product.regularPrice.toString())
+            inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
+        }
+        val etSalePrice = EditText(this).apply {
+            hint = "Sale Price (Optional)"
+            setText(product.salePrice?.toString() ?: "")
+            inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
+        }
+        val etStock = EditText(this).apply {
+            hint = "Stock Quantity"
+            setText(product.stockQuantity.toString())
+            inputType = InputType.TYPE_CLASS_NUMBER
+        }
+
+        formLayout.addView(etName)
+        formLayout.addView(etShortDesc)
+        formLayout.addView(etRegularPrice)
+        formLayout.addView(etSalePrice)
+        formLayout.addView(etStock)
+
+        val scrollForm = ScrollView(this).apply { addView(formLayout) }
+
+        val dialog = AlertDialog.Builder(this)
+            .setTitle("Edit Product #${product.id}")
+            .setView(scrollForm)
+            .setPositiveButton("Update", null)
+            .setNegativeButton("Cancel", null)
+            .show()
+
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+            val name = etName.text.toString().trim()
+            val shortDesc = etShortDesc.text.toString().trim()
+            val regPrice = etRegularPrice.text.toString().toDoubleOrNull()
+            val salePriceText = etSalePrice.text.toString().trim()
+            val salePrice = if (salePriceText.isEmpty()) null else salePriceText.toDoubleOrNull()
+            val stock = etStock.text.toString().toIntOrNull()
+
+            if (name.isEmpty() || regPrice == null || regPrice <= 0 || stock == null || stock < 0) {
+                Toast.makeText(this, "Please enter valid product details.", Toast.LENGTH_LONG).show()
+                return@setOnClickListener
+            }
+
+            val btn = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+            btn.isEnabled = false
+            btn.text = "Updating..."
+
+            viewModel.updateProduct(product.id, name, shortDesc, regPrice, salePrice, stock) { result ->
+                if (result.isSuccess) {
+                    dialog.dismiss()
+                    Toast.makeText(this, "Product updated successfully.", Toast.LENGTH_SHORT).show()
+                } else {
+                    btn.isEnabled = true
+                    btn.text = "Update"
+                    Toast.makeText(this, result.exceptionOrNull()?.message ?: "Update failed.", Toast.LENGTH_LONG).show()
+                }
+            }
         }
     }
 

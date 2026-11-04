@@ -104,6 +104,25 @@ class ProductRepositoryImpl(private val api: ApiClient) : ProductRepository {
         }
     }
 
+    override suspend fun updateProduct(
+        id: Long,
+        name: String,
+        shortDescription: String,
+        regularPrice: Double,
+        salePrice: Double?,
+        stock: Int
+    ): Result<Unit> {
+        val body = JSONObject().apply {
+            put("id", id)
+            put("name", name)
+            put("short_desc", shortDescription)
+            put("regular_price", regularPrice)
+            if (salePrice != null) put("sale_price", salePrice) else put("sale_price", JSONObject.NULL)
+            put("stock_quantity", stock)
+        }
+        return api.put("products", body).map { }
+    }
+
     override suspend fun deleteProduct(id: Long): Result<Unit> {
         return api.delete("products", mapOf("id" to id.toString())).map { }
     }
