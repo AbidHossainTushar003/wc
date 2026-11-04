@@ -17,9 +17,9 @@ request should redirect to HTTPS.
 **Deployment follow-up:** cPanel's **Domains → Force HTTPS Redirect** is now
 enabled for the domain, but live HTTP probes still return HTTP 200 from an
 upstream Nginx cache (including stale HTML on `/api/products`) instead of a
-redirect. Do not send credentials or bearer tokens over HTTP. Ask the hosting
-provider to clear or correct the HTTP cache/redirect at the Nginx proxy, then
-repeat the HTTP checks above. This redirect is not yet verified.
+redirect. Do not send credentials or bearer tokens over HTTP. Repeat the HTTP
+checks after the provider clears or corrects the proxy cache. This redirect is
+not yet verified.
 
 **Hosting support contacted:** ChepHost support ticket `FPB-032495` was
 submitted requesting a purge/fix of the HTTP proxy cache, HTTPS redirects at
