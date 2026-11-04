@@ -152,6 +152,8 @@ DELIMITER ;
 
 CALL `wc_20261104_add_column_if_missing`('products', 'is_archived', 'TINYINT(1) NOT NULL DEFAULT 0');
 CALL `wc_20261104_add_column_if_missing`('categories', 'is_archived', 'TINYINT(1) NOT NULL DEFAULT 0');
+CALL `wc_20261104_add_column_if_missing`('admins', 'password_change_required', 'TINYINT(1) NOT NULL DEFAULT 1');
+CALL `wc_20261104_add_column_if_missing`('admins', 'last_totp_counter', 'BIGINT UNSIGNED DEFAULT NULL');
 DROP PROCEDURE IF EXISTS `wc_20261104_add_column_if_missing`;
 
 DROP PROCEDURE IF EXISTS `wc_20261104_preserve_order_items`;

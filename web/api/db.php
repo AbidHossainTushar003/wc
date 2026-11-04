@@ -42,6 +42,8 @@ class Database {
                 }
                 self::ensureSQLiteColumn(self::$instance, 'categories', 'is_archived', 'INTEGER NOT NULL DEFAULT 0');
                 self::ensureSQLiteColumn(self::$instance, 'products', 'is_archived', 'INTEGER NOT NULL DEFAULT 0');
+                self::ensureSQLiteColumn(self::$instance, 'admins', 'password_change_required', 'INTEGER NOT NULL DEFAULT 1');
+                self::ensureSQLiteColumn(self::$instance, 'admins', 'last_totp_counter', 'INTEGER DEFAULT NULL');
                 self::$instance->exec("
                     CREATE TABLE IF NOT EXISTS admin_tokens (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -211,6 +213,8 @@ class Database {
                 password_hash TEXT NOT NULL,
                 full_name TEXT NOT NULL,
                 role TEXT DEFAULT 'Super Admin',
+                password_change_required INTEGER NOT NULL DEFAULT 1,
+                last_totp_counter INTEGER DEFAULT NULL,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP
             );
             CREATE TABLE IF NOT EXISTS admin_tokens (
@@ -358,7 +362,7 @@ function getAdminTokenFromRequest(): ?string {
     return getBearerTokenFromRequest();
 }
 
-function requireAdminToken(PDO $pdo): array {
+function requireAdminToken(PDO $pdo, bool $allowPasswordChange = false): array {
     $token = getAdminTokenFromRequest();
     if ($token === null) {
         logSecurityEvent('admin_auth_denied');
@@ -366,7 +370,7 @@ function requireAdminToken(PDO $pdo): array {
     }
 
     $stmt = $pdo->prepare("
-        SELECT a.id, a.username, a.full_name, a.role
+        SELECT a.id, a.username, a.full_name, a.role, a.password_change_required
         FROM admin_tokens t
         INNER JOIN admins a ON a.id = t.admin_id
         WHERE t.token_hash = ? AND t.expires_at > ?
@@ -377,14 +381,23 @@ function requireAdminToken(PDO $pdo): array {
         logSecurityEvent('admin_auth_denied');
         jsonResponse(['error' => 'Admin authorization required'], 401);
     }
+    if ((int)$admin['password_change_required'] === 1 && !$allowPasswordChange) {
+        jsonResponse(['error' => 'Change the initial admin password before using the admin panel.'], 403);
+    }
     return $admin;
 }
 
-function loginAttemptKeys(): array {
+function loginAttemptKeys(string $username): array {
     $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
     return [
-        hash('sha256', 'login'),
-        hash('sha256', $ip)
+        'account' => [
+            'username_hash' => hash('sha256', 'login:account:' . strtolower(trim($username))),
+            'ip_hash' => hash('sha256', 'login:account-global')
+        ],
+        'ip' => [
+            'username_hash' => hash('sha256', 'login:ip'),
+            'ip_hash' => hash('sha256', $ip)
+        ]
     ];
 }
 
@@ -460,56 +473,109 @@ function enforceApiRateLimit(PDO $pdo, string $scope, int $limit, int $windowSec
     }
 }
 
-function isLoginRateLimited(PDO $pdo): bool {
-    [$usernameHash, $ipHash] = loginAttemptKeys();
-    $cutoff = gmdate('Y-m-d H:i:s', time() - 1800);
-    $cleanup = $pdo->prepare("
-        DELETE FROM login_attempts
-        WHERE username_hash = ?
-          AND ((locked_until IS NULL AND window_started_at < ?)
-           OR (locked_until IS NOT NULL AND locked_until < ?))
-    ");
-    $cleanup->execute([$usernameHash, $cutoff, gmdate('Y-m-d H:i:s')]);
-    $stmt = $pdo->prepare('SELECT locked_until FROM login_attempts WHERE username_hash = ? AND ip_hash = ?');
-    $stmt->execute([$usernameHash, $ipHash]);
-    $lockedUntil = $stmt->fetchColumn();
-    return $lockedUntil !== false && $lockedUntil !== null && strtotime($lockedUntil . ' UTC') > time();
-}
-
-function recordLoginFailure(PDO $pdo): bool {
-    [$usernameHash, $ipHash] = loginAttemptKeys();
+function isLoginRateLimited(PDO $pdo, string $username): bool {
+    $keys = loginAttemptKeys($username);
     $now = time();
-    $stmt = $pdo->prepare('SELECT attempt_count, window_started_at FROM login_attempts WHERE username_hash = ? AND ip_hash = ?');
-    $stmt->execute([$usernameHash, $ipHash]);
-    $attempt = $stmt->fetch();
+    $nowText = gmdate('Y-m-d H:i:s', $now);
+    $windowStart = gmdate('Y-m-d H:i:s', $now - 900);
 
-    if (!$attempt || $now - strtotime($attempt['window_started_at'] . ' UTC') >= 900) {
-        $stmt = $pdo->prepare("
-            INSERT INTO login_attempts (username_hash, ip_hash, attempt_count, window_started_at, locked_until)
-            VALUES (?, ?, 1, ?, NULL)
-            ON DUPLICATE KEY UPDATE attempt_count = 1, window_started_at = VALUES(window_started_at), locked_until = NULL
-        ");
-        try {
-            $stmt->execute([$usernameHash, $ipHash, gmdate('Y-m-d H:i:s', $now)]);
-        } catch (PDOException $e) {
-            $stmt = $pdo->prepare("
-                INSERT OR REPLACE INTO login_attempts (username_hash, ip_hash, attempt_count, window_started_at, locked_until)
-                VALUES (?, ?, 1, ?, NULL)
-            ");
-            $stmt->execute([$usernameHash, $ipHash, gmdate('Y-m-d H:i:s', $now)]);
+    try {
+        $cleanup = $pdo->prepare('DELETE FROM login_attempts WHERE window_started_at < ? AND (locked_until IS NULL OR locked_until < ?)');
+        $cleanup->execute([gmdate('Y-m-d H:i:s', $now - 3600), $nowText]);
+
+        $ipStmt = $pdo->prepare('SELECT locked_until FROM login_attempts WHERE username_hash = ? AND ip_hash = ?');
+        $ipStmt->execute([$keys['ip']['username_hash'], $keys['ip']['ip_hash']]);
+        $lockedUntil = $ipStmt->fetchColumn();
+        if ($lockedUntil !== false && $lockedUntil !== null && strtotime($lockedUntil . ' UTC') > $now) {
+            return true;
+        }
+
+        $accountStmt = $pdo->prepare('SELECT attempt_count, window_started_at FROM login_attempts WHERE username_hash = ? AND ip_hash = ?');
+        $accountStmt->execute([$keys['account']['username_hash'], $keys['account']['ip_hash']]);
+        $accountAttempt = $accountStmt->fetch();
+        if ($accountAttempt && strtotime($accountAttempt['window_started_at'] . ' UTC') >= $now - 900) {
+            $delayMicroseconds = min(2000000, max(0, (int)$accountAttempt['attempt_count'] - 1) * 250000);
+            if ($delayMicroseconds > 0) {
+                usleep($delayMicroseconds);
+            }
         }
         return false;
+    } catch (PDOException $e) {
+        error_log('Wonderful Collection login rate-limit lookup failed.');
+        jsonResponse(['error' => 'Login could not be processed. Please try again.'], 500);
     }
-
-    $attemptCount = (int)$attempt['attempt_count'] + 1;
-    $lockedUntil = $attemptCount >= 5 ? gmdate('Y-m-d H:i:s', $now + 900) : null;
-    $stmt = $pdo->prepare('UPDATE login_attempts SET attempt_count = ?, locked_until = ? WHERE username_hash = ? AND ip_hash = ?');
-    $stmt->execute([$attemptCount, $lockedUntil, $usernameHash, $ipHash]);
-    return $lockedUntil !== null;
 }
 
-function clearLoginAttempts(PDO $pdo): void {
-    [$usernameHash, $ipHash] = loginAttemptKeys();
-    $stmt = $pdo->prepare('DELETE FROM login_attempts WHERE username_hash = ? AND ip_hash = ?');
-    $stmt->execute([$usernameHash, $ipHash]);
+function recordLoginFailure(PDO $pdo, string $username): bool {
+    $keys = loginAttemptKeys($username);
+    $now = time();
+    $nowText = gmdate('Y-m-d H:i:s', $now);
+    $windowStart = gmdate('Y-m-d H:i:s', $now - 900);
+    $lockedUntil = gmdate('Y-m-d H:i:s', $now + 900);
+    $driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+
+    try {
+        foreach (['account', 'ip'] as $bucket) {
+            $key = $keys[$bucket];
+            $isIpBucket = $bucket === 'ip' ? 1 : 0;
+            if ($driver === 'mysql') {
+                $sql = '
+                INSERT INTO login_attempts (username_hash, ip_hash, attempt_count, window_started_at, locked_until)
+                VALUES (?, ?, 1, ?, NULL)
+                ON DUPLICATE KEY UPDATE
+                    attempt_count = IF(window_started_at < ?, 1, attempt_count + 1),
+                    locked_until = IF(window_started_at < ?, NULL, IF(? = 1 AND attempt_count >= 5, ?, locked_until)),
+                    window_started_at = IF(window_started_at < ?, ?, window_started_at)
+                ';
+            } elseif ($driver === 'sqlite') {
+                $sql = '
+                INSERT INTO login_attempts (username_hash, ip_hash, attempt_count, window_started_at, locked_until)
+                VALUES (?, ?, 1, ?, NULL)
+                ON CONFLICT(username_hash, ip_hash) DO UPDATE SET
+                    attempt_count = CASE WHEN window_started_at < ? THEN 1 ELSE attempt_count + 1 END,
+                    locked_until = CASE WHEN window_started_at < ? THEN NULL WHEN ? = 1 AND attempt_count >= 5 THEN ? ELSE locked_until END,
+                    window_started_at = CASE WHEN window_started_at < ? THEN ? ELSE window_started_at END
+                ';
+            } else {
+                jsonResponse(['error' => 'Login rate limiting is unsupported by this database driver.'], 500);
+            }
+
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([
+                $key['username_hash'],
+                $key['ip_hash'],
+                $nowText,
+                $windowStart,
+                $windowStart,
+                $isIpBucket,
+                $lockedUntil,
+                $windowStart,
+                $nowText
+            ]);
+        }
+
+        $ipStmt = $pdo->prepare('SELECT locked_until FROM login_attempts WHERE username_hash = ? AND ip_hash = ?');
+        $ipStmt->execute([$keys['ip']['username_hash'], $keys['ip']['ip_hash']]);
+        $ipLockedUntil = $ipStmt->fetchColumn();
+        return $ipLockedUntil !== false && $ipLockedUntil !== null && strtotime($ipLockedUntil . ' UTC') > $now;
+    } catch (PDOException $e) {
+        error_log('Wonderful Collection login rate-limit storage failed.');
+        jsonResponse(['error' => 'Login could not be processed. Please try again.'], 500);
+    }
+}
+
+function clearLoginAttempts(PDO $pdo, string $username): void {
+    $keys = loginAttemptKeys($username);
+    $stmt = $pdo->prepare('DELETE FROM login_attempts WHERE (username_hash = ? AND ip_hash = ?) OR (username_hash = ? AND ip_hash = ?)');
+    try {
+        $stmt->execute([
+            $keys['account']['username_hash'],
+            $keys['account']['ip_hash'],
+            $keys['ip']['username_hash'],
+            $keys['ip']['ip_hash']
+        ]);
+    } catch (PDOException $e) {
+        error_log('Wonderful Collection login attempt cleanup failed.');
+        jsonResponse(['error' => 'Login could not be completed. Please try again.'], 500);
+    }
 }

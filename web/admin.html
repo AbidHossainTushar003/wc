@@ -165,6 +165,8 @@
         <input id="admin-username" class="admin-input" autocomplete="username" required>
         <label for="admin-password" style="display: block; margin: 16px 0 6px;">Password</label>
         <input id="admin-password" class="admin-input" type="password" autocomplete="current-password" required>
+        <label for="admin-totp-code" style="display: block; margin: 16px 0 6px;">Authenticator code</label>
+        <input id="admin-totp-code" class="admin-input" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" required>
         <button id="admin-login-button" type="submit" class="admin-btn" style="width: 100%; margin-top: 20px;">Sign in</button>
         <p id="admin-login-error" role="alert" style="display: none; color: #fca5a5; margin-top: 14px;"></p>
       </form>

@@ -151,11 +151,13 @@ CREATE TABLE `admins` (
   `password_hash` VARCHAR(255) NOT NULL,
   `full_name` VARCHAR(150) NOT NULL,
   `role` VARCHAR(50) DEFAULT 'Super Admin',
+  `password_change_required` TINYINT(1) NOT NULL DEFAULT 1,
+  `last_totp_counter` BIGINT UNSIGNED DEFAULT NULL,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO `admins` (`username`, `password_hash`, `full_name`, `role`) VALUES
-('admin', '$2y$12$l0nUHojhz2R6lYhkYzvOwejLKmJc.tCQbXMm7NmbWqewMxLUmZuiy', 'Wonderful Store Manager', 'Super Admin');
+INSERT INTO `admins` (`username`, `password_hash`, `full_name`, `role`, `password_change_required`) VALUES
+('admin', '$2y$12$l0nUHojhz2R6lYhkYzvOwejLKmJc.tCQbXMm7NmbWqewMxLUmZuiy', 'Wonderful Store Manager', 'Super Admin', 1);
 
 -- Admin bearer tokens are stored as SHA-256 hashes and expire.
 CREATE TABLE `admin_tokens` (

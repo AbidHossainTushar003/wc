@@ -33,13 +33,18 @@ class ApiClient(
         }
     }
 
-    suspend fun loginAdmin(username: String, password: String): Result<String> {
+    suspend fun loginAdmin(username: String, password: String, totpCode: String): Result<String> {
         val body = JSONObject()
             .put("action", "admin_login")
             .put("username", username)
             .put("password", password)
+            .put("totp_code", totpCode)
         return post("auth", body).map { response ->
-            val token = response.getJSONObject("data").getString("token")
+            val data = response.getJSONObject("data")
+            if (data.optBoolean("must_change_password")) {
+                throw IllegalStateException("Complete the required password change in the web admin panel before using the Android app.")
+            }
+            val token = data.getString("token")
             setAdminToken(token)
             token
         }

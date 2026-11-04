@@ -75,8 +75,14 @@ class MainActivity : AppCompatActivity() {
             hint = "Admin password"
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
         }
+        val totpCode = EditText(this).apply {
+            hint = "6-digit authenticator code"
+            inputType = InputType.TYPE_CLASS_NUMBER
+            filters = arrayOf(android.text.InputFilter.LengthFilter(6))
+        }
         fields.addView(username, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
         fields.addView(password, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
+        fields.addView(totpCode, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
 
         val dialog = AlertDialog.Builder(this)
             .setTitle("Admin sign in")
@@ -93,15 +99,16 @@ class MainActivity : AppCompatActivity() {
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
                 val enteredUsername = username.text.toString().trim()
                 val enteredPassword = password.text.toString()
-                if (enteredUsername.isEmpty() || enteredPassword.isEmpty()) {
-                    Toast.makeText(this, "Enter your admin username and password.", Toast.LENGTH_SHORT).show()
+                val enteredTotpCode = totpCode.text.toString()
+                if (enteredUsername.isEmpty() || enteredPassword.isEmpty() || !enteredTotpCode.matches(Regex("[0-9]{6}"))) {
+                    Toast.makeText(this, "Enter your admin username, password, and 6-digit authenticator code.", Toast.LENGTH_SHORT).show()
                     return@setOnClickListener
                 }
 
                 val submit = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
                 submit.isEnabled = false
                 activityScope.launch {
-                    val result = ServiceLocator.apiClient.loginAdmin(enteredUsername, enteredPassword)
+                    val result = ServiceLocator.apiClient.loginAdmin(enteredUsername, enteredPassword, enteredTotpCode)
                     result.onSuccess {
                         dialog.dismiss()
                         Toast.makeText(this@MainActivity, "Admin sign in successful.", Toast.LENGTH_SHORT).show()

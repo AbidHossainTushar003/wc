@@ -24,6 +24,54 @@ function createCustomerSession(PDO $pdo, int $customerId): array {
     return ['token' => $token, 'expires_at' => $expiresAt];
 }
 
+function isAdminMfaConfigured(): bool {
+    if (!defined('ADMIN_TOTP_SECRET')) {
+        return false;
+    }
+    $secret = strtoupper(preg_replace('/[\s=-]/', '', (string)ADMIN_TOTP_SECRET));
+    return preg_match('/\A[A-Z2-7]{16,128}\z/', $secret) === 1;
+}
+
+function verifyAdminTotp(string $code): ?int {
+    if (!isAdminMfaConfigured() || !preg_match('/\A[0-9]{6}\z/', $code)) {
+        return null;
+    }
+
+    $base32 = strtoupper(preg_replace('/[\s=-]/', '', (string)ADMIN_TOTP_SECRET));
+    $alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+    $secret = '';
+    $buffer = 0;
+    $bits = 0;
+    foreach (str_split($base32) as $character) {
+        $buffer = ($buffer << 5) | strpos($alphabet, $character);
+        $bits += 5;
+        if ($bits >= 8) {
+            $bits -= 8;
+            $secret .= chr(($buffer >> $bits) & 0xff);
+            $buffer &= (1 << $bits) - 1;
+        }
+    }
+    if ($secret === '') {
+        return null;
+    }
+
+    $counter = intdiv(time(), 30);
+    foreach ([-1, 0, 1] as $window) {
+        $step = $counter + $window;
+        $digest = hash_hmac('sha1', pack('N2', 0, $step), $secret, true);
+        $offset = ord($digest[19]) & 0x0f;
+        $binaryCode = ((ord($digest[$offset]) & 0x7f) << 24)
+            | ((ord($digest[$offset + 1]) & 0xff) << 16)
+            | ((ord($digest[$offset + 2]) & 0xff) << 8)
+            | (ord($digest[$offset + 3]) & 0xff);
+        $expected = str_pad((string)($binaryCode % 1000000), 6, '0', STR_PAD_LEFT);
+        if (hash_equals($expected, $code)) {
+            return $step;
+        }
+    }
+    return null;
+}
+
 switch ($action) {
     case 'admin_login':
         $username = is_string($data['username'] ?? null) ? trim($data['username']) : '';
@@ -32,7 +80,11 @@ switch ($action) {
             jsonResponse(['error' => 'Please enter username and password'], 400);
         }
 
-        if (isLoginRateLimited($pdo)) {
+        if (!isAdminMfaConfigured()) {
+            logSecurityEvent('admin_mfa_unconfigured');
+            jsonResponse(['error' => 'Admin sign-in is disabled until MFA is configured in api/config.local.php.'], 503);
+        }
+        if (isLoginRateLimited($pdo, $username)) {
             header('Retry-After: 900');
             jsonResponse(['error' => 'Too many login attempts. Try again in 15 minutes.'], 429);
         }
@@ -42,21 +94,41 @@ switch ($action) {
         $admin = $stmt->fetch();
         if (!$admin || !password_verify($password, $admin['password_hash'])) {
             logSecurityEvent('admin_login_failed');
-            if (recordLoginFailure($pdo)) {
+            if (recordLoginFailure($pdo, $username)) {
                 header('Retry-After: 900');
                 jsonResponse(['error' => 'Too many login attempts. Try again in 15 minutes.'], 429);
             }
             jsonResponse(['error' => 'Invalid admin credentials'], 401);
         }
 
-        clearLoginAttempts($pdo);
+        $totpCounter = verifyAdminTotp(is_string($data['totp_code'] ?? null) ? $data['totp_code'] : '');
+        if ($totpCounter === null) {
+            logSecurityEvent('admin_mfa_failed');
+            if (recordLoginFailure($pdo, $username)) {
+                header('Retry-After: 900');
+                jsonResponse(['error' => 'Too many login attempts. Try again in 15 minutes.'], 429);
+            }
+            jsonResponse(['error' => 'Invalid admin credentials'], 401);
+        }
+        $consumeTotpCode = $pdo->prepare('
+            UPDATE admins SET last_totp_counter = ?
+            WHERE id = ? AND (last_totp_counter IS NULL OR last_totp_counter < ?)
+        ');
+        $consumeTotpCode->execute([$totpCounter, (int)$admin['id'], $totpCounter]);
+        if ($consumeTotpCode->rowCount() !== 1) {
+            logSecurityEvent('admin_mfa_replay_rejected');
+            jsonResponse(['error' => 'Invalid admin credentials'], 401);
+        }
+
+        clearLoginAttempts($pdo, $username);
         if (password_needs_rehash($admin['password_hash'], PASSWORD_DEFAULT)) {
             $rehash = $pdo->prepare('UPDATE admins SET password_hash = ? WHERE id = ?');
             $rehash->execute([password_hash($password, PASSWORD_DEFAULT), (int)$admin['id']]);
         }
 
         $token = 'wc_adm_' . bin2hex(random_bytes(32));
-        $expiresAt = gmdate('Y-m-d H:i:s', time() + 43200);
+        $passwordChangeRequired = (int)$admin['password_change_required'] === 1;
+        $expiresAt = gmdate('Y-m-d H:i:s', time() + ($passwordChangeRequired ? 900 : 43200));
         $pdo->prepare('DELETE FROM admin_tokens WHERE expires_at <= ?')->execute([gmdate('Y-m-d H:i:s')]);
         $tokenStmt = $pdo->prepare('INSERT INTO admin_tokens (token_hash, admin_id, expires_at) VALUES (?, ?, ?)');
         $tokenStmt->execute([hash('sha256', $token), (int)$admin['id'], $expiresAt]);
@@ -70,13 +142,14 @@ switch ($action) {
                 'admin_id' => $admin['id'],
                 'username' => $admin['username'],
                 'full_name' => $admin['full_name'],
-                'role' => $admin['role']
+                'role' => $admin['role'],
+                'must_change_password' => $passwordChangeRequired
             ]
         ]);
         break;
 
     case 'admin_change_password':
-        $admin = requireAdminToken($pdo);
+        $admin = requireAdminToken($pdo, true);
         $currentPassword = is_string($data['current_password'] ?? null) ? $data['current_password'] : '';
         $newPassword = is_string($data['new_password'] ?? null) ? $data['new_password'] : '';
         if ($currentPassword === '' || strlen($newPassword) < 14 || strlen($newPassword) > 72) {
@@ -97,7 +170,7 @@ switch ($action) {
         $expiresAt = gmdate('Y-m-d H:i:s', time() + 43200);
         try {
             $pdo->beginTransaction();
-            $updatePassword = $pdo->prepare('UPDATE admins SET password_hash = ? WHERE id = ?');
+            $updatePassword = $pdo->prepare('UPDATE admins SET password_hash = ?, password_change_required = 0 WHERE id = ?');
             $updatePassword->execute([password_hash($newPassword, PASSWORD_DEFAULT), (int)$admin['id']]);
             $revokeTokens = $pdo->prepare('DELETE FROM admin_tokens WHERE admin_id = ?');
             $revokeTokens->execute([(int)$admin['id']]);
@@ -120,7 +193,7 @@ switch ($action) {
         break;
 
     case 'admin_logout':
-        requireAdminToken($pdo);
+        requireAdminToken($pdo, true);
         $token = getAdminTokenFromRequest();
         $stmt = $pdo->prepare('DELETE FROM admin_tokens WHERE token_hash = ?');
         $stmt->execute([hash('sha256', $token)]);
@@ -457,7 +530,7 @@ switch ($action) {
             jsonResponse(['error' => 'Email and password are required'], 400);
         }
 
-        if (isLoginRateLimited($pdo)) {
+        if (isLoginRateLimited($pdo, $email)) {
             header('Retry-After: 900');
             jsonResponse(['error' => 'Too many login attempts. Try again in 15 minutes.'], 429);
         }
@@ -471,14 +544,14 @@ switch ($action) {
         $customer = $stmt->fetch();
         if (!$customer || !password_verify($password, $customer['password_hash'])) {
             logSecurityEvent('customer_login_failed');
-            if (recordLoginFailure($pdo)) {
+            if (recordLoginFailure($pdo, $email)) {
                 header('Retry-After: 900');
                 jsonResponse(['error' => 'Too many login attempts. Try again in 15 minutes.'], 429);
             }
             jsonResponse(['error' => 'Invalid email or password'], 401);
         }
 
-        clearLoginAttempts($pdo);
+        clearLoginAttempts($pdo, $email);
         if (password_needs_rehash($customer['password_hash'], PASSWORD_DEFAULT)) {
             $rehash = $pdo->prepare('UPDATE customers SET password_hash = ? WHERE id = ?');
             $rehash->execute([password_hash($password, PASSWORD_DEFAULT), (int)$customer['id']]);

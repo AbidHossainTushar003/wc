@@ -105,7 +105,8 @@ async function handleAdminLogin(event) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 username: document.getElementById('admin-username').value.trim(),
-                password: document.getElementById('admin-password').value
+                password: document.getElementById('admin-password').value,
+                totp_code: document.getElementById('admin-totp-code').value.trim()
             })
         });
         const result = await response.json();
@@ -118,7 +119,16 @@ async function handleAdminLogin(event) {
         sessionStorage.setItem(ADMIN_TOKEN_KEY, result.data.token);
         sessionStorage.setItem(ADMIN_NAME_KEY, result.data.full_name);
         document.getElementById('admin-password').value = '';
+        document.getElementById('admin-totp-code').value = '';
         showAdminApp(result.data.full_name);
+        if (result.data.must_change_password) {
+            const panel = document.getElementById('admin-password-panel');
+            panel.classList.add('active');
+            panel.style.display = 'block';
+            const passwordError = document.getElementById('admin-password-error');
+            passwordError.textContent = 'Set a new password before using any admin features.';
+            passwordError.style.display = 'block';
+        }
     } catch (e) {
         error.textContent = 'Could not connect to the authentication service.';
         error.style.display = 'block';
