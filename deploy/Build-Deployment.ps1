@@ -8,14 +8,10 @@ $ErrorActionPreference = 'Stop'
 
 $repositoryRoot = Split-Path -Parent $PSScriptRoot
 $webRoot = Join-Path $repositoryRoot 'web'
-$configTemplate = Join-Path $PSScriptRoot 'config.local.php.template'
 $outputPath = [System.IO.Path]::GetFullPath($OutputPath)
 
 if (-not (Test-Path -LiteralPath $webRoot -PathType Container)) {
     throw "Web root not found: $webRoot"
-}
-if (-not (Test-Path -LiteralPath $configTemplate -PathType Leaf)) {
-    throw "Config template not found: $configTemplate"
 }
 if ((Test-Path -LiteralPath $outputPath) -and -not $Force) {
     throw "Output already exists. Choose another OutputPath or pass -Force: $outputPath"
@@ -41,10 +37,6 @@ try {
         New-Item -ItemType Directory -Path $destinationDirectory -Force | Out-Null
         Copy-Item -LiteralPath $_.FullName -Destination $destination
     }
-
-    $apiDirectory = Join-Path $stagingRoot 'api'
-    New-Item -ItemType Directory -Path $apiDirectory -Force | Out-Null
-    Copy-Item -LiteralPath $configTemplate -Destination (Join-Path $apiDirectory 'config.local.php')
 
     if (-not (Test-Path -LiteralPath (Join-Path $stagingRoot 'index.html') -PathType Leaf)) {
         throw 'Staged deployment is missing the root index.html.'
@@ -86,7 +78,7 @@ try {
     $archive = [System.IO.Compression.ZipFile]::OpenRead($outputPath)
     try {
         $entryNames = @($archive.Entries | ForEach-Object { $_.FullName })
-        foreach ($requiredEntry in @('index.html', '.htaccess', 'api/config.local.php')) {
+        foreach ($requiredEntry in @('index.html', '.htaccess')) {
             if ($entryNames -notcontains $requiredEntry) {
                 throw "Deployment archive is missing $requiredEntry."
             }
@@ -94,6 +86,7 @@ try {
         $forbiddenEntry = $entryNames | Where-Object {
             $_ -match '(^|/)(\.git|node_modules|admin-android)(/|$)' -or
             $_ -match '(?i)(\.sqlite|\.sql|\.md)$' -or
+            $_ -match '(^|/)config\.local\.php$' -or
             $_ -match '(^|/)server\.js$|(^|/)dev-data\.json$'
         } | Select-Object -First 1
         if ($forbiddenEntry) {
