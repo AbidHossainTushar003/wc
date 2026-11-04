@@ -57,6 +57,7 @@ This creates `deploy\wonderful-deploy.zip` with `index.html` at the archive root
 
 4. **Upload and configure the site**
    - From cPanel home, open **Files → File Manager**, then open `/home/wonderfu/public_html`.
+   - Before extracting over an existing site, enable **Show Hidden Files** in File Manager and inspect `.htaccess`. If it contains a cPanel-generated PHP INI directives block, preserve and merge that block into the deployment `.htaccess`; do not replace the account's `php.ini` or `.user.ini`.
    - Click **Upload**, choose `deploy\wonderful-deploy.zip`, return to File Manager, select the ZIP, and click **Extract**. Extract into `public_html` itself, not a nested folder.
    - Confirm `/home/wonderfu/public_html/index.html` exists at the web-root level, then delete `wonderful-deploy.zip` from File Manager.
    - Open `public_html/api/config.local.php` in File Manager's editor and replace the database-name, database-user, and password placeholders:
