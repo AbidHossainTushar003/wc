@@ -31,7 +31,7 @@ This ledger tracks findings in `AUDIT_REPORT.md`. `OPEN` means not addressed yet
 | S-08 | OPEN | CSP permits inline scripts and styles. |
 | S-09 | OPEN | Post-deploy test script can send an admin token to any HTTPS host. |
 | S-10 | OPEN | Courier webhook freshness, replay prevention, and status transitions are not enforced. |
-| D-01 | OPEN | Existing deployment ZIP is stale; a fresh ZIP will be built in Batch 4. |
+| D-01 | PARTIAL | The earlier ZIPs remain untouched and predate the committed Batch 1 fixes; a new archive including current committed fixes is deferred to Batch 4. |
 | D-02 | PARTIAL | Every PHP API response now emits `Cache-Control: no-store` plus legacy no-cache headers. The host still must purge/bypass its proxy cache and enforce HTTP-to-HTTPS redirect; agent cannot change hosting proxy configuration. |
 | D-03 | OPEN | Production MySQL import/integration has not been verified. |
 | D-04 | OPEN | Local config path and deployment handling need hardening/documentation. |
