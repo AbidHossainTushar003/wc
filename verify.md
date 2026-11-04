@@ -61,10 +61,10 @@ curl.exe -i https://wonderfulcollection.store/api/config.local.php
 
 The unauthenticated write checks passed (401). The production lockout test also
 passed: four invalid admin logins returned 401, and the fifth returned 429.
-The tested source IP is now subject to the 15-minute lockout. Admin sign-in
-itself is still pending because the owner does not have the credentials. Do
-not share passwords in chat; reset or recover access before further admin
-testing.
+The test-created lockout row was cleared after verification. The seeded admin
+password was reset with the owner's authorization, and a login using the new
+credentials returned HTTP 200. The owner should change that temporary password
+immediately after signing in.
 
 ## Test order, stock, and tracking
 
