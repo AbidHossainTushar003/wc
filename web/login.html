@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customer Login & Register | Wonderful Collection Dhanmondi</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+</head>
+<body>
+  <div class="top-bar">
+    <div class="top-bar-notice">
+      <span class="top-bar-badge">ACCOUNT</span>
+      <span>⚡ Login or create an account for faster checkout in Dhanmondi, Dhaka</span>
+    </div>
+  </div>
+
+  <header class="site-header">
+    <div class="header-container" style="justify-content: center;">
+      <a href="index.html" class="brand-logo-wrap"><img src="assets/logo.jpg" alt="Wonderful Collection" class="brand-logo-img"></a>
+    </div>
+  </header>
+
+  <main class="page-container" style="max-width: 540px;">
+    <div style="background: #fff; border-radius: 20px; border: 1px solid #e2e8f0; padding: 36px 32px; box-shadow: var(--shadow-md);">
+      
+      <!-- Tab switcher -->
+      <div style="display: flex; border-bottom: 2px solid #f1f5f9; margin-bottom: 28px;">
+        <button id="tab-login" onclick="switchAuthTab('login')" style="flex: 1; padding: 12px; background: none; border: none; font-weight: 800; font-size: 1.1rem; color: #f05423; border-bottom: 3px solid #f05423; cursor: pointer;">
+          Sign In
+        </button>
+        <button id="tab-register" onclick="switchAuthTab('register')" style="flex: 1; padding: 12px; background: none; border: none; font-weight: 700; font-size: 1.1rem; color: #64748b; border-bottom: 3px solid transparent; cursor: pointer;">
+          Create Account
+        </button>
+      </div>
+
+      <!-- Login Form -->
+      <form id="login-form" onsubmit="handleLogin(event)">
+        <div style="margin-bottom: 16px;">
+          <label style="display: block; font-size: 0.88rem; font-weight: 700; margin-bottom: 6px;">Email Address</label>
+          <input type="email" id="login_email" required placeholder="name@example.com" style="width: 100%; border: 1px solid #cbd5e1; padding: 12px 14px; border-radius: 8px;">
+        </div>
+        <div style="margin-bottom: 8px;">
+          <label style="display: block; font-size: 0.88rem; font-weight: 700; margin-bottom: 6px;">Password</label>
+          <input type="password" id="login_password" required placeholder="••••••••" style="width: 100%; border: 1px solid #cbd5e1; padding: 12px 14px; border-radius: 8px;">
+        </div>
+        <div style="text-align: right; margin-bottom: 24px;">
+          <a href="forgot-password.html" style="font-size: 0.82rem; color: #f05423; font-weight: 600;">Forgot Password?</a>
+        </div>
+        <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 14px; font-size: 1.05rem;">
+          Sign In To Account →
+        </button>
+      </form>
+
+      <!-- Register Form -->
+      <form id="register-form" onsubmit="handleRegister(event)" style="display: none;">
+        <div style="margin-bottom: 14px;">
+          <label style="display: block; font-size: 0.88rem; font-weight: 700; margin-bottom: 6px;">Full Name *</label>
+          <input type="text" id="reg_name" required placeholder="e.g. Mahbub Alam" style="width: 100%; border: 1px solid #cbd5e1; padding: 10px 14px; border-radius: 8px;">
+        </div>
+        <div style="margin-bottom: 14px;">
+          <label style="display: block; font-size: 0.88rem; font-weight: 700; margin-bottom: 6px;">Email Address *</label>
+          <input type="email" id="reg_email" required placeholder="name@example.com" style="width: 100%; border: 1px solid #cbd5e1; padding: 10px 14px; border-radius: 8px;">
+        </div>
+        <div style="margin-bottom: 14px;">
+          <label style="display: block; font-size: 0.88rem; font-weight: 700; margin-bottom: 6px;">Mobile Phone (WhatsApp) *</label>
+          <input type="tel" id="reg_phone" required placeholder="017XXXXXXXX" style="width: 100%; border: 1px solid #cbd5e1; padding: 10px 14px; border-radius: 8px;">
+        </div>
+        <div style="margin-bottom: 14px;">
+          <label style="display: block; font-size: 0.88rem; font-weight: 700; margin-bottom: 6px;">Delivery Area in Dhaka</label>
+          <select id="reg_area" style="width: 100%; border: 1px solid #cbd5e1; padding: 10px 14px; border-radius: 8px; background: #fff;">
+            <option value="Dhanmondi" selected>Dhanmondi</option>
+            <option value="Gulshan">Gulshan</option>
+            <option value="Banani">Banani</option>
+            <option value="Uttara">Uttara</option>
+            <option value="Mohammadpur">Mohammadpur</option>
+            <option value="Mirpur">Mirpur</option>
+            <option value="Other">Other Location in Bangladesh</option>
+          </select>
+        </div>
+        <div style="margin-bottom: 24px;">
+          <label style="display: block; font-size: 0.88rem; font-weight: 700; margin-bottom: 6px;">Choose Password *</label>
+          <input type="password" id="reg_password" required minlength="8" maxlength="72" placeholder="8–72 characters" style="width: 100%; border: 1px solid #cbd5e1; padding: 10px 14px; border-radius: 8px;">
+        </div>
+        <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 14px; font-size: 1.05rem;">
+          Create My Account 🎉
+        </button>
+      </form>
+
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-bottom"><div class="footer-bottom-container"><div>© 2026 Wonderful Collection - Dhanmondi, Dhaka 🇧🇩</div></div></div>
+  </footer>
+
+  <script src="js/store.js"></script>
+  <script>
+    function switchAuthTab(tab) {
+      if (tab === 'login') {
+        document.getElementById('login-form').style.display = 'block';
+        document.getElementById('register-form').style.display = 'none';
+        document.getElementById('tab-login').style.color = '#f05423';
+        document.getElementById('tab-login').style.borderBottomColor = '#f05423';
+        document.getElementById('tab-register').style.color = '#64748b';
+        document.getElementById('tab-register').style.borderBottomColor = 'transparent';
+      } else {
+        document.getElementById('login-form').style.display = 'none';
+        document.getElementById('register-form').style.display = 'block';
+        document.getElementById('tab-register').style.color = '#f05423';
+        document.getElementById('tab-register').style.borderBottomColor = '#f05423';
+        document.getElementById('tab-login').style.color = '#64748b';
+        document.getElementById('tab-login').style.borderBottomColor = 'transparent';
+      }
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('login_email').value.trim();
+      const password = document.getElementById('login_password').value;
+
+      try {
+        const res = await fetch('/api/auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'login', email, password })
+        });
+        const data = await res.json();
+        if (data.status === 'success') {
+          Store.state.user = data.data;
+          Store.saveState();
+          Store.showToast('Welcome back, ' + data.data.name + '!');
+          setTimeout(() => window.location.href = 'profile.html', 800);
+        } else {
+          alert(data.error || 'Login failed.');
+        }
+      } catch (err) {
+        alert('Could not connect to authentication server.');
+      }
+    }
+
+    async function handleRegister(e) {
+      e.preventDefault();
+      const payload = {
+        action: 'register',
+        name: document.getElementById('reg_name').value.trim(),
+        email: document.getElementById('reg_email').value.trim(),
+        phone: document.getElementById('reg_phone').value.trim(),
+        area: document.getElementById('reg_area').value,
+        password: document.getElementById('reg_password').value
+      };
+
+      try {
+        const res = await fetch('/api/auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.status === 'success') {
+          Store.state.user = data.data;
+          Store.saveState();
+          Store.showToast('Account created successfully!');
+          setTimeout(() => window.location.href = 'profile.html', 800);
+        } else {
+          alert(data.error || 'Registration failed.');
+        }
+      } catch (err) {
+        alert('Could not connect to authentication server.');
+      }
+    }
+  </script>
+</body>
+</html>

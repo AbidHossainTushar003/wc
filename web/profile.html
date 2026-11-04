@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Profile | Wonderful Collection Dhanmondi</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+</head>
+<body>
+  <div class="top-bar">
+    <div class="top-bar-notice">
+      <span class="top-bar-badge">ACCOUNT</span>
+      <span>Manage your personal profile and Dhanmondi/Dhaka delivery address</span>
+    </div>
+    <div class="top-bar-links">
+      <a href="track-order.html">📍 Track Order</a>
+      <a href="contact.html">📞 Contact</a>
+    </div>
+  </div>
+
+  <header class="site-header">
+    <div class="header-container">
+      <a href="index.html" class="brand-logo-wrap"><img src="assets/logo.jpg" alt="Wonderful Collection" class="brand-logo-img"></a>
+      <div class="header-actions">
+        <a href="orders.html" class="header-action-btn"><span class="icon">📦</span><span>My Orders</span></a>
+        <a href="cart.html" class="header-action-btn open-cart-btn"><span class="icon">🛍️</span><span>Cart</span></a>
+        <button onclick="logoutCustomer()" style="background: none; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 6px; font-weight: 700; color: #ef4444; cursor: pointer;">Logout</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-container" style="max-width: 800px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+      <h1 style="font-size: 2rem; font-weight: 800; color: #0e2a47;">My Customer Profile</h1>
+      <a href="orders.html" class="btn-secondary" style="color: #0e2a47; border-color: #cbd5e1;">View Order History →</a>
+    </div>
+
+    <div style="background: #fff; border-radius: 20px; border: 1px solid #e2e8f0; padding: 32px; box-shadow: var(--shadow-sm);">
+      <form onsubmit="handleSaveProfile(event)">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+          <div>
+            <label style="display: block; font-size: 0.88rem; font-weight: 700; margin-bottom: 6px;">Full Name</label>
+            <input type="text" id="prof_name" required style="width: 100%; border: 1px solid #cbd5e1; padding: 12px 14px; border-radius: 8px;">
+          </div>
+          <div>
+            <label style="display: block; font-size: 0.88rem; font-weight: 700; margin-bottom: 6px;">Email Address</label>
+            <input type="email" id="prof_email" readonly style="width: 100%; border: 1px solid #e2e8f0; background: #f8fafc; padding: 12px 14px; border-radius: 8px; color: #64748b;">
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+          <div>
+            <label style="display: block; font-size: 0.88rem; font-weight: 700; margin-bottom: 6px;">Phone Number (WhatsApp)</label>
+            <input type="tel" id="prof_phone" required style="width: 100%; border: 1px solid #cbd5e1; padding: 12px 14px; border-radius: 8px;">
+          </div>
+          <div>
+            <label style="display: block; font-size: 0.88rem; font-weight: 700; margin-bottom: 6px;">Primary Area in Dhaka</label>
+            <input type="text" id="prof_area" value="Dhanmondi" style="width: 100%; border: 1px solid #cbd5e1; padding: 12px 14px; border-radius: 8px;">
+          </div>
+        </div>
+
+        <div style="margin-bottom: 24px;">
+          <label style="display: block; font-size: 0.88rem; font-weight: 700; margin-bottom: 6px;">Default Delivery Address</label>
+          <textarea id="prof_address" rows="3" style="width: 100%; border: 1px solid #cbd5e1; padding: 12px 14px; border-radius: 8px;"></textarea>
+        </div>
+
+        <button type="submit" class="btn-primary" style="padding: 14px 28px;">
+          Save Profile Changes
+        </button>
+      </form>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-bottom"><div class="footer-bottom-container"><div>© 2026 Wonderful Collection - Dhanmondi, Dhaka 🇧🇩</div></div></div>
+  </footer>
+
+  <script src="js/store.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const user = Store.state.user;
+      if (!user) {
+        window.location.href = 'login.html';
+        return;
+      }
+      document.getElementById('prof_name').value = user.name || '';
+      document.getElementById('prof_email').value = user.email || '';
+      document.getElementById('prof_phone').value = user.phone || '';
+      document.getElementById('prof_area').value = user.area || 'Dhanmondi';
+      document.getElementById('prof_address').value = user.address || '';
+    });
+
+    function handleSaveProfile(e) {
+      e.preventDefault();
+      Store.state.user.name = document.getElementById('prof_name').value.trim();
+      Store.state.user.phone = document.getElementById('prof_phone').value.trim();
+      Store.state.user.area = document.getElementById('prof_area').value.trim();
+      Store.state.user.address = document.getElementById('prof_address').value.trim();
+      Store.saveState();
+      Store.showToast('Profile updated successfully! ✨');
+    }
+
+    function logoutCustomer() {
+      Store.state.user = null;
+      Store.saveState();
+      window.location.href = 'index.html';
+    }
+  </script>
+</body>
+</html>

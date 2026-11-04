@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Category | Wonderful Collection Dhanmondi</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+</head>
+<body>
+  <div class="top-bar">
+    <div class="top-bar-notice">
+      <span class="top-bar-badge">DHANMONDI HUB</span>
+      <span>⚡ Super-fast delivery within 2-4 hours across Dhanmondi, Dhaka!</span>
+    </div>
+    <div class="top-bar-links">
+      <a href="track-order.html">📍 Track Order</a>
+      <a href="contact.html">📞 Contact</a>
+    </div>
+  </div>
+
+  <header class="site-header">
+    <div class="header-container">
+      <a href="index.html" class="brand-logo-wrap"><img src="assets/logo.jpg" alt="Wonderful Collection" class="brand-logo-img"></a>
+      <div class="header-search">
+        <form action="search.html" method="GET" class="search-input-wrap">
+          <input type="text" name="q" class="search-input" placeholder="Search..." required>
+          <button type="submit" class="search-btn"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></button>
+        </form>
+      </div>
+      <div class="header-actions">
+        <a href="login.html" class="header-action-btn"><span class="icon">👤</span><span>Account</span></a>
+        <a href="wishlist.html" class="header-action-btn"><span class="icon">❤️</span><span>Wishlist</span><span class="action-count-badge wish-count-badge" style="display: none;">0</span></a>
+        <a href="cart.html" class="header-action-btn open-cart-btn"><span class="icon">🛍️</span><span>Cart</span><span class="action-count-badge cart-count-badge" style="display: none;">0</span></a>
+      </div>
+    </div>
+  </header>
+
+  <nav class="site-nav">
+    <div class="nav-container">
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="shop.html">All Products</a></li>
+        <li><a href="category.html?cat=mens-fashion">Men's Fashion</a></li>
+        <li><a href="category.html?cat=womens-fashion">Women's Fashion</a></li>
+        <li><a href="category.html?cat=perfumes-attar">Perfumes & Attar</a></li>
+        <li><a href="category.html?cat=gadgets-electronics">Gadgets</a></li>
+        <li><a href="category.html?cat=leather-accessories">Leather</a></li>
+        <li><a href="category.html?cat=home-decor">Home Decor</a></li>
+      </ul>
+      <div class="nav-dhanmondi-pill">📍 Dhanmondi, Dhaka</div>
+    </div>
+  </nav>
+
+  <main class="page-container">
+    <div style="background: linear-gradient(135deg, #0e2a47 0%, #1a426e 100%); color: #fff; padding: 40px; border-radius: 18px; margin-bottom: 32px;">
+      <div style="font-size: 0.85rem; color: #ff9d7e; font-weight: 700; text-transform: uppercase;">Category</div>
+      <h1 id="cat-header-title" style="font-size: 2.2rem; font-weight: 800; margin: 6px 0;">Loading Category...</h1>
+      <p id="cat-header-desc" style="color: #cbd5e1; max-width: 600px;">Hand-curated collection for delivery across Dhanmondi and Dhaka.</p>
+    </div>
+
+    <div class="products-grid" id="category-products-grid"></div>
+  </main>
+
+  <div class="cart-drawer-overlay"></div>
+  <div class="cart-drawer">
+    <div class="drawer-header"><div class="drawer-title">Shopping Cart 🛍️</div><button class="drawer-close">✕</button></div>
+    <div class="drawer-body"></div>
+    <div class="drawer-footer"></div>
+  </div>
+
+  <footer class="site-footer">
+    <div class="footer-bottom"><div class="footer-bottom-container"><div>© 2026 Wonderful Collection - Dhanmondi, Dhaka 🇧🇩</div></div></div>
+  </footer>
+
+  <script src="js/store.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const catSlug = urlParams.get('cat') || 'mens-fashion';
+
+      const categories = await Store.fetchCategories();
+      const currentCat = categories.find(c => c.slug === catSlug) || { name: catSlug.replace('-', ' ').toUpperCase(), description: 'Explore our hand-picked selections.' };
+
+      document.getElementById('cat-header-title').textContent = currentCat.name;
+      if (currentCat.description) document.getElementById('cat-header-desc').textContent = currentCat.description;
+
+      const products = await Store.fetchProducts({ category: catSlug });
+      const grid = document.getElementById('category-products-grid');
+      if (products.length) {
+        grid.innerHTML = products.map(p => `
+          <div class="product-card">
+            <div class="product-thumb-wrap">
+              <a href="product.html?id=${p.id}"><img src="${Array.isArray(p.images) ? p.images[0] : p.image}" alt="${p.name}"></a>
+            </div>
+            <div class="product-body">
+              <div class="product-category-tag">${p.category_name}</div>
+              <a href="product.html?id=${p.id}" class="product-title">${p.name}</a>
+              <div class="product-pricing">
+                <span class="price-current">${Store.formatBDT(p.sale_price || p.regular_price)}</span>
+                ${p.sale_price ? `<span class="price-original">${Store.formatBDT(p.regular_price)}</span>` : ''}
+              </div>
+              <button class="btn-add-cart" onclick='Store.addToCart(${JSON.stringify(p).replace(/'/g, "&apos;")})'>🛒 Add to Cart</button>
+            </div>
+          </div>
+        `).join('');
+      } else {
+        grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 48px; color: #64748b;">No products in this category yet. Check back soon!</div>`;
+      }
+    });
+  </script>
+</body>
+</html>

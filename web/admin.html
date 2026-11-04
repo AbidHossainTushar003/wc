@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel | Wonderful Collection Backend</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+  <style>
+    body.admin-body {
+      background-color: #0f172a;
+      color: #f8fafc;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .admin-header-pill {
+      background: #fbbf24;
+      color: #000000;
+      font-weight: 900;
+      font-size: 1.15rem;
+      letter-spacing: 0.5px;
+      padding: 10px 28px;
+      border-radius: 999px;
+      display: inline-block;
+      text-transform: uppercase;
+      box-shadow: 0 4px 15px rgba(251, 191, 36, 0.4);
+    }
+    .admin-subtext {
+      color: #38bdf8;
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-top: 8px;
+    }
+    .admin-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      max-width: 680px;
+      margin: 32px auto 48px;
+    }
+    @media (max-width: 600px) {
+      .admin-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 14px;
+      }
+    }
+    .admin-card {
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+      border: 3px solid transparent;
+      user-select: none;
+    }
+    .admin-card:hover {
+      transform: translateY(-6px) scale(1.03);
+      box-shadow: 0 14px 28px rgba(0,0,0,0.35);
+      border-color: #fbbf24;
+    }
+    .admin-card-icon {
+      font-size: 2.4rem;
+      line-height: 1;
+      margin-bottom: 12px;
+      color: #0f172a;
+    }
+    .admin-card-title {
+      font-size: 1rem;
+      font-weight: 800;
+      letter-spacing: -0.2px;
+    }
+    /* Module View Screen */
+    .admin-module-screen {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 20px;
+      padding: 32px;
+      max-width: 1040px;
+      margin: 0 auto 48px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      display: none;
+    }
+    .admin-module-screen.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .admin-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      margin-top: 16px;
+    }
+    .admin-table th {
+      padding: 12px;
+      background: #0f172a;
+      color: #94a3b8;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+    .admin-table td {
+      padding: 12px;
+      border-bottom: 1px solid #334155;
+      font-size: 0.9rem;
+    }
+    .admin-table tr:hover td {
+      background: #273549;
+    }
+    .admin-input {
+      background: #0f172a;
+      border: 1px solid #334155;
+      color: #f8fafc;
+      padding: 10px 14px;
+      border-radius: 8px;
+      width: 100%;
+      font-size: 0.95rem;
+    }
+    .admin-btn {
+      background: #fbbf24;
+      color: #000;
+      font-weight: 800;
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .admin-btn:hover {
+      background: #f59e0b;
+      transform: translateY(-1px);
+    }
+  </style>
+</head>
+<body class="admin-body">
+
+  <!-- Top bar with link to front store -->
+  <div style="padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155;">
+    <a href="index.html" style="color: #94a3b8; font-size: 0.88rem; font-weight: 600; display: flex; align-items: center; gap: 6px;">
+      ← View Customer Store (wonderfulcollection.store)
+    </a>
+    <div style="display: flex; align-items: center; gap: 12px; font-size: 0.85rem; color: #fbbf24; font-weight: 700;">
+      <span id="admin-user-name">Not signed in</span>
+      <button id="admin-change-password" type="button" class="admin-btn" onclick="toggleAdminPasswordPanel()" style="display: none; padding: 6px 12px;">Change password</button>
+      <button id="admin-logout" type="button" class="admin-btn" onclick="handleAdminLogout()" style="display: none; padding: 6px 12px;">Sign out</button>
+    </div>
+  </div>
+
+  <main style="max-width: 1100px; margin: 32px auto; padding: 0 20px; flex: 1; width: 100%;">
+    <section id="admin-login-screen" class="admin-module-screen active" style="max-width: 480px; margin: 40px auto;">
+      <h1 style="margin-bottom: 20px; color: #fbbf24;">Admin sign in</h1>
+      <form onsubmit="handleAdminLogin(event)">
+        <label for="admin-username" style="display: block; margin-bottom: 6px;">Username</label>
+        <input id="admin-username" class="admin-input" autocomplete="username" required>
+        <label for="admin-password" style="display: block; margin: 16px 0 6px;">Password</label>
+        <input id="admin-password" class="admin-input" type="password" autocomplete="current-password" required>
+        <button id="admin-login-button" type="submit" class="admin-btn" style="width: 100%; margin-top: 20px;">Sign in</button>
+        <p id="admin-login-error" role="alert" style="display: none; color: #fca5a5; margin-top: 14px;"></p>
+      </form>
+    </section>
+
+    <div id="admin-app" style="display: none;">
+    <section id="admin-password-panel" class="admin-module-screen" style="max-width: 520px; margin: 0 auto 24px;">
+      <form onsubmit="handleAdminPasswordChange(event)">
+        <h2 style="margin-bottom: 16px; color: #fbbf24;">Change admin password</h2>
+        <label for="admin-current-password" style="display: block; margin-bottom: 6px;">Current password</label>
+        <input id="admin-current-password" class="admin-input" type="password" autocomplete="current-password" required>
+        <label for="admin-new-password" style="display: block; margin: 16px 0 6px;">New password (at least 14 characters)</label>
+        <input id="admin-new-password" class="admin-input" type="password" minlength="14" maxlength="72" autocomplete="new-password" required>
+        <label for="admin-confirm-password" style="display: block; margin: 16px 0 6px;">Confirm new password</label>
+        <input id="admin-confirm-password" class="admin-input" type="password" minlength="14" maxlength="72" autocomplete="new-password" required>
+        <button type="submit" class="admin-btn" style="margin-top: 20px;">Update password</button>
+        <button type="button" class="admin-btn" onclick="toggleAdminPasswordPanel()" style="margin: 20px 0 0 8px; background: #334155; color: #fff;">Cancel</button>
+        <p id="admin-password-error" role="alert" style="display: none; color: #fca5a5; margin-top: 14px;"></p>
+      </form>
+    </section>
+    
+    <!-- Top Branding matching Image 2 -->
+    <div style="text-align: center; margin-bottom: 8px;">
+      <div class="admin-header-pill">ADMIN PANEL &ndash; BACKEND SCREENS</div>
+      <div class="admin-subtext">Only for you (the shop owner)</div>
+    </div>
+
+    <!-- 3x3 Grid Matching Image 2 -->
+    <div class="admin-grid" id="main-admin-grid">
+      <!-- 1. Dashboard -->
+      <div class="admin-card" onclick="openModule('dashboard')">
+        <div class="admin-card-icon">📊</div>
+        <div class="admin-card-title" style="color: #ea580c;">Dashboard</div>
+      </div>
+
+      <!-- 2. Products -->
+      <div class="admin-card" onclick="openModule('products')">
+        <div class="admin-card-icon">📦</div>
+        <div class="admin-card-title" style="color: #0284c7;">Products</div>
+      </div>
+
+      <!-- 3. Categories -->
+      <div class="admin-card" onclick="openModule('categories')">
+        <div class="admin-card-icon">🗂️</div>
+        <div class="admin-card-title" style="color: #0d9488;">Categories</div>
+      </div>
+
+      <!-- 4. Orders -->
+      <div class="admin-card" onclick="openModule('orders')">
+        <div class="admin-card-icon">📑</div>
+        <div class="admin-card-title" style="color: #db2777;">Orders</div>
+      </div>
+
+      <!-- 5. Customers -->
+      <div class="admin-card" onclick="openModule('customers')">
+        <div class="admin-card-icon">👥</div>
+        <div class="admin-card-title" style="color: #7c3aed;">Customers</div>
+      </div>
+
+      <!-- 6. Coupons -->
+      <div class="admin-card" onclick="openModule('coupons')">
+        <div class="admin-card-icon">🏷️</div>
+        <div class="admin-card-title" style="color: #0891b2;">Coupons</div>
+      </div>
+
+      <!-- 7. Stock / Inventory -->
+      <div class="admin-card" onclick="openModule('inventory')">
+        <div class="admin-card-icon">🗄️</div>
+        <div class="admin-card-title" style="color: #d97706;">Stock / Inventory</div>
+      </div>
+
+      <!-- 8. Reports -->
+      <div class="admin-card" onclick="openModule('reports')">
+        <div class="admin-card-icon">📈</div>
+        <div class="admin-card-title" style="color: #dc2626;">Reports</div>
+      </div>
+
+      <!-- 9. Settings -->
+      <div class="admin-card" onclick="openModule('settings')">
+        <div class="admin-card-icon">⚙️</div>
+        <div class="admin-card-title" style="color: #f97316;">Settings</div>
+      </div>
+    </div>
+
+    <!-- Active Module Display Container -->
+    <div id="module-container">
+      
+      <!-- 1. DASHBOARD SCREEN -->
+      <div id="mod-dashboard" class="admin-module-screen">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+          <h2 style="font-size: 1.6rem; font-weight: 800; color: #ea580c;">📊 Store Dashboard</h2>
+          <button onclick="closeModule()" class="admin-btn" style="background: #334155; color: #fff;">← Back to Grid</button>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 28px;" id="dash-kpi-cards">
+          <!-- KPI cards injected via JS -->
+        </div>
+        <h3 style="font-size: 1.15rem; font-weight: 700; color: #cbd5e1; margin-bottom: 12px;">Recent Store Orders</h3>
+        <div style="overflow-x: auto;">
+          <table class="admin-table" id="dash-orders-table">
+            <thead><tr><th>Order #</th><th>Customer</th><th>Area</th><th>Total</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 2. PRODUCTS SCREEN -->
+      <div id="mod-products" class="admin-module-screen">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+          <h2 style="font-size: 1.6rem; font-weight: 800; color: #0284c7;">📦 Product Management</h2>
+          <div style="display: flex; gap: 10px;">
+            <button onclick="showAddProductModal()" class="admin-btn">+ Add Product</button>
+            <button onclick="closeModule()" class="admin-btn" style="background: #334155; color: #fff;">← Grid</button>
+          </div>
+        </div>
+        <div style="overflow-x: auto;">
+          <table class="admin-table" id="products-table">
+            <thead><tr><th>Image</th><th>Name</th><th>Category</th><th>Regular</th><th>Sale</th><th>Stock</th><th>Action</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 3. CATEGORIES SCREEN -->
+      <div id="mod-categories" class="admin-module-screen">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+          <h2 style="font-size: 1.6rem; font-weight: 800; color: #0d9488;">🗂️ Categories</h2>
+          <button onclick="closeModule()" class="admin-btn" style="background: #334155; color: #fff;">← Grid</button>
+        </div>
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+          <table class="admin-table" id="categories-table">
+            <thead><tr><th>Category</th><th>Slug</th><th>Count</th></tr></thead>
+            <tbody></tbody>
+          </table>
+          <div style="background: #0f172a; padding: 20px; border-radius: 12px; border: 1px solid #334155;">
+            <h4 style="margin-bottom: 12px; color: #0d9488;">+ Add New Category</h4>
+            <input type="text" id="new-cat-name" placeholder="Category Name" class="admin-input" style="margin-bottom: 10px;">
+            <input type="text" id="new-cat-slug" placeholder="Slug (optional)" class="admin-input" style="margin-bottom: 14px;">
+            <button onclick="handleAddCategory()" class="admin-btn" style="width: 100%;">Create Category</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. ORDERS SCREEN -->
+      <div id="mod-orders" class="admin-module-screen">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+          <h2 style="font-size: 1.6rem; font-weight: 800; color: #db2777;">📑 Order Management</h2>
+          <button onclick="closeModule()" class="admin-btn" style="background: #334155; color: #fff;">← Grid</button>
+        </div>
+        <div style="overflow-x: auto;">
+          <table class="admin-table" id="orders-table">
+            <thead><tr><th>Order #</th><th>Customer / Phone</th><th>Delivery Area</th><th>Total</th><th>Status</th><th>Update Status</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 5. CUSTOMERS SCREEN -->
+      <div id="mod-customers" class="admin-module-screen">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+          <h2 style="font-size: 1.6rem; font-weight: 800; color: #7c3aed;">👥 Customer Directory</h2>
+          <button onclick="closeModule()" class="admin-btn" style="background: #334155; color: #fff;">← Grid</button>
+        </div>
+        <div style="overflow-x: auto;">
+          <table class="admin-table" id="customers-table">
+            <thead><tr><th>Name</th><th>Email / Phone</th><th>Location</th><th>Orders</th><th>Total Spent</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 6. COUPONS SCREEN -->
+      <div id="mod-coupons" class="admin-module-screen">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+          <h2 style="font-size: 1.6rem; font-weight: 800; color: #0891b2;">🏷️ Discount Coupons</h2>
+          <button onclick="closeModule()" class="admin-btn" style="background: #334155; color: #fff;">← Grid</button>
+        </div>
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+          <table class="admin-table" id="coupons-table">
+            <thead><tr><th>Code</th><th>Discount</th><th>Min Order</th><th>Status</th></tr></thead>
+            <tbody></tbody>
+          </table>
+          <div style="background: #0f172a; padding: 20px; border-radius: 12px; border: 1px solid #334155;">
+            <h4 style="margin-bottom: 12px; color: #0891b2;">+ Create Coupon</h4>
+            <input type="text" id="new-cp-code" placeholder="CODE (e.g. DHANMONDI20)" class="admin-input" style="margin-bottom: 10px; text-transform: uppercase;">
+            <input type="number" id="new-cp-val" placeholder="Value (e.g. 10 for % or 150 for BDT)" class="admin-input" style="margin-bottom: 10px;">
+            <select id="new-cp-type" class="admin-input" style="margin-bottom: 10px;">
+              <option value="percentage">Percentage (%)</option>
+              <option value="fixed">Fixed BDT (৳)</option>
+            </select>
+            <input type="number" id="new-cp-min" placeholder="Min Order BDT (e.g. 1500)" class="admin-input" style="margin-bottom: 14px;">
+            <button onclick="handleAddCoupon()" class="admin-btn" style="width: 100%;">Create Coupon</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 7. INVENTORY SCREEN -->
+      <div id="mod-inventory" class="admin-module-screen">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+          <h2 style="font-size: 1.6rem; font-weight: 800; color: #d97706;">🗄️ Stock & Inventory Manager</h2>
+          <button onclick="closeModule()" class="admin-btn" style="background: #334155; color: #fff;">← Grid</button>
+        </div>
+        <div id="inv-summary-banner" style="margin-bottom: 20px; display: flex; gap: 16px;"></div>
+        <div style="overflow-x: auto;">
+          <table class="admin-table" id="inventory-table">
+            <thead><tr><th>Product Name</th><th>SKU</th><th>Stock</th><th>Status</th><th>Quick Adjust</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 8. REPORTS SCREEN -->
+      <div id="mod-reports" class="admin-module-screen">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+          <h2 style="font-size: 1.6rem; font-weight: 800; color: #dc2626;">📈 Financial Reports & Sales</h2>
+          <button onclick="closeModule()" class="admin-btn" style="background: #334155; color: #fff;">← Grid</button>
+        </div>
+        <div id="reports-breakdown-box"></div>
+      </div>
+
+      <!-- 9. SETTINGS SCREEN -->
+      <div id="mod-settings" class="admin-module-screen">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+          <h2 style="font-size: 1.6rem; font-weight: 800; color: #f97316;">⚙️ Store Settings</h2>
+          <button onclick="closeModule()" class="admin-btn" style="background: #334155; color: #fff;">← Grid</button>
+        </div>
+        <form onsubmit="handleSaveSettings(event)" style="max-width: 600px;">
+          <div style="margin-bottom: 14px;">
+            <label style="display: block; font-size: 0.85rem; color: #94a3b8; margin-bottom: 4px;">Store Name</label>
+            <input type="text" id="set_store_name" class="admin-input">
+          </div>
+          <div style="margin-bottom: 14px;">
+            <label style="display: block; font-size: 0.85rem; color: #94a3b8; margin-bottom: 4px;">Dhanmondi Express Delivery Fee (৳)</label>
+            <input type="number" id="set_fee_dhanmondi" class="admin-input">
+          </div>
+          <div style="margin-bottom: 14px;">
+            <label style="display: block; font-size: 0.85rem; color: #94a3b8; margin-bottom: 4px;">Inside Dhaka Regular Delivery Fee (৳)</label>
+            <input type="number" id="set_fee_dhaka" class="admin-input">
+          </div>
+          <div style="margin-bottom: 14px;">
+            <label style="display: block; font-size: 0.85rem; color: #94a3b8; margin-bottom: 4px;">bKash Account / Number</label>
+            <input type="text" id="set_bkash" class="admin-input">
+          </div>
+          <div style="margin-bottom: 20px;">
+            <label style="display: block; font-size: 0.85rem; color: #94a3b8; margin-bottom: 4px;">Nagad Account / Number</label>
+            <input type="text" id="set_nagad" class="admin-input">
+          </div>
+          <button type="submit" class="admin-btn">Save Settings Changes</button>
+        </form>
+      </div>
+
+    </div>
+    </div>
+  </main>
+
+  <script src="js/admin.js"></script>
+</body>
+</html>

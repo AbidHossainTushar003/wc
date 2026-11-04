@@ -1,0 +1,351 @@
+<?php
+/**
+ * Wonderful Collection - Database Connection Provider
+ * MySQL connection provider with an explicit development-only SQLite fallback.
+ */
+
+require_once __DIR__ . '/config.php';
+
+class Database {
+    private static ?PDO $instance = null;
+
+    public static function getConnection(): PDO {
+        if (self::$instance !== null) {
+            return self::$instance;
+        }
+
+        try {
+            $dsn = "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4";
+            $options = [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                PDO::ATTR_EMULATE_PREPARES => false,
+                PDO::ATTR_TIMEOUT => 2
+            ];
+            self::$instance = new PDO($dsn, DB_USER, DB_PASS, $options);
+            return self::$instance;
+        } catch (PDOException $e) {
+            if (!DEV_MODE) {
+                error_log('Wonderful Collection MySQL connection failed: ' . $e->getMessage());
+                jsonResponse(['error' => 'Database connection failed'], 500);
+            }
+
+            try {
+                $sqlitePath = __DIR__ . '/../data.sqlite';
+                $isNew = !file_exists($sqlitePath);
+                self::$instance = new PDO("sqlite:" . $sqlitePath);
+                self::$instance->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                self::$instance->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+
+                if ($isNew) {
+                    self::initSQLiteDatabase(self::$instance);
+                }
+                self::$instance->exec("
+                    CREATE TABLE IF NOT EXISTS admin_tokens (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        token_hash TEXT UNIQUE NOT NULL,
+                        admin_id INTEGER NOT NULL,
+                        expires_at DATETIME NOT NULL,
+                        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                    );
+                    CREATE INDEX IF NOT EXISTS idx_admin_tokens_admin_id ON admin_tokens (admin_id);
+                    CREATE TABLE IF NOT EXISTS login_attempts (
+                        username_hash TEXT NOT NULL,
+                        ip_hash TEXT NOT NULL,
+                        attempt_count INTEGER NOT NULL,
+                        window_started_at DATETIME NOT NULL,
+                        locked_until DATETIME,
+                        PRIMARY KEY (username_hash, ip_hash)
+                    );
+                ");
+            } catch (PDOException $sqliteError) {
+                error_log('Wonderful Collection development SQLite connection failed: ' . $sqliteError->getMessage());
+                jsonResponse(['error' => 'Database connection failed'], 500);
+            }
+            return self::$instance;
+        }
+    }
+
+    private static function initSQLiteDatabase(PDO $pdo): void {
+        // Create tables in SQLite
+        $pdo->exec("
+            CREATE TABLE IF NOT EXISTS settings (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                key_name TEXT UNIQUE NOT NULL,
+                value_data TEXT,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            );
+            CREATE TABLE IF NOT EXISTS categories (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                slug TEXT UNIQUE NOT NULL,
+                description TEXT,
+                image TEXT,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            );
+            CREATE TABLE IF NOT EXISTS products (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                slug TEXT UNIQUE NOT NULL,
+                category_id INTEGER NOT NULL,
+                regular_price REAL NOT NULL,
+                sale_price REAL,
+                stock_quantity INTEGER NOT NULL DEFAULT 10,
+                sku TEXT UNIQUE,
+                short_desc TEXT,
+                description TEXT,
+                images TEXT NOT NULL,
+                is_featured INTEGER DEFAULT 0,
+                is_trending INTEGER DEFAULT 0,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            );
+            CREATE TABLE IF NOT EXISTS customers (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                email TEXT UNIQUE NOT NULL,
+                phone TEXT NOT NULL,
+                password_hash TEXT NOT NULL,
+                address TEXT,
+                area TEXT DEFAULT 'Dhanmondi',
+                city TEXT DEFAULT 'Dhaka',
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            );
+            CREATE TABLE IF NOT EXISTS orders (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                order_number TEXT UNIQUE NOT NULL,
+                customer_id INTEGER,
+                customer_name TEXT NOT NULL,
+                customer_phone TEXT NOT NULL,
+                customer_email TEXT,
+                delivery_address TEXT NOT NULL,
+                delivery_area TEXT NOT NULL,
+                delivery_fee REAL NOT NULL DEFAULT 60.00,
+                subtotal REAL NOT NULL,
+                discount REAL NOT NULL DEFAULT 0.00,
+                total REAL NOT NULL,
+                payment_method TEXT NOT NULL DEFAULT 'Cash on Delivery',
+                payment_status TEXT NOT NULL DEFAULT 'Pending',
+                trx_id TEXT,
+                order_status TEXT DEFAULT 'Pending',
+                tracking_code TEXT UNIQUE NOT NULL,
+                notes TEXT,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            );
+            CREATE TABLE IF NOT EXISTS order_items (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                order_id INTEGER NOT NULL,
+                product_id INTEGER NOT NULL,
+                product_name TEXT NOT NULL,
+                price REAL NOT NULL,
+                quantity INTEGER NOT NULL DEFAULT 1,
+                total REAL NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS coupons (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                code TEXT UNIQUE NOT NULL,
+                type TEXT NOT NULL DEFAULT 'percentage',
+                value REAL NOT NULL,
+                min_order REAL DEFAULT 0.00,
+                max_discount REAL,
+                expiry_date TEXT,
+                usage_limit INTEGER DEFAULT 100,
+                times_used INTEGER DEFAULT 0,
+                is_active INTEGER DEFAULT 1,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            );
+            CREATE TABLE IF NOT EXISTS reviews (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                product_id INTEGER NOT NULL,
+                customer_name TEXT NOT NULL,
+                rating INTEGER NOT NULL,
+                comment TEXT,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            );
+            CREATE TABLE IF NOT EXISTS admins (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT UNIQUE NOT NULL,
+                password_hash TEXT NOT NULL,
+                full_name TEXT NOT NULL,
+                role TEXT DEFAULT 'Super Admin',
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            );
+            CREATE TABLE IF NOT EXISTS admin_tokens (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                token_hash TEXT UNIQUE NOT NULL,
+                admin_id INTEGER NOT NULL,
+                expires_at DATETIME NOT NULL,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            );
+            CREATE INDEX IF NOT EXISTS idx_admin_tokens_admin_id ON admin_tokens (admin_id);
+            CREATE TABLE IF NOT EXISTS login_attempts (
+                username_hash TEXT NOT NULL,
+                ip_hash TEXT NOT NULL,
+                attempt_count INTEGER NOT NULL,
+                window_started_at DATETIME NOT NULL,
+                locked_until DATETIME,
+                PRIMARY KEY (username_hash, ip_hash)
+            );
+        ");
+
+        // Seed data
+        $pdo->exec("
+            INSERT OR IGNORE INTO settings (key_name, value_data) VALUES
+            ('store_name', 'Wonderful Collection'),
+            ('store_moto', '🛍️ Wonderful Collection: Your top online shopping service in Dhanmondi, Dhaka. Quality delivered. 🇧🇩'),
+            ('store_email', 'contact@wonderfulcollection.store'),
+            ('store_phone', '+880 1712-345678'),
+            ('store_address', 'House 42, Road 7/A, Dhanmondi, Dhaka-1209, Bangladesh'),
+            ('currency_symbol', '৳'),
+            ('currency_code', 'BDT'),
+            ('delivery_fee_dhanmondi', '60'),
+            ('delivery_fee_dhaka', '80'),
+            ('delivery_fee_outside_dhaka', '130'),
+            ('free_delivery_min_amount', '2000'),
+            ('bkash_number', '01712345678 (Merchant / Personal)'),
+            ('nagad_number', '01812345678 (Merchant)'),
+            ('rocket_number', '01912345678 (Personal)');
+
+            INSERT OR IGNORE INTO categories (id, name, slug, description, image) VALUES
+            (1, 'Men\'s Fashion', 'mens-fashion', 'Premium Panjabis, shirts, and traditional attire.', 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=500&q=80'),
+            (2, 'Women\'s Fashion', 'womens-fashion', 'Exquisite designer salwar kameez, sarees and kurtis.', 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=500&q=80'),
+            (3, 'Perfumes & Attar', 'perfumes-attar', 'Long-lasting Arabian oud, concentrated attars, and luxury fragrances.', 'https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=500&q=80'),
+            (4, 'Gadgets & Electronics', 'gadgets-electronics', 'Smartwatches, wireless earbuds, and lifestyle tech accessories.', 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&q=80'),
+            (5, 'Leather & Accessories', 'leather-accessories', '100% Genuine Bangladeshi leather wallets, belts, and luxury bags.', 'https://images.unsplash.com/photo-1627123424574-724758594e93?w=500&q=80'),
+            (6, 'Home Decor & Living', 'home-decor', 'Aesthetic scented candles, art pieces, and modern home essentials.', 'https://images.unsplash.com/photo-1602874801007-bd458bb1b8b8?w=500&q=80');
+
+            INSERT OR IGNORE INTO products (id, name, slug, category_id, regular_price, sale_price, stock_quantity, sku, short_desc, description, images, is_featured, is_trending) VALUES
+            (1, 'Royal Nawab Premium Cotton Panjabi - Navy Blue', 'royal-nawab-panjabi-navy', 1, 2800.00, 2350.00, 18, 'WC-PANJ-001', 'Handcrafted semi-fitted 100% organic Egyptian cotton Panjabi with intricate threadwork on collar and placket.', 'Experience exceptional elegance with our flagship Royal Nawab Panjabi. Tailored from 100% breathable organic Egyptian cotton, designed specifically for Dhaka\'s climate. Hand-embroidered mandarin collar, contrast buttons, and side pockets. Delivered right to your doorstep in Dhanmondi within 2-4 hours.', '[\"https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=800&q=80\",\"https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?w=800&q=80\"]', 1, 1),
+            (2, 'Imperial Golden Oud & Amber Perfume (50ml)', 'imperial-golden-oud-amber', 3, 3500.00, 2990.00, 24, 'WC-PERF-002', 'Luxurious oriental fragrance featuring aged Cambodian agarwood, Madagascar vanilla, and warm amber.', 'Our signature bestseller. Imperial Golden Oud opens with sparkling bergamot and saffron, blending seamlessly into rich agarwood, Bulgarian rose, and base notes of warm amber. Unmatched projection that lasts 14+ hours.', '[\"https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=800&q=80\"]', 1, 1),
+            (3, 'Handcrafted Full-Grain Leather Bi-Fold Wallet', 'full-grain-leather-wallet-brown', 5, 1650.00, 1350.00, 35, 'WC-LEATH-003', 'Crafted from authentic Hazaribagh full-grain cowhide leather with RFID blocking technology.', 'Sleek, minimalist, and built for durability. Handcrafted from vegetable-tanned authentic Bangladeshi leather that patinas beautifully over time.', '[\"https://images.unsplash.com/photo-1627123424574-724758594e93?w=800&q=80\"]', 1, 0),
+            (4, 'Dhanmondi Blossom Designer Georgette 3-Piece', 'dhanmondi-blossom-georgette-3piece', 2, 4200.00, 3650.00, 12, 'WC-WOM-004', 'Heavy sequin and zari embroidered semi-stitched georgette kameez with digital printed silk dupatta.', 'Turn heads at any festive gathering in Dhaka. Crafted on premium weightless georgette fabric adorned with delicate floral thread embroidery and shimmering sequins.', '[\"https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800&q=80\"]', 1, 1),
+            (5, 'Pro ANC Wireless Earbuds - Matte Obsidian', 'pro-anc-wireless-earbuds-black', 4, 2900.00, 2450.00, 40, 'WC-TECH-005', 'Active Noise Cancelling up to 35dB, Quad-Mic ENC for clear calls on Dhaka streets, 32-hour battery.', 'Equipped with 13mm dynamic drivers for deep punchy bass, Bluetooth 5.3 low-latency connection, IPX5 water resistance, and fast Type-C charging.', '[\"https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=800&q=80\"]', 1, 1),
+            (6, 'Artisanal Soy Wax Scented Candle - Dhaka Rain', 'artisanal-candle-dhaka-rain', 6, 950.00, 790.00, 22, 'WC-HOME-006', 'Hand-poured 100% natural soy wax candle scented with petrichor, jasmine, and wet earthen sandalwood.', 'Relive the nostalgic beauty of sudden monsoon rain in Dhanmondi lake. Poured by hand into reusable amber glass jars using unbleached cotton wicks.', '[\"https://images.unsplash.com/photo-1602874801007-bd458bb1b8b8?w=800&q=80\"]', 0, 1),
+            (7, 'Executive Chronograph Quartz Watch - Rose Gold', 'executive-chronograph-watch-rosegold', 5, 3800.00, 3190.00, 15, 'WC-ACC-007', 'Precision Japanese quartz movement with genuine leather strap and sapphire-coated mineral glass.', 'A statement of refined taste. Clean architectural dial with date window, tachymeter bezel, 30m water resistance, and supple genuine leather strap.', '[\"https://images.unsplash.com/photo-1524805444758-089113d48a6d?w=800&q=80\"]', 0, 1),
+            (8, 'Ultra-Fine Kashmiri Pashmina Shawl - Ruby Wine', 'kashmiri-pashmina-shawl-ruby', 2, 3200.00, 2750.00, 8, 'WC-WOM-008', 'Featherlight softness with traditional Sozni needlework border, perfect for Dhaka winter evenings.', 'Woven from finest grade Himalayan wool, exquisitely soft and warm yet effortlessly lightweight.', '[\"https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&q=80\"]', 0, 0);
+
+            INSERT OR IGNORE INTO customers (id, name, email, phone, password_hash, address, area, city) VALUES
+            (1, 'Tanvir Ahmed', 'tanvir.dhk@example.com', '01711223344', '$2y$12$DgMggvzrteoM9JD80oF61eeZHbVNeMESrHj2h.1DqtAv5Nvt6jcD2', 'House 14, Road 8, Dhanmondi', 'Dhanmondi', 'Dhaka'),
+            (2, 'Nusrat Jahan', 'nusrat.j@example.com', '01822334455', '$2y$12$DgMggvzrteoM9JD80oF61eeZHbVNeMESrHj2h.1DqtAv5Nvt6jcD2', 'Apt 4B, Concord Tower, Dhanmondi 27', 'Dhanmondi', 'Dhaka'),
+            (3, 'Rahim Chowdhury', 'rahim.chowdhury@example.com', '01933445566', '$2y$12$DgMggvzrteoM9JD80oF61eeZHbVNeMESrHj2h.1DqtAv5Nvt6jcD2', 'Flat 6C, Gulshan-2, Dhaka', 'Gulshan', 'Dhaka');
+
+            INSERT OR IGNORE INTO orders (id, order_number, customer_id, customer_name, customer_phone, customer_email, delivery_address, delivery_area, delivery_fee, subtotal, discount, total, payment_method, payment_status, trx_id, order_status, tracking_code, notes) VALUES
+            (1, 'WC-10021', 1, 'Tanvir Ahmed', '01711223344', 'tanvir.dhk@example.com', 'House 14, Road 8, Dhanmondi, Dhaka', 'Dhanmondi', 60.00, 2350.00, 0.00, 2410.00, 'bKash', 'Paid', 'BKASH9823471', 'Processing', 'TRK-WC-7721', 'Deliver after 4 PM at Dhanmondi Lake.'),
+            (2, 'WC-10022', 2, 'Nusrat Jahan', '01822334455', 'nusrat.j@example.com', 'Apt 4B, Concord Tower, Dhanmondi 27', 'Dhanmondi', 60.00, 3650.00, 365.00, 3345.00, 'Cash on Delivery', 'Pending', NULL, 'Pending', 'TRK-WC-8842', 'Call before delivery.'),
+            (3, 'WC-10020', 3, 'Rahim Chowdhury', '01933445566', 'rahim.chowdhury@example.com', 'Flat 6C, Gulshan-2, Dhaka', 'Gulshan', 80.00, 5440.00, 200.00, 5320.00, 'Nagad', 'Paid', 'NGD7716298', 'Delivered', 'TRK-WC-6619', 'Delivered with receipt.');
+
+            INSERT OR IGNORE INTO order_items (order_id, product_id, product_name, price, quantity, total) VALUES
+            (1, 1, 'Royal Nawab Premium Cotton Panjabi - Navy Blue', 2350.00, 1, 2350.00),
+            (2, 4, 'Dhanmondi Blossom Designer Georgette 3-Piece', 3650.00, 1, 3650.00),
+            (3, 2, 'Imperial Golden Oud & Amber Perfume (50ml)', 2990.00, 1, 2990.00),
+            (3, 5, 'Pro ANC Wireless Earbuds - Matte Obsidian', 2450.00, 1, 2450.00);
+
+            INSERT OR IGNORE INTO coupons (code, type, value, min_order, max_discount, expiry_date, usage_limit, times_used, is_active) VALUES
+            ('DHANMONDI10', 'percentage', 10.00, 1000.00, 500.00, '2028-12-31', 500, 42, 1),
+            ('WONDERFUL100', 'fixed', 100.00, 1500.00, 100.00, '2028-12-31', 200, 19, 1),
+            ('EIDSPECIAL', 'percentage', 15.00, 2500.00, 750.00, '2028-12-31', 300, 8, 1);
+
+            INSERT OR IGNORE INTO reviews (product_id, customer_name, rating, comment) VALUES
+            (1, 'Fahim Morshed', 5, 'Super fast delivery to Dhanmondi Road 4. The fabric is 10/10 quality! Definitely ordering again.'),
+            (1, 'Sabbir Hossain', 5, 'Fitting is very comfortable for Dhaka weather. Color is exact navy blue as shown in pictures.'),
+            (2, 'Dr. Ariful Islam', 5, 'The oud projection is unbelievable. Lasts over 12 hours easily. Authentic fragrance!'),
+            (4, 'Sadia Rahman', 5, 'Wore this to a family dawat in Dhanmondi, got so many compliments. Beautiful embroidery work.');
+
+            INSERT OR IGNORE INTO admins (username, password_hash, full_name, role) VALUES
+            ('admin', '$2y$12$l0nUHojhz2R6lYhkYzvOwejLKmJc.tCQbXMm7NmbWqewMxLUmZuiy', 'Wonderful Store Manager', 'Super Admin');
+        ");
+    }
+}
+
+function getAdminTokenFromRequest(): ?string {
+    $authorization = $_SERVER['HTTP_AUTHORIZATION'] ?? ($_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '');
+    if ($authorization === '' && function_exists('getallheaders')) {
+        $headers = getallheaders();
+        $authorization = $headers['Authorization'] ?? $headers['authorization'] ?? '';
+    }
+
+    if (!preg_match('/^Bearer\s+([A-Za-z0-9_-]+)$/i', trim($authorization), $matches)) {
+        return null;
+    }
+    return $matches[1];
+}
+
+function requireAdminToken(PDO $pdo): array {
+    $token = getAdminTokenFromRequest();
+    if ($token === null) {
+        jsonResponse(['error' => 'Admin authorization required'], 401);
+    }
+
+    $stmt = $pdo->prepare("
+        SELECT a.id, a.username, a.full_name, a.role
+        FROM admin_tokens t
+        INNER JOIN admins a ON a.id = t.admin_id
+        WHERE t.token_hash = ? AND t.expires_at > ?
+    ");
+    $stmt->execute([hash('sha256', $token), gmdate('Y-m-d H:i:s')]);
+    $admin = $stmt->fetch();
+    if (!$admin) {
+        jsonResponse(['error' => 'Admin authorization required'], 401);
+    }
+    return $admin;
+}
+
+function loginAttemptKeys(): array {
+    $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+    return [
+        hash('sha256', 'login'),
+        hash('sha256', $ip)
+    ];
+}
+
+function isLoginRateLimited(PDO $pdo): bool {
+    [$usernameHash, $ipHash] = loginAttemptKeys();
+    $cutoff = gmdate('Y-m-d H:i:s', time() - 1800);
+    $cleanup = $pdo->prepare("
+        DELETE FROM login_attempts
+        WHERE (locked_until IS NULL AND window_started_at < ?)
+           OR (locked_until IS NOT NULL AND locked_until < ?)
+    ");
+    $cleanup->execute([$cutoff, gmdate('Y-m-d H:i:s')]);
+    $stmt = $pdo->prepare('SELECT locked_until FROM login_attempts WHERE username_hash = ? AND ip_hash = ?');
+    $stmt->execute([$usernameHash, $ipHash]);
+    $lockedUntil = $stmt->fetchColumn();
+    return $lockedUntil !== false && $lockedUntil !== null && strtotime($lockedUntil . ' UTC') > time();
+}
+
+function recordLoginFailure(PDO $pdo): bool {
+    [$usernameHash, $ipHash] = loginAttemptKeys();
+    $now = time();
+    $stmt = $pdo->prepare('SELECT attempt_count, window_started_at FROM login_attempts WHERE username_hash = ? AND ip_hash = ?');
+    $stmt->execute([$usernameHash, $ipHash]);
+    $attempt = $stmt->fetch();
+
+    if (!$attempt || $now - strtotime($attempt['window_started_at'] . ' UTC') >= 900) {
+        $stmt = $pdo->prepare("
+            INSERT INTO login_attempts (username_hash, ip_hash, attempt_count, window_started_at, locked_until)
+            VALUES (?, ?, 1, ?, NULL)
+            ON DUPLICATE KEY UPDATE attempt_count = 1, window_started_at = VALUES(window_started_at), locked_until = NULL
+        ");
+        try {
+            $stmt->execute([$usernameHash, $ipHash, gmdate('Y-m-d H:i:s', $now)]);
+        } catch (PDOException $e) {
+            $stmt = $pdo->prepare("
+                INSERT OR REPLACE INTO login_attempts (username_hash, ip_hash, attempt_count, window_started_at, locked_until)
+                VALUES (?, ?, 1, ?, NULL)
+            ");
+            $stmt->execute([$usernameHash, $ipHash, gmdate('Y-m-d H:i:s', $now)]);
+        }
+        return false;
+    }
+
+    $attemptCount = (int)$attempt['attempt_count'] + 1;
+    $lockedUntil = $attemptCount >= 5 ? gmdate('Y-m-d H:i:s', $now + 900) : null;
+    $stmt = $pdo->prepare('UPDATE login_attempts SET attempt_count = ?, locked_until = ? WHERE username_hash = ? AND ip_hash = ?');
+    $stmt->execute([$attemptCount, $lockedUntil, $usernameHash, $ipHash]);
+    return $lockedUntil !== null;
+}
+
+function clearLoginAttempts(PDO $pdo): void {
+    [$usernameHash, $ipHash] = loginAttemptKeys();
+    $stmt = $pdo->prepare('DELETE FROM login_attempts WHERE username_hash = ? AND ip_hash = ?');
+    $stmt->execute([$usernameHash, $ipHash]);
+}

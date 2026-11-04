@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shopping Cart | Wonderful Collection Dhanmondi</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+</head>
+<body>
+  <div class="top-bar">
+    <div class="top-bar-notice">
+      <span class="top-bar-badge">DHANMONDI HUB</span>
+      <span>⚡ Super-fast delivery within 2-4 hours across Dhanmondi, Dhaka!</span>
+    </div>
+    <div class="top-bar-links">
+      <a href="track-order.html">📍 Track Order</a>
+      <a href="contact.html">📞 Contact</a>
+    </div>
+  </div>
+
+  <header class="site-header">
+    <div class="header-container">
+      <a href="index.html" class="brand-logo-wrap"><img src="assets/logo.jpg" alt="Wonderful Collection" class="brand-logo-img"></a>
+      <div class="header-search">
+        <form action="search.html" method="GET" class="search-input-wrap">
+          <input type="text" name="q" class="search-input" placeholder="Search..." required>
+          <button type="submit" class="search-btn"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></button>
+        </form>
+      </div>
+      <div class="header-actions">
+        <a href="login.html" class="header-action-btn"><span class="icon">👤</span><span>Account</span></a>
+        <a href="wishlist.html" class="header-action-btn"><span class="icon">❤️</span><span>Wishlist</span><span class="action-count-badge wish-count-badge" style="display: none;">0</span></a>
+        <a href="cart.html" class="header-action-btn open-cart-btn"><span class="icon">🛍️</span><span>Cart</span><span class="action-count-badge cart-count-badge" style="display: none;">0</span></a>
+      </div>
+    </div>
+  </header>
+
+  <nav class="site-nav">
+    <div class="nav-container">
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="shop.html">All Products</a></li>
+        <li><a href="category.html?cat=mens-fashion">Men's Fashion</a></li>
+        <li><a href="category.html?cat=womens-fashion">Women's Fashion</a></li>
+        <li><a href="category.html?cat=perfumes-attar">Perfumes & Attar</a></li>
+        <li><a href="category.html?cat=gadgets-electronics">Gadgets</a></li>
+        <li><a href="category.html?cat=leather-accessories">Leather</a></li>
+        <li><a href="category.html?cat=home-decor">Home Decor</a></li>
+      </ul>
+      <div class="nav-dhanmondi-pill">📍 Dhanmondi, Dhaka</div>
+    </div>
+  </nav>
+
+  <main class="page-container">
+    <h1 style="font-size: 2.2rem; font-weight: 800; color: #0e2a47; margin-bottom: 24px;">Your Shopping Cart</h1>
+
+    <div id="cart-content-view">
+      <!-- Dynamic render -->
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-bottom"><div class="footer-bottom-container"><div>© 2026 Wonderful Collection - Dhanmondi, Dhaka 🇧🇩</div></div></div>
+  </footer>
+
+  <script src="js/store.js"></script>
+  <script>
+    function renderCartPage() {
+      const container = document.getElementById('cart-content-view');
+      if (!Store.state.cart.length) {
+        container.innerHTML = `
+          <div style="background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 60px 20px; text-align: center;">
+            <div style="font-size: 4rem; margin-bottom: 16px;">🛍️</div>
+            <h2 style="color: #0e2a47; margin-bottom: 8px;">Your cart is empty</h2>
+            <p style="color: #64748b; margin-bottom: 24px;">Looks like you haven't added anything to your cart yet.</p>
+            <a href="shop.html" class="btn-primary">Browse Shop</a>
+          </div>
+        `;
+        return;
+      }
+
+      const subtotal = Store.getCartSubtotal();
+      const discount = Store.state.appliedCoupon ? Store.state.appliedCoupon.discount : 0;
+      const total = Math.max(0, subtotal - discount);
+
+      container.innerHTML = `
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 32px; align-items: start;">
+          <!-- Cart Table -->
+          <div style="background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 24px; box-shadow: var(--shadow-sm);">
+            <table style="width: 100%; border-collapse: collapse; text-align: left;">
+              <thead>
+                <tr style="border-bottom: 2px solid #f1f5f9; color: #64748b; font-size: 0.85rem; text-transform: uppercase;">
+                  <th style="padding-bottom: 12px;">Product</th>
+                  <th style="padding-bottom: 12px;">Price</th>
+                  <th style="padding-bottom: 12px;">Quantity</th>
+                  <th style="padding-bottom: 12px;">Total</th>
+                  <th style="padding-bottom: 12px;">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${Store.state.cart.map(item => `
+                  <tr style="border-bottom: 1px solid #f1f5f9;">
+                    <td style="padding: 16px 0; display: flex; align-items: center; gap: 14px;">
+                      <img src="${item.image}" alt="${item.name}" style="width: 60px; height: 60px; border-radius: 8px; object-fit: cover;">
+                      <a href="product.html?id=${item.id}" style="font-weight: 700; color: #0e2a47;">${item.name}</a>
+                    </td>
+                    <td style="padding: 16px 0; font-weight: 700;">${Store.formatBDT(item.price)}</td>
+                    <td style="padding: 16px 0;">
+                      <div style="display: inline-flex; border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden;">
+                        <button onclick="Store.updateCartQuantity(${item.id}, -1)" style="border: none; padding: 4px 10px; cursor: pointer; background: #f8fafc;">-</button>
+                        <span style="padding: 4px 10px; font-weight: 700;">${item.quantity}</span>
+                        <button onclick="Store.updateCartQuantity(${item.id}, 1)" style="border: none; padding: 4px 10px; cursor: pointer; background: #f8fafc;">+</button>
+                      </div>
+                    </td>
+                    <td style="padding: 16px 0; font-weight: 800; color: #f05423;">${Store.formatBDT(item.price * item.quantity)}</td>
+                    <td style="padding: 16px 0;">
+                      <button onclick="Store.removeFromCart(${item.id})" style="border: none; background: none; color: #ef4444; cursor: pointer; font-size: 0.88rem;">✕</button>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Order Summary -->
+          <div style="background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 24px; box-shadow: var(--shadow-sm);">
+            <h3 style="font-size: 1.25rem; font-weight: 800; color: #0e2a47; margin-bottom: 18px;">Order Summary</h3>
+            
+            <div style="display: flex; justify-content: space-between; margin-bottom: 12px; color: #475569;">
+              <span>Subtotal:</span>
+              <span style="font-weight: 700; color: #0e2a47;">${Store.formatBDT(subtotal)}</span>
+            </div>
+
+            <!-- Coupon section -->
+            <div style="border-top: 1px dashed #cbd5e1; border-bottom: 1px dashed #cbd5e1; padding: 16px 0; margin: 16px 0;">
+              <div style="font-size: 0.85rem; font-weight: 700; margin-bottom: 8px;">Apply Promo Code:</div>
+              <div style="display: flex; gap: 8px;">
+                <input type="text" id="cart-coupon-input" placeholder="e.g. DHANMONDI10" value="${Store.state.appliedCoupon ? Store.state.appliedCoupon.code : ''}" style="flex: 1; border: 1px solid #cbd5e1; padding: 8px 12px; border-radius: 6px; text-transform: uppercase;">
+                <button onclick="applyCartCoupon()" style="background: #0e2a47; color: #fff; border: none; border-radius: 6px; padding: 8px 14px; font-weight: 700; cursor: pointer;">Apply</button>
+              </div>
+              ${Store.state.appliedCoupon ? `
+                <div style="color: #10b981; font-size: 0.82rem; font-weight: 600; margin-top: 6px;">
+                  ✓ Coupon "${Store.state.appliedCoupon.code}" applied (-${Store.formatBDT(discount)})
+                </div>
+              ` : ''}
+            </div>
+
+            ${discount > 0 ? `
+              <div style="display: flex; justify-content: space-between; margin-bottom: 12px; color: #10b981; font-weight: 700;">
+                <span>Coupon Discount:</span>
+                <span>-${Store.formatBDT(discount)}</span>
+              </div>
+            ` : ''}
+
+            <div style="display: flex; justify-content: space-between; margin-bottom: 24px; font-size: 1.25rem; font-weight: 800; color: #0e2a47;">
+              <span>Estimated Total:</span>
+              <span style="color: #f05423;">${Store.formatBDT(total)}</span>
+            </div>
+
+            <a href="checkout.html" class="btn-primary" style="display: block; text-align: center; justify-content: center; width: 100%; box-sizing: border-box; font-size: 1rem; padding: 14px;">
+              Proceed To Checkout →
+            </a>
+            
+            <p style="font-size: 0.78rem; color: #64748b; text-align: center; margin-top: 14px;">
+              🚚 Dhaka & all Bangladesh delivery fees calculated at checkout.
+            </p>
+          </div>
+        </div>
+      `;
+    }
+
+    async function applyCartCoupon() {
+      const code = document.getElementById('cart-coupon-input').value.trim();
+      if (!code) {
+        Store.showToast('Please enter a coupon code.');
+        return;
+      }
+      const subtotal = Store.getCartSubtotal();
+      const res = await Store.validateCoupon(code, subtotal);
+      if (res.status === 'success') {
+        Store.state.appliedCoupon = res.data;
+        Store.saveState();
+        Store.showToast('Coupon applied successfully! 🎉');
+        renderCartPage();
+      } else {
+        Store.showToast(res.error || 'Invalid coupon.');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', renderCartPage);
+  </script>
+</body>
+</html>

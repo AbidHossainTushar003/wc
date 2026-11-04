@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact Us | Wonderful Collection Dhanmondi, Dhaka</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+</head>
+<body>
+  <div class="top-bar">
+    <div class="top-bar-notice">
+      <span class="top-bar-badge">DHANMONDI HUB</span>
+      <span>⚡ Super-fast delivery within 2-4 hours across Dhanmondi, Dhaka!</span>
+    </div>
+  </div>
+
+  <header class="site-header">
+    <div class="header-container">
+      <a href="index.html" class="brand-logo-wrap"><img src="assets/logo.jpg" alt="Wonderful Collection" class="brand-logo-img"></a>
+      <div class="header-actions">
+        <a href="shop.html" class="header-action-btn"><span class="icon">🛍️</span><span>Shop</span></a>
+        <a href="cart.html" class="header-action-btn open-cart-btn"><span class="icon">🛒</span><span>Cart</span></a>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-container" style="max-width: 960px;">
+    <h1 style="font-size: 2.2rem; font-weight: 800; color: #0e2a47; margin-bottom: 8px;">Contact Wonderful Collection</h1>
+    <p style="color: #64748b; margin-bottom: 32px;">Have questions regarding an order, size, or Dhanmondi delivery? We are here to assist you.</p>
+
+    <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 36px; align-items: start;">
+      <!-- Store Info -->
+      <div style="background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 28px; box-shadow: var(--shadow-sm);">
+        <h3 style="font-size: 1.25rem; font-weight: 800; color: #0e2a47; margin-bottom: 20px;">Dhanmondi Hub & Store</h3>
+        
+        <div style="margin-bottom: 20px;">
+          <div style="font-weight: 700; color: #0e2a47;">📍 Physical Address:</div>
+          <div style="color: #64748b; font-size: 0.95rem; margin-top: 4px;">
+            House 42, Road 7/A, Dhanmondi<br>
+            Dhaka-1209, Bangladesh 🇧🇩
+          </div>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+          <div style="font-weight: 700; color: #0e2a47;">📞 Direct Phone / WhatsApp:</div>
+          <div style="color: #64748b; font-size: 0.95rem; margin-top: 4px;">
+            <a href="tel:+8801712345678" style="color: #f05423; font-weight: 700;">+880 1712-345678</a>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+          <div style="font-weight: 700; color: #0e2a47;">✉️ Customer Support Email:</div>
+          <div style="color: #64748b; font-size: 0.95rem; margin-top: 4px;">
+            contact@wonderfulcollection.store
+          </div>
+        </div>
+
+        <div style="margin-bottom: 24px;">
+          <div style="font-weight: 700; color: #0e2a47;">⏱ Operating Hours:</div>
+          <div style="color: #64748b; font-size: 0.95rem; margin-top: 4px;">
+            Saturday – Thursday: 9:00 AM – 10:00 PM<br>
+            Friday: 2:00 PM – 10:00 PM
+          </div>
+        </div>
+
+        <a href="https://wa.me/8801712345678" target="_blank" class="btn-primary" style="display: flex; justify-content: center; background: #25D366; box-shadow: none;">
+          💬 Chat on WhatsApp Directly
+        </a>
+      </div>
+
+      <!-- Contact Message Form -->
+      <div style="background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 28px; box-shadow: var(--shadow-sm);">
+        <h3 style="font-size: 1.25rem; font-weight: 800; color: #0e2a47; margin-bottom: 20px;">Send Us A Message</h3>
+        <form onsubmit="handleContactSubmit(event)">
+          <div style="margin-bottom: 14px;">
+            <label style="display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 6px;">Your Name *</label>
+            <input type="text" id="contact_name" required placeholder="Full Name" style="width: 100%; border: 1px solid #cbd5e1; padding: 10px 14px; border-radius: 8px;">
+          </div>
+          <div style="margin-bottom: 14px;">
+            <label style="display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 6px;">Phone Number *</label>
+            <input type="tel" id="contact_phone" required placeholder="017XXXXXXXX" style="width: 100%; border: 1px solid #cbd5e1; padding: 10px 14px; border-radius: 8px;">
+          </div>
+          <div style="margin-bottom: 14px;">
+            <label style="display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 6px;">Subject</label>
+            <input type="text" id="contact_subject" placeholder="Inquiry about order, product or sizing" style="width: 100%; border: 1px solid #cbd5e1; padding: 10px 14px; border-radius: 8px;">
+          </div>
+          <div style="margin-bottom: 20px;">
+            <label style="display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 6px;">Message *</label>
+            <textarea id="contact_msg" required rows="4" placeholder="How can our Dhanmondi team help you today?" style="width: 100%; border: 1px solid #cbd5e1; padding: 10px 14px; border-radius: 8px;"></textarea>
+          </div>
+          <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 14px;">
+            Send Message ✉️
+          </button>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-bottom"><div class="footer-bottom-container"><div>© 2026 Wonderful Collection - Dhanmondi, Dhaka 🇧🇩</div></div></div>
+  </footer>
+
+  <script src="js/store.js"></script>
+  <script>
+    function handleContactSubmit(e) {
+      e.preventDefault();
+      alert('Thank you for reaching out! A Wonderful Collection Dhanmondi representative will call or WhatsApp you shortly.');
+      e.target.reset();
+    }
+  </script>
+</body>
+</html>

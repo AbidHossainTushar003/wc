@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Search Results | Wonderful Collection Dhanmondi</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+</head>
+<body>
+  <div class="top-bar">
+    <div class="top-bar-notice">
+      <span class="top-bar-badge">DHANMONDI HUB</span>
+      <span>⚡ Super-fast delivery within 2-4 hours across Dhanmondi, Dhaka!</span>
+    </div>
+    <div class="top-bar-links">
+      <a href="track-order.html">📍 Track Order</a>
+      <a href="contact.html">📞 Contact</a>
+    </div>
+  </div>
+
+  <header class="site-header">
+    <div class="header-container">
+      <a href="index.html" class="brand-logo-wrap"><img src="assets/logo.jpg" alt="Wonderful Collection" class="brand-logo-img"></a>
+      <div class="header-search">
+        <form action="search.html" method="GET" class="search-input-wrap">
+          <input type="text" name="q" id="search-box-input" class="search-input" placeholder="Search..." required>
+          <button type="submit" class="search-btn"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></button>
+        </form>
+      </div>
+      <div class="header-actions">
+        <a href="login.html" class="header-action-btn"><span class="icon">👤</span><span>Account</span></a>
+        <a href="wishlist.html" class="header-action-btn"><span class="icon">❤️</span><span>Wishlist</span><span class="action-count-badge wish-count-badge" style="display: none;">0</span></a>
+        <a href="cart.html" class="header-action-btn open-cart-btn"><span class="icon">🛍️</span><span>Cart</span><span class="action-count-badge cart-count-badge" style="display: none;">0</span></a>
+      </div>
+    </div>
+  </header>
+
+  <nav class="site-nav">
+    <div class="nav-container">
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="shop.html">All Products</a></li>
+        <li><a href="category.html?cat=mens-fashion">Men's Fashion</a></li>
+        <li><a href="category.html?cat=womens-fashion">Women's Fashion</a></li>
+        <li><a href="category.html?cat=perfumes-attar">Perfumes & Attar</a></li>
+        <li><a href="category.html?cat=gadgets-electronics">Gadgets</a></li>
+        <li><a href="category.html?cat=leather-accessories">Leather</a></li>
+        <li><a href="category.html?cat=home-decor">Home Decor</a></li>
+      </ul>
+      <div class="nav-dhanmondi-pill">📍 Dhanmondi, Dhaka</div>
+    </div>
+  </nav>
+
+  <main class="page-container">
+    <div style="margin-bottom: 24px;">
+      <h1 style="font-size: 1.8rem; font-weight: 800; color: #0e2a47;">
+        Search Results for "<span id="search-term-display" style="color: #f05423;">...</span>"
+      </h1>
+      <p id="search-count-display" style="color: #64748b;">Searching catalog...</p>
+    </div>
+
+    <div class="products-grid" id="search-results-grid"></div>
+  </main>
+
+  <div class="cart-drawer-overlay"></div>
+  <div class="cart-drawer">
+    <div class="drawer-header"><div class="drawer-title">Shopping Cart 🛍️</div><button class="drawer-close">✕</button></div>
+    <div class="drawer-body"></div>
+    <div class="drawer-footer"></div>
+  </div>
+
+  <footer class="site-footer">
+    <div class="footer-bottom"><div class="footer-bottom-container"><div>© 2026 Wonderful Collection - Dhanmondi, Dhaka 🇧🇩</div></div></div>
+  </footer>
+
+  <script src="js/store.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const query = urlParams.get('q') || '';
+      document.getElementById('search-term-display').textContent = query;
+      document.getElementById('search-box-input').value = query;
+
+      const results = await Store.fetchProducts({ q: query });
+      document.getElementById('search-count-display').textContent = `Found ${results.length} item(s) matching your search`;
+
+      const grid = document.getElementById('search-results-grid');
+      if (results.length) {
+        grid.innerHTML = results.map(p => `
+          <div class="product-card">
+            <div class="product-thumb-wrap">
+              <a href="product.html?id=${p.id}"><img src="${Array.isArray(p.images) ? p.images[0] : p.image}" alt="${p.name}"></a>
+            </div>
+            <div class="product-body">
+              <div class="product-category-tag">${p.category_name}</div>
+              <a href="product.html?id=${p.id}" class="product-title">${p.name}</a>
+              <div class="product-pricing">
+                <span class="price-current">${Store.formatBDT(p.sale_price || p.regular_price)}</span>
+                ${p.sale_price ? `<span class="price-original">${Store.formatBDT(p.regular_price)}</span>` : ''}
+              </div>
+              <button class="btn-add-cart" onclick='Store.addToCart(${JSON.stringify(p).replace(/'/g, "&apos;")})'>🛒 Add to Cart</button>
+            </div>
+          </div>
+        `).join('');
+      } else {
+        grid.innerHTML = `
+          <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px;">
+            <h3>No products found for "${query}"</h3>
+            <p style="color: #64748b; margin: 12px 0 20px;">Try searching for "Panjabi", "Oud", "Wallet", "Earbuds", or "Candle".</p>
+            <a href="shop.html" class="btn-primary">Browse All Products</a>
+          </div>
+        `;
+      }
+    });
+  </script>
+</body>
+</html>

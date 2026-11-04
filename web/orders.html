@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Orders | Wonderful Collection Dhanmondi</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+</head>
+<body>
+  <div class="top-bar">
+    <div class="top-bar-notice">
+      <span class="top-bar-badge">MY ORDERS</span>
+      <span>⚡ Track your purchases and deliveries from Dhanmondi Hub</span>
+    </div>
+    <div class="top-bar-links">
+      <a href="track-order.html">📍 Track Any Order</a>
+    </div>
+  </div>
+
+  <header class="site-header">
+    <div class="header-container">
+      <a href="index.html" class="brand-logo-wrap"><img src="assets/logo.jpg" alt="Wonderful Collection" class="brand-logo-img"></a>
+      <div class="header-actions">
+        <a href="profile.html" class="header-action-btn"><span class="icon">👤</span><span>Profile</span></a>
+        <a href="cart.html" class="header-action-btn open-cart-btn"><span class="icon">🛍️</span><span>Cart</span></a>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-container" style="max-width: 900px;">
+    <h1 style="font-size: 2rem; font-weight: 800; color: #0e2a47; margin-bottom: 24px;">My Order History</h1>
+    <div id="orders-list-view">Loading orders...</div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-bottom"><div class="footer-bottom-container"><div>© 2026 Wonderful Collection - Dhanmondi, Dhaka 🇧🇩</div></div></div>
+  </footer>
+
+  <script src="js/store.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const user = Store.state.user || { id: 1, name: 'Tanvir Ahmed' };
+      const res = await fetch(`/api/orders?customer_id=${user.id}`);
+      const json = await res.json();
+      const orders = json.data || [];
+
+      const container = document.getElementById('orders-list-view');
+      if (!orders.length) {
+        container.innerHTML = `
+          <div style="background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 48px 20px; text-align: center;">
+            <p style="color: #64748b; margin-bottom: 16px;">You haven't placed any orders yet.</p>
+            <a href="shop.html" class="btn-primary">Start Shopping</a>
+          </div>
+        `;
+        return;
+      }
+
+      const statusColors = {
+        Pending: '#f59e0b',
+        Processing: '#3b82f6',
+        Shipped: '#8b5cf6',
+        Delivered: '#10b981',
+        Cancelled: '#ef4444'
+      };
+
+      container.innerHTML = orders.map(ord => `
+        <div style="background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 24px; box-shadow: var(--shadow-sm); margin-bottom: 20px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 14px; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
+            <div>
+              <div style="font-size: 1.1rem; font-weight: 800; color: #0e2a47;">${ord.order_number}</div>
+              <div style="font-size: 0.8rem; color: #64748b;">Placed on: ${new Date(ord.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span style="background: ${statusColors[ord.order_status] || '#64748b'}20; color: ${statusColors[ord.order_status] || '#64748b'}; padding: 4px 12px; border-radius: 999px; font-weight: 800; font-size: 0.82rem;">
+                ● ${ord.order_status}
+              </span>
+              <a href="track-order.html?order=${ord.order_number}" class="btn-secondary" style="padding: 6px 12px; font-size: 0.82rem; color: #0e2a47; border-color: #cbd5e1;">Track</a>
+            </div>
+          </div>
+
+          <div style="margin-bottom: 14px;">
+            ${(ord.items || []).map(it => `
+              <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 6px;">
+                <span>${it.product_name} &times; ${it.quantity}</span>
+                <span style="font-weight: 700;">${Store.formatBDT(it.price * it.quantity)}</span>
+              </div>
+            `).join('')}
+          </div>
+
+          <div style="border-top: 1px dashed #e2e8f0; padding-top: 12px; display: flex; justify-content: space-between; align-items: center; font-size: 0.95rem;">
+            <span style="color: #64748b;">Total: <strong style="color: #f05423; font-size: 1.1rem;">${Store.formatBDT(ord.total)}</strong> (${ord.payment_method})</span>
+            <span style="font-size: 0.82rem; color: #64748b;">Delivery to: ${ord.delivery_area}</span>
+          </div>
+        </div>
+      `).join('');
+    });
+  </script>
+</body>
+</html>

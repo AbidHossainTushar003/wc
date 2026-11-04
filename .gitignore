@@ -1,0 +1,5 @@
+web/api/config.local.php
+web/data.sqlite
+*.sqlite
+admin-android/.gradle/
+admin-android/build/

@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout | Wonderful Collection Dhanmondi</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+</head>
+<body>
+  <div class="top-bar">
+    <div class="top-bar-notice">
+      <span class="top-bar-badge">SECURE CHECKOUT</span>
+      <span>⚡ Super-fast delivery within 2-4 hours across Dhanmondi, Dhaka!</span>
+    </div>
+    <div class="top-bar-links">
+      <a href="contact.html">📞 Need Help? Call 01712-345678</a>
+    </div>
+  </div>
+
+  <header class="site-header">
+    <div class="header-container" style="justify-content: center;">
+      <a href="index.html" class="brand-logo-wrap">
+        <img src="assets/logo.jpg" alt="Wonderful Collection" class="brand-logo-img">
+      </a>
+    </div>
+  </header>
+
+  <main class="page-container" style="max-width: 1040px;">
+    <h1 style="font-size: 2rem; font-weight: 800; color: #0e2a47; margin-bottom: 28px; text-align: center;">
+      Complete Your Order
+    </h1>
+
+    <div id="checkout-view">
+      <form id="checkout-form" onsubmit="handlePlaceOrder(event)" style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 32px;">
+        <!-- Left: Customer & Delivery Details -->
+        <div>
+          <!-- Step 1: Customer Details -->
+          <div style="background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 24px; box-shadow: var(--shadow-sm); margin-bottom: 24px;">
+            <h3 style="font-size: 1.2rem; font-weight: 800; color: #0e2a47; margin-bottom: 18px; display: flex; align-items: center; gap: 8px;">
+              <span style="background: #0e2a47; color: #fff; width: 26px; height: 26px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.82rem;">1</span>
+              Delivery Address & Contact
+            </h3>
+
+            <div style="margin-bottom: 14px;">
+              <label style="display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 6px;">Full Name *</label>
+              <input type="text" id="cust_name" required placeholder="e.g. Tanvir Ahmed" style="width: 100%; border: 1px solid #cbd5e1; padding: 10px 14px; border-radius: 8px; font-size: 0.95rem;">
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+              <div>
+                <label style="display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 6px;">Mobile Phone (WhatsApp) *</label>
+                <input type="tel" id="cust_phone" required placeholder="017XXXXXXXX" style="width: 100%; border: 1px solid #cbd5e1; padding: 10px 14px; border-radius: 8px; font-size: 0.95rem;">
+              </div>
+              <div>
+                <label style="display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 6px;">Email (Optional)</label>
+                <input type="email" id="cust_email" placeholder="name@example.com" style="width: 100%; border: 1px solid #cbd5e1; padding: 10px 14px; border-radius: 8px; font-size: 0.95rem;">
+              </div>
+            </div>
+
+            <div style="margin-bottom: 14px;">
+              <label style="display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 6px;">Delivery Area *</label>
+              <select id="delivery_area" onchange="updateDeliveryFee()" style="width: 100%; border: 1px solid #cbd5e1; padding: 10px 14px; border-radius: 8px; font-size: 0.95rem; background: #fff;">
+                <option value="dhaka" selected>Inside Dhaka (Regular 24-48 Hours) — ৳80</option>
+                <option value="outside_dhaka">Outside Dhaka (Steadfast / SA Paribahan) — ৳130</option>
+              </select>
+            </div>
+
+            <div style="margin-bottom: 14px;">
+              <label style="display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 6px;">Full Delivery Address *</label>
+              <textarea id="cust_address" required rows="2" placeholder="House/Flat #, Road #, Sector/Area, Dhaka" style="width: 100%; border: 1px solid #cbd5e1; padding: 10px 14px; border-radius: 8px; font-size: 0.95rem;"></textarea>
+            </div>
+
+            <div>
+              <label style="display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 6px;">Order Note (Optional)</label>
+              <input type="text" id="order_notes" placeholder="Special delivery instructions, preferred delivery time..." style="width: 100%; border: 1px solid #cbd5e1; padding: 10px 14px; border-radius: 8px; font-size: 0.95rem;">
+            </div>
+          </div>
+
+          <!-- Step 2: Payment Method -->
+          <div style="background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 24px; box-shadow: var(--shadow-sm);">
+            <h3 style="font-size: 1.2rem; font-weight: 800; color: #0e2a47; margin-bottom: 18px; display: flex; align-items: center; gap: 8px;">
+              <span style="background: #0e2a47; color: #fff; width: 26px; height: 26px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.82rem;">2</span>
+              Payment Method
+            </h3>
+
+            <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 18px;">
+              <label style="display: flex; align-items: center; gap: 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 12px 16px; cursor: pointer;">
+                <input type="radio" name="payment_method" value="Cash on Delivery" checked onchange="togglePaymentFields()">
+                <div>
+                  <div style="font-weight: 700; color: #0e2a47;">Cash on Delivery (COD)</div>
+                  <div style="font-size: 0.8rem; color: #64748b;">Pay with cash upon receiving your package at your doorstep in Dhaka.</div>
+                </div>
+              </label>
+
+              <label style="display: flex; align-items: center; gap: 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 12px 16px; cursor: pointer;">
+                <input type="radio" name="payment_method" value="bKash" onchange="togglePaymentFields()">
+                <div>
+                  <div style="font-weight: 700; color: #e2136e;">bKash Mobile Payment</div>
+                  <div style="font-size: 0.8rem; color: #64748b;">Send Money to our bKash number: <strong>01712-345678</strong></div>
+                </div>
+              </label>
+
+              <label style="display: flex; align-items: center; gap: 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 12px 16px; cursor: pointer;">
+                <input type="radio" name="payment_method" value="Nagad" onchange="togglePaymentFields()">
+                <div>
+                  <div style="font-weight: 700; color: #f7931e;">Nagad Mobile Payment</div>
+                  <div style="font-size: 0.8rem; color: #64748b;">Send Money to our Nagad Merchant/Personal number: <strong>01812-345678</strong></div>
+                </div>
+              </label>
+            </div>
+
+            <!-- Trx ID field for bKash / Nagad -->
+            <div id="trx-box" style="display: none; background: #fff8f5; border: 1px dashed #f05423; border-radius: 8px; padding: 14px; margin-top: 10px;">
+              <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #0e2a47; margin-bottom: 4px;">Transaction ID (TrxID) *</label>
+              <input type="text" id="trx_id" placeholder="e.g. BKASH9823471" style="width: 100%; border: 1px solid #cbd5e1; padding: 8px 12px; border-radius: 6px; font-weight: 700; text-transform: uppercase;">
+              <div style="font-size: 0.78rem; color: #64748b; margin-top: 4px;">Please complete payment to our number and paste your SMS Transaction ID here.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Order Summary Sidebar -->
+        <div style="background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 24px; box-shadow: var(--shadow-sm); position: sticky; top: 90px;">
+          <h3 style="font-size: 1.25rem; font-weight: 800; color: #0e2a47; margin-bottom: 18px;">Items In Order</h3>
+
+          <div id="checkout-items-list" style="max-height: 240px; overflow-y: auto; margin-bottom: 16px; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px;"></div>
+
+          <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #475569; font-size: 0.92rem;">
+            <span>Subtotal:</span>
+            <span id="chk-subtotal" style="font-weight: 700; color: #0e2a47;">৳0</span>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #475569; font-size: 0.92rem;">
+            <span>Delivery Fee:</span>
+            <span id="chk-delivery" style="font-weight: 700; color: #0e2a47;">৳80</span>
+          </div>
+
+          <div id="chk-discount-row" style="display: none; justify-content: space-between; margin-bottom: 8px; color: #10b981; font-size: 0.92rem; font-weight: 700;">
+            <span>Coupon Discount:</span>
+            <span id="chk-discount">-৳0</span>
+          </div>
+
+          <div style="border-top: 2px solid #e2e8f0; padding-top: 14px; margin-top: 14px; display: flex; justify-content: space-between; align-items: baseline; font-size: 1.3rem; font-weight: 800; color: #0e2a47;">
+            <span>Total Payable:</span>
+            <span id="chk-total" style="color: #f05423;">৳0</span>
+          </div>
+
+          <button type="submit" id="submit-order-btn" class="btn-primary" style="display: block; width: 100%; text-align: center; justify-content: center; margin-top: 24px; padding: 16px; font-size: 1.05rem;">
+            Confirm Order Now 🛍️
+          </button>
+
+          <div style="margin-top: 16px; font-size: 0.78rem; color: #64748b; text-align: center;">
+            🔒 By placing your order, you agree to Wonderful Collection's Terms and 7-day return policy.
+          </div>
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-bottom"><div class="footer-bottom-container"><div>© 2026 Wonderful Collection - Dhanmondi, Dhaka 🇧🇩</div></div></div>
+  </footer>
+
+  <script src="js/store.js"></script>
+  <script>
+    let deliveryFees = {
+      dhaka: 80,
+      outside_dhaka: 130
+    };
+
+    function initCheckout() {
+      if (!Store.state.cart.length) {
+        window.location.href = 'cart.html';
+        return;
+      }
+
+      // Prefill user profile if logged in
+      if (Store.state.user) {
+        document.getElementById('cust_name').value = Store.state.user.name || '';
+        document.getElementById('cust_phone').value = Store.state.user.phone || '';
+        document.getElementById('cust_email').value = Store.state.user.email || '';
+        document.getElementById('cust_address').value = Store.state.user.address || '';
+      }
+
+      // Render items
+      const itemsList = document.getElementById('checkout-items-list');
+      itemsList.innerHTML = Store.state.cart.map(i => `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 0.88rem;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <img src="${i.image}" style="width: 38px; height: 38px; border-radius: 4px; object-fit: cover;">
+            <span>${i.name} &times; ${i.quantity}</span>
+          </div>
+          <span style="font-weight: 700;">${Store.formatBDT(i.price * i.quantity)}</span>
+        </div>
+      `).join('');
+
+      updateDeliveryFee();
+    }
+
+    function updateDeliveryFee() {
+      const area = document.getElementById('delivery_area').value;
+      const fee = deliveryFees[area] || 80;
+      const subtotal = Store.getCartSubtotal();
+      const discount = Store.state.appliedCoupon ? Store.state.appliedCoupon.discount : 0;
+      const total = Math.max(0, subtotal - discount + fee);
+
+      document.getElementById('chk-subtotal').textContent = Store.formatBDT(subtotal);
+      document.getElementById('chk-delivery').textContent = Store.formatBDT(fee);
+      
+      if (discount > 0) {
+        document.getElementById('chk-discount-row').style.display = 'flex';
+        document.getElementById('chk-discount').textContent = '-' + Store.formatBDT(discount);
+      } else {
+        document.getElementById('chk-discount-row').style.display = 'none';
+      }
+
+      document.getElementById('chk-total').textContent = Store.formatBDT(total);
+    }
+
+    function togglePaymentFields() {
+      const method = document.querySelector('input[name="payment_method"]:checked').value;
+      const trxBox = document.getElementById('trx-box');
+      if (method === 'bKash' || method === 'Nagad') {
+        trxBox.style.display = 'block';
+        document.getElementById('trx_id').required = true;
+      } else {
+        trxBox.style.display = 'none';
+        document.getElementById('trx_id').required = false;
+      }
+    }
+
+    async function handlePlaceOrder(e) {
+      e.preventDefault();
+      const btn = document.getElementById('submit-order-btn');
+      btn.disabled = true;
+      btn.textContent = 'Processing Your Order...';
+
+      const areaKey = document.getElementById('delivery_area').value;
+      const areaLabels = {
+        dhaka: 'Inside Dhaka',
+        outside_dhaka: 'Outside Dhaka'
+      };
+
+      const payload = {
+        customer_name: document.getElementById('cust_name').value.trim(),
+        customer_phone: document.getElementById('cust_phone').value.trim(),
+        customer_email: document.getElementById('cust_email').value.trim(),
+        delivery_address: document.getElementById('cust_address').value.trim(),
+        delivery_area: areaLabels[areaKey] || 'Inside Dhaka',
+        delivery_zone: areaKey,
+        delivery_fee: deliveryFees[areaKey] || 80,
+        subtotal: Store.getCartSubtotal(),
+        discount: Store.state.appliedCoupon ? Store.state.appliedCoupon.discount : 0,
+        coupon_code: Store.state.appliedCoupon ? Store.state.appliedCoupon.code : '',
+        payment_method: document.querySelector('input[name="payment_method"]:checked').value,
+        trx_id: document.getElementById('trx_id').value.trim() || null,
+        notes: document.getElementById('order_notes').value.trim(),
+        items: Store.state.cart.map(i => ({
+          product_id: i.id,
+          name: i.name,
+          price: i.price,
+          quantity: i.quantity
+        }))
+      };
+
+      const res = await Store.placeOrder(payload);
+      if (res.status === 'success') {
+        const orderData = res.data;
+        Store.clearCart();
+        window.location.href = `order-success.html?order=${orderData.order_number}&track=${orderData.tracking_code}&total=${orderData.total}`;
+      } else {
+        alert(res.error || 'Failed to place order. Please try again.');
+        btn.disabled = false;
+        btn.textContent = 'Confirm Order Now 🛍️';
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', initCheckout);
+  </script>
+</body>
+</html>
