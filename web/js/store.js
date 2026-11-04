@@ -280,17 +280,17 @@ const Store = {
         this.state.cart.forEach(item => {
             itemsHtml += `
                 <div class="drawer-cart-item">
-                    <img src="${this.escapeHtml(item.image)}" alt="${this.escapeHtml(item.name)}" class="drawer-cart-img" onerror="this.onerror=null;this.src='assets/product-placeholder.svg'">
+                    <img src="${this.escapeHtml(this.productImage(item))}" alt="${this.escapeHtml(item.name)}" class="drawer-cart-img" onerror="this.onerror=null;this.src='assets/product-placeholder.svg'">
                     <div style="flex: 1;">
                         <a href="product.html?id=${Number(item.id)}" class="drawer-item-title" style="color: #0e2a47;">${this.escapeHtml(item.name)}</a>
                         <div class="drawer-item-price">${this.formatBDT(item.price)}</div>
                         <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 8px;">
                             <div style="display: flex; align-items: center; border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden; background: #fff;">
-                                <button onclick="Store.updateCartQuantity(${item.id}, -1)" style="border: none; background: #f8fafc; padding: 4px 10px; cursor: pointer; font-weight: bold;">-</button>
-                                <span style="padding: 0 10px; font-size: 0.85rem; font-weight: 700;">${item.quantity}</span>
-                                <button onclick="Store.updateCartQuantity(${item.id}, 1)" style="border: none; background: #f8fafc; padding: 4px 10px; cursor: pointer; font-weight: bold;">+</button>
+                                <button onclick="Store.updateCartQuantity(${Number(item.id)}, -1)" style="border: none; background: #f8fafc; padding: 4px 10px; cursor: pointer; font-weight: bold;">-</button>
+                                <span style="padding: 0 10px; font-size: 0.85rem; font-weight: 700;">${Number(item.quantity)}</span>
+                                <button onclick="Store.updateCartQuantity(${Number(item.id)}, 1)" style="border: none; background: #f8fafc; padding: 4px 10px; cursor: pointer; font-weight: bold;">+</button>
                             </div>
-                            <button onclick="Store.removeFromCart(${item.id})" style="border: none; background: none; color: #ef4444; font-size: 0.8rem; cursor: pointer;">Remove</button>
+                            <button onclick="Store.removeFromCart(${Number(item.id)})" style="border: none; background: none; color: #ef4444; font-size: 0.8rem; cursor: pointer;">Remove</button>
                         </div>
                     </div>
                 </div>

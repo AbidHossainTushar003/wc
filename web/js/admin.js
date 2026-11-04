@@ -152,7 +152,29 @@ async function initializeAdmin() {
 }
 
 function formatBDT(amount) {
-    return '৳' + Number(amount || 0).toLocaleString('en-BD');
+    const value = Number(amount || 0);
+    return '৳' + (Number.isFinite(value) ? value : 0).toLocaleString('en-BD');
+}
+
+function escapeAdminHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, char => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+    })[char]);
+}
+
+function safeAdminImage(value) {
+    if (typeof value !== 'string') return 'assets/product-placeholder.svg';
+    if (/^assets\/(?!.*(?:^|\/)\.\.(?:\/|$))[a-z0-9._/-]+$/i.test(value)) return value;
+    try {
+        const url = new URL(value);
+        return url.protocol === 'https:' ? url.href : 'assets/product-placeholder.svg';
+    } catch (error) {
+        return 'assets/product-placeholder.svg';
+    }
 }
 
 function openModule(moduleName) {
@@ -197,7 +219,7 @@ async function loadDashboard() {
             </div>
             <div style="background: #0f172a; padding: 20px; border-radius: 12px; border: 1px solid #334155;">
                 <div style="font-size: 0.8rem; color: #94a3b8;">Total Orders</div>
-                <div style="font-size: 1.6rem; font-weight: 800; color: #38bdf8;">${ov.total_orders}</div>
+                <div style="font-size: 1.6rem; font-weight: 800; color: #38bdf8;">${Number(ov.total_orders) || 0}</div>
             </div>
             <div style="background: #0f172a; padding: 20px; border-radius: 12px; border: 1px solid #334155;">
                 <div style="font-size: 0.8rem; color: #94a3b8;">Average Order (AOV)</div>
@@ -205,18 +227,18 @@ async function loadDashboard() {
             </div>
             <div style="background: #0f172a; padding: 20px; border-radius: 12px; border: 1px solid #334155;">
                 <div style="font-size: 0.8rem; color: #94a3b8;">Low Stock Alerts</div>
-                <div style="font-size: 1.6rem; font-weight: 800; color: #ef4444;">${ov.low_stock_alerts} Products</div>
+                <div style="font-size: 1.6rem; font-weight: 800; color: #ef4444;">${Number(ov.low_stock_alerts) || 0} Products</div>
             </div>
         `;
 
         const tbody = document.querySelector('#dash-orders-table tbody');
         tbody.innerHTML = (json.data.recent_orders || []).map(o => `
             <tr>
-                <td style="font-weight: 800; color: #38bdf8;">${o.order_number}</td>
-                <td>${o.customer_name}</td>
-                <td>${o.delivery_area}</td>
+                <td style="font-weight: 800; color: #38bdf8;">${escapeAdminHtml(o.order_number)}</td>
+                <td>${escapeAdminHtml(o.customer_name)}</td>
+                <td>${escapeAdminHtml(o.delivery_area)}</td>
                 <td style="font-weight: 700;">${formatBDT(o.total)}</td>
-                <td><span style="color: #fbbf24; font-weight: 700;">● ${o.order_status}</span></td>
+                <td><span style="color: #fbbf24; font-weight: 700;">● ${escapeAdminHtml(o.order_status)}</span></td>
                 <td><button onclick="openModule('orders')" class="admin-btn" style="padding: 4px 10px; font-size: 0.75rem;">Manage</button></td>
             </tr>
         `).join('');
@@ -235,13 +257,13 @@ async function loadProducts() {
     const tbody = document.querySelector('#products-table tbody');
     tbody.innerHTML = (json.data || []).map(p => `
         <tr>
-            <td><img src="${Array.isArray(p.images) && p.images.length ? p.images[0] : (p.image || 'assets/product-placeholder.svg')}" style="width: 44px; height: 44px; border-radius: 6px; object-fit: cover;"></td>
-            <td style="font-weight: 700; color: #f8fafc;">${p.name}</td>
-            <td style="color: #94a3b8;">${p.category_name}</td>
+            <td><img src="${escapeAdminHtml(safeAdminImage(Array.isArray(p.images) && p.images.length ? p.images[0] : p.image))}" alt="${escapeAdminHtml(p.name)}" width="44" height="44" loading="lazy" onerror="this.onerror=null;this.src='assets/product-placeholder.svg'" style="border-radius: 6px; object-fit: cover;"></td>
+            <td style="font-weight: 700; color: #f8fafc;">${escapeAdminHtml(p.name)}</td>
+            <td style="color: #94a3b8;">${escapeAdminHtml(p.category_name)}</td>
             <td>${formatBDT(p.regular_price)}</td>
             <td style="color: #f97316; font-weight: 700;">${p.sale_price ? formatBDT(p.sale_price) : '-'}</td>
             <td style="font-weight: 700;">${p.stock_quantity}</td>
-            <td><button onclick="deleteProduct(${p.id})" style="border: none; background: #dc2626; color: #fff; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.78rem;">Delete</button></td>
+            <td><button onclick="deleteProduct(${Number.isSafeInteger(Number(p.id)) ? Number(p.id) : 0})" style="border: none; background: #dc2626; color: #fff; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.78rem;">Delete</button></td>
         </tr>
     `).join('');
 }
@@ -347,9 +369,9 @@ async function loadCategories() {
     const tbody = document.querySelector('#categories-table tbody');
     tbody.innerHTML = (json.data || []).map(c => `
         <tr>
-            <td style="font-weight: 700; color: #f8fafc;">${c.name}</td>
-            <td style="color: #94a3b8;">${c.slug}</td>
-            <td style="font-weight: 700;">${c.product_count || 0}</td>
+            <td style="font-weight: 700; color: #f8fafc;">${escapeAdminHtml(c.name)}</td>
+            <td style="color: #94a3b8;">${escapeAdminHtml(c.slug)}</td>
+            <td style="font-weight: 700;">${Number(c.product_count) || 0}</td>
         </tr>
     `).join('');
 }
@@ -373,19 +395,23 @@ async function loadOrders() {
     const res = await adminFetch(`${API_BASE}/orders`);
     const json = await res.json();
     const tbody = document.querySelector('#orders-table tbody');
-    tbody.innerHTML = (json.data || []).map(o => `
+    tbody.innerHTML = (json.data || []).map(o => {
+        const orderId = Number(o.id);
+        const customerPhone = String(o.customer_phone ?? '').replace(/[^\d+]/g, '').slice(0, 20);
+        const whatsappPhone = customerPhone.replace(/\D/g, '');
+        return `
         <tr>
-            <td style="font-weight: 800; color: #38bdf8;">${o.order_number}</td>
+            <td style="font-weight: 800; color: #38bdf8;">${escapeAdminHtml(o.order_number)}</td>
             <td>
-                <strong>${o.customer_name}</strong><br>
-                <a href="tel:${o.customer_phone}" style="color: #38bdf8; font-size: 0.82rem;">📞 ${o.customer_phone}</a> | 
-                <a href="https://wa.me/880${o.customer_phone.replace(/^0+/, '')}" target="_blank" style="color: #10b981; font-size: 0.82rem;">💬 WA</a>
+                <strong>${escapeAdminHtml(o.customer_name)}</strong><br>
+                <a href="tel:${escapeAdminHtml(customerPhone)}" style="color: #38bdf8; font-size: 0.82rem;">📞 ${escapeAdminHtml(o.customer_phone)}</a> |
+                <a href="https://wa.me/${escapeAdminHtml(whatsappPhone)}" target="_blank" rel="noopener noreferrer" style="color: #10b981; font-size: 0.82rem;">💬 WA</a>
             </td>
-            <td>${o.delivery_area}</td>
+            <td>${escapeAdminHtml(o.delivery_area)}</td>
             <td style="font-weight: 800; color: #f97316;">${formatBDT(o.total)}</td>
-            <td><strong style="color: #fbbf24;">● ${o.order_status}</strong></td>
+            <td><strong style="color: #fbbf24;">● ${escapeAdminHtml(o.order_status)}</strong></td>
             <td>
-                <select onchange="updateOrderStatus(${o.id}, this.value)" style="background: #0f172a; color: #fff; border: 1px solid #334155; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem;">
+                <select onchange="updateOrderStatus(${Number.isSafeInteger(orderId) ? orderId : 0}, this.value)" style="background: #0f172a; color: #fff; border: 1px solid #334155; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem;">
                     <option value="">Change Status...</option>
                     <option value="Pending" ${o.order_status==='Pending'?'selected':''}>Pending</option>
                     <option value="Processing" ${o.order_status==='Processing'?'selected':''}>Processing</option>
@@ -395,7 +421,8 @@ async function loadOrders() {
                 </select>
             </td>
         </tr>
-    `).join('');
+    `;
+    }).join('');
 }
 
 async function updateOrderStatus(orderId, newStatus) {
@@ -416,10 +443,10 @@ async function loadCustomers() {
     const tbody = document.querySelector('#customers-table tbody');
     tbody.innerHTML = (json.data || []).map(c => `
         <tr>
-            <td style="font-weight: 700; color: #f8fafc;">${c.name}</td>
-            <td>${c.email}<br><span style="color: #38bdf8;">${c.phone}</span></td>
-            <td>${c.address || c.area} (${c.city})</td>
-            <td style="font-weight: 700;">${c.total_orders || 1}</td>
+            <td style="font-weight: 700; color: #f8fafc;">${escapeAdminHtml(c.name)}</td>
+            <td>${escapeAdminHtml(c.email)}<br><span style="color: #38bdf8;">${escapeAdminHtml(c.phone)}</span></td>
+            <td>${escapeAdminHtml(c.address || c.area)} (${escapeAdminHtml(c.city)})</td>
+            <td style="font-weight: 700;">${Number(c.total_orders) || 1}</td>
             <td style="font-weight: 800; color: #10b981;">${formatBDT(c.total_spent || 0)}</td>
         </tr>
     `).join('');
@@ -432,8 +459,8 @@ async function loadCoupons() {
     const tbody = document.querySelector('#coupons-table tbody');
     tbody.innerHTML = (json.data || []).map(cp => `
         <tr>
-            <td style="font-weight: 800; color: #38bdf8;">${/dhanmondi/i.test(cp.code) ? 'Legacy coupon' : cp.code}</td>
-            <td>${cp.type === 'percentage' ? cp.value + '%' : formatBDT(cp.value)}</td>
+            <td style="font-weight: 800; color: #38bdf8;">${/dhanmondi/i.test(String(cp.code ?? '')) ? 'Legacy coupon' : escapeAdminHtml(cp.code)}</td>
+            <td>${cp.type === 'percentage' ? `${Number(cp.value) || 0}%` : formatBDT(cp.value)}</td>
             <td>${formatBDT(cp.min_order)}</td>
             <td><span style="color: ${cp.is_active ? '#10b981' : '#ef4444'}; font-weight: 700;">● ${cp.is_active ? 'Active' : 'Disabled'}</span></td>
         </tr>
@@ -464,27 +491,27 @@ async function loadInventory() {
 
     document.getElementById('inv-summary-banner').innerHTML = `
         <div style="background: #0f172a; padding: 12px 20px; border-radius: 8px; border: 1px solid #334155;">
-            <strong>Total Products:</strong> ${sum.total_products}
+            <strong>Total Products:</strong> ${Number(sum.total_products) || 0}
         </div>
         <div style="background: #0f172a; padding: 12px 20px; border-radius: 8px; border: 1px solid #334155; color: #fbbf24;">
-            <strong>Low Stock (≤5):</strong> ${sum.low_stock_count}
+            <strong>Low Stock (≤5):</strong> ${Number(sum.low_stock_count) || 0}
         </div>
         <div style="background: #0f172a; padding: 12px 20px; border-radius: 8px; border: 1px solid #334155; color: #ef4444;">
-            <strong>Out of Stock:</strong> ${sum.out_of_stock_count}
+            <strong>Out of Stock:</strong> ${Number(sum.out_of_stock_count) || 0}
         </div>
     `;
 
     const tbody = document.querySelector('#inventory-table tbody');
     tbody.innerHTML = (json.data || []).map(item => `
         <tr>
-            <td style="font-weight: 700; color: #f8fafc;">${item.name}</td>
-            <td style="color: #94a3b8;">${item.sku}</td>
-            <td style="font-size: 1.1rem; font-weight: 800; color: ${item.stock_quantity <= 5 ? '#ef4444' : '#10b981'};">${item.stock_quantity}</td>
-            <td><span style="font-size: 0.8rem; font-weight: 700;">${item.stock_status}</span></td>
+            <td style="font-weight: 700; color: #f8fafc;">${escapeAdminHtml(item.name)}</td>
+            <td style="color: #94a3b8;">${escapeAdminHtml(item.sku)}</td>
+            <td style="font-size: 1.1rem; font-weight: 800; color: ${Number(item.stock_quantity) <= 5 ? '#ef4444' : '#10b981'};">${Number(item.stock_quantity) || 0}</td>
+            <td><span style="font-size: 0.8rem; font-weight: 700;">${escapeAdminHtml(item.stock_status)}</span></td>
             <td>
-                <button onclick="adjustInventory(${item.id}, -1)" class="admin-btn" style="padding: 4px 10px; font-size: 0.8rem;">-1</button>
-                <button onclick="adjustInventory(${item.id}, 1)" class="admin-btn" style="padding: 4px 10px; font-size: 0.8rem;">+1</button>
-                <button onclick="adjustInventory(${item.id}, 10)" class="admin-btn" style="padding: 4px 10px; font-size: 0.8rem; background: #38bdf8; color: #000;">+10</button>
+                <button onclick="adjustInventory(${Number.isSafeInteger(Number(item.id)) ? Number(item.id) : 0}, -1)" class="admin-btn" style="padding: 4px 10px; font-size: 0.8rem;">-1</button>
+                <button onclick="adjustInventory(${Number.isSafeInteger(Number(item.id)) ? Number(item.id) : 0}, 1)" class="admin-btn" style="padding: 4px 10px; font-size: 0.8rem;">+1</button>
+                <button onclick="adjustInventory(${Number.isSafeInteger(Number(item.id)) ? Number(item.id) : 0}, 10)" class="admin-btn" style="padding: 4px 10px; font-size: 0.8rem; background: #38bdf8; color: #000;">+10</button>
             </td>
         </tr>
     `).join('');
@@ -511,8 +538,8 @@ async function loadReports() {
                 <h4 style="color: #dc2626; margin-bottom: 12px;">Orders By Status</h4>
                 ${d.status_breakdown.map(s => `
                     <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                        <span>${s.order_status}:</span>
-                        <strong>${s.count} orders (${formatBDT(s.revenue)})</strong>
+                        <span>${escapeAdminHtml(s.order_status)}:</span>
+                        <strong>${Number(s.count) || 0} orders (${formatBDT(s.revenue)})</strong>
                     </div>
                 `).join('')}
             </div>
@@ -521,8 +548,8 @@ async function loadReports() {
                 <h4 style="color: #38bdf8; margin-bottom: 12px;">Top Performing Products</h4>
                 ${d.top_products.map(p => `
                     <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                        <span>${p.product_name}:</span>
-                        <strong>${p.total_units_sold} sold</strong>
+                        <span>${escapeAdminHtml(p.product_name)}:</span>
+                        <strong>${Number(p.total_units_sold) || 0} sold</strong>
                     </div>
                 `).join('')}
             </div>
