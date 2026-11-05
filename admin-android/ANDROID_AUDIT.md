@@ -9,6 +9,7 @@
 | SEC-03 | Security | Admin Login | Sign-in dialog | Required six-digit TOTP and clear initial-password guidance | TOTP is required by the PHP API | `MainActivity.kt`, `ApiClient.kt` | App validates the six-digit code; API client explains that a forced password change must be completed in web admin | Med | PASS |
 | UX-01 | UX/UI | Products & Orders | Tap list card | Edit / Update options | Previously read-only list | `ProductsScreen.kt`, `OrdersScreen.kt` | Added full add/edit dialogs for products and order status updates | Med | PASS |
 | UX-02 | UX/UI | Inventory | Adjust stock | Clear result, no duplicate taps, accessible touch targets | Adjustment failures were silent and controls had no screen-reader labels | `presentation/inventory/InventoryScreen.kt` | Show success/error feedback, disable the row controls while saving, prevent decrement at zero, and add 48dp labeled controls | Med | PASS |
+| UX-03 | UX/UI | Categories | Create category | Persist a valid category and confirm only after API success | Button displayed success and reloaded without sending a create request | `presentation/categories/CategoriesActivity.kt` | Validate name/slug, call the authenticated category repository, prevent duplicate submissions, and display API errors | High | PASS |
 | PERF-01| Performance | Notifications | New order received | Ringtone alert & vibration | Silent notification | `OrderNotificationHelper.kt` | Added default sound and vibration pattern | Low | PASS |
 
 ---

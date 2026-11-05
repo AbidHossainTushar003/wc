@@ -9,6 +9,7 @@ Follow this checklist with the phone in hand:
    - Tap an order to view customer details, tap WhatsApp/Call buttons to verify COD.
    - Advance order status from `Pending` → `Processing` → `Shipped` → `Delivered`.
 3. **Catalog & Inventory:**
+   - Create a uniquely named category; confirm it appears only after the server accepts it. Try a blank/overlong name and an existing slug; verify a helpful error appears and the dialog stays usable.
    - Open Products screen, tap `+ Add` to add a new item with camera/gallery photos.
    - Edit an existing product's price or stock quantity.
    - In Inventory, try the `−1`, `+1`, and `+5` controls. Confirm each update refreshes the displayed stock, controls cannot be tapped repeatedly while a request is pending, and a failed request displays an error instead of appearing successful.

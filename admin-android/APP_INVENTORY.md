@@ -9,7 +9,7 @@
 3. **`ProductsActivity` (`store.wonderfulcollection.admin.presentation.products.ProductsActivity`)**:
    - Screen 2: Products Inventory management. Search bar, product listing cards, Add Product button (`+ Add`), and tap-to-edit product modal (Name, short desc, regular price, sale price, stock).
 4. **`CategoriesActivity` (`store.wonderfulcollection.admin.presentation.categories.CategoriesActivity`)**:
-   - Screen 3: Category management and creation.
+   - Screen 3: Category listing and creation through the protected categories API.
 5. **`OrdersActivity` (`store.wonderfulcollection.admin.presentation.orders.OrdersActivity`)**:
    - Screen 4: Customer Orders management. Status filter chips (All, Pending, Processing, Shipped, Delivered), real-time search, order cards with status accent lines, advance status buttons, and tap-to-edit order status dialog.
 6. **`CustomersActivity` (`store.wonderfulcollection.admin.presentation.customers.CustomersActivity`)**:

@@ -14,6 +14,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import kotlinx.coroutines.launch
 import store.wonderfulcollection.admin.di.ServiceLocator
 import store.wonderfulcollection.admin.domain.model.Category
+import java.util.Locale
 
 class CategoriesActivity : AppCompatActivity() {
 
@@ -137,20 +138,58 @@ class CategoriesActivity : AppCompatActivity() {
     private fun showAddCategoryDialog() {
         val input = EditText(this).apply {
             hint = "Category Name (e.g. Punjabi, Sharee)"
+            inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_FLAG_CAP_WORDS
             setTextColor(0xFFF8FAFC.toInt())
             setPadding(32, 32, 32, 32)
         }
-        AlertDialog.Builder(this)
+        val dialog = AlertDialog.Builder(this)
             .setTitle("Add New Category")
             .setView(input)
-            .setPositiveButton("Create") { _, _ ->
+            .setPositiveButton("Create", null)
+            .setNegativeButton("Cancel", null)
+            .create()
+
+        dialog.setOnShowListener {
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
                 val name = input.text.toString().trim()
-                if (name.isNotEmpty()) {
-                    Toast.makeText(this, "Category '$name' created!", Toast.LENGTH_SHORT).show()
-                    loadCategories()
+                if (name.isEmpty() || name.length > 150) {
+                    input.error = "Enter a category name (up to 150 characters)."
+                    return@setOnClickListener
+                }
+
+                val slug = name.lowercase(Locale.ROOT)
+                    .replace(Regex("[^A-Za-z0-9-]+"), "-")
+                    .trim('-')
+                if (slug.isEmpty()) {
+                    input.error = "Use a name with English letters or numbers so it can have a URL slug."
+                    return@setOnClickListener
+                }
+
+                input.error = null
+                val createButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+                createButton.isEnabled = false
+                lifecycleScope.launch {
+                    ServiceLocator.categoryRepository.createCategory(name, slug)
+                        .onSuccess {
+                            Toast.makeText(
+                                this@CategoriesActivity,
+                                "Category '$name' created.",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            dialog.dismiss()
+                            loadCategories()
+                        }
+                        .onFailure { error ->
+                            createButton.isEnabled = true
+                            Toast.makeText(
+                                this@CategoriesActivity,
+                                error.message ?: "Could not create category. Please try again.",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
                 }
             }
-            .setNegativeButton("Cancel", null)
-            .show()
+        }
+        dialog.show()
     }
 }

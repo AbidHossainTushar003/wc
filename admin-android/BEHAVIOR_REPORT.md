@@ -22,3 +22,14 @@
   admin hub. I did not open a data-backed screen or perform any sign-in/order
   action, so the inventory screen's physical-device appearance remains
   unverified.
+
+## 3. Category creation follow-up (2026-11-05)
+
+- Fixed a false-success path where the Android category form refreshed without
+  sending a create request.
+- Category creation now validates a non-empty bounded name and a usable slug,
+  submits through the authenticated category repository, prevents repeated
+  submissions while pending, and reports server failures without dismissing the
+  form.
+- Android unit tests and the debug build passed. No live category was created
+  during this code change.
