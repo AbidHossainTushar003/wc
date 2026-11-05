@@ -2,7 +2,7 @@
 
 ## 1. Activities & Screens
 1. **`MainActivity` (`store.wonderfulcollection.admin.presentation.main.MainActivity`)**:
-   - Launcher activity. Displays top bar, admin sign-in status, and the 3x3 Grid of 9 rounded white cards (Dashboard, Products, Categories, Orders, Customers, Coupons, Inventory, Reports, Settings).
+   - Launcher activity. Displays top bar, admin sign-in status, and the 2-column grid of 9 rounded white cards (Dashboard, Products, Categories, Orders, Customers, Coupons, Inventory, Reports, Settings). The top-bar add control opens the product creation form directly.
    - Dialogs: Admin Login prompt (username, password, and required six-digit TOTP code).
 2. **`DashboardActivity` (`store.wonderfulcollection.admin.presentation.dashboard.DashboardActivity`)**:
    - Screen 1: Executive Dashboard with API-backed metrics (recorded order value, order count, average order total, registered customers, and low-stock count). Weekly trends and fulfillment performance are not provided by the current API.

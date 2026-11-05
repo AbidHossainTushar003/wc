@@ -182,8 +182,10 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.btnAdd.setOnClickListener {
-            Toast.makeText(this, "Quick Add Product", Toast.LENGTH_SHORT).show()
-            startActivity(Intent(this, ProductsActivity::class.java))
+            startActivity(
+                Intent(this, ProductsActivity::class.java)
+                    .putExtra(ProductsActivity.EXTRA_OPEN_ADD_PRODUCT, true)
+            )
         }
     }
 

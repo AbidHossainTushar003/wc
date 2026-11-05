@@ -11,6 +11,7 @@
 | UX-02 | UX/UI | Inventory | Adjust stock | Clear result, no duplicate taps, accessible touch targets | Adjustment failures were silent and controls had no screen-reader labels | `presentation/inventory/InventoryScreen.kt` | Show success/error feedback, disable the row controls while saving, prevent decrement at zero, and add 48dp labeled controls | Med | PASS |
 | UX-03 | UX/UI | Categories | Create category | Persist a valid category and confirm only after API success | Button displayed success and reloaded without sending a create request | `presentation/categories/CategoriesActivity.kt` | Validate name/slug, call the authenticated category repository, prevent duplicate submissions, and display API errors | High | PASS |
 | DATA-01 | Data accuracy | Dashboard & Reports | View trends and delivery performance | Display only values returned by the API | Weekly trend bars and delivery/hub claims were hardcoded; the API does not provide those metrics | `presentation/dashboard/DashboardScreen.kt`, `presentation/reports/ReportsActivity.kt` | Remove synthetic trend/performance claims and label order totals to match the all-status API aggregates | High | PASS |
+| UX-04 | UX/UI | Admin home | Quick add product | Open the product creation form with one tap; use an accessible touch target | Add control showed a toast and opened only the product list; target was 32dp | `presentation/main/MainActivity.kt`, `presentation/products/ProductsScreen.kt`, `res/layout/activity_main.xml` | Route the add intent directly to the product form and enlarge top-bar controls to 48dp | Med | PASS |
 | PERF-01| Performance | Notifications | New order received | Ringtone alert & vibration | Silent notification | `OrderNotificationHelper.kt` | Added default sound and vibration pattern | Low | PASS |
 
 ---
@@ -20,7 +21,7 @@
 | Inventory Item | Status | Artifact / Test Output |
 |:---|:---|:---|
 | `MainActivity` & Sign-in | PASS | Unit tests passed, verified on emulator/device |
-| `DashboardActivity` | PASS | KPI cards, trend chart rendered correctly |
+| `DashboardActivity` | PASS | API-backed metrics; synthetic trend removed |
 | `ProductsActivity` (CRUD & Edit) | PASS | Add, edit, list products verified |
 | `CategoriesActivity` | PASS | Category listing and creation verified |
 | `OrdersActivity` (List, Filter, Edit) | PASS | Status filtering, search, status updates verified |

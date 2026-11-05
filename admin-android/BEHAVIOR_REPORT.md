@@ -45,3 +45,12 @@
   aggregates returned by the API, rather than calling them completed sales.
 - Android unit tests and the debug build passed after this change. No
   production data was accessed or changed.
+
+## 5. Admin home quick-add follow-up (2026-11-05)
+
+- The top-bar Add product control now passes an explicit intent to open the
+  product creation form directly instead of showing a toast and opening only
+  the product list.
+- The add and back controls now meet a 48dp touch-target size; the add control
+  has the screen-reader label "Add product".
+- Verified by Android unit tests and debug build. No product was created.

@@ -313,6 +313,9 @@ class ProductsActivity : AppCompatActivity() {
         }
 
         viewModel.loadProducts()
+        if (savedInstanceState == null && intent.getBooleanExtra(EXTRA_OPEN_ADD_PRODUCT, false)) {
+            showAddProductDialog()
+        }
     }
 
     private fun showAddProductDialog() {
@@ -638,6 +641,7 @@ class ProductsActivity : AppCompatActivity() {
     }
 
     companion object {
+        const val EXTRA_OPEN_ADD_PRODUCT = "store.wonderfulcollection.admin.OPEN_ADD_PRODUCT"
         private const val MAX_PRODUCT_IMAGES = 5
         private const val MAX_IMAGE_BYTES = 1_450_000
     }

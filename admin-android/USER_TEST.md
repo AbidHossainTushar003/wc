@@ -9,6 +9,7 @@ Follow this checklist with the phone in hand:
    - Tap an order to view customer details, tap WhatsApp/Call buttons to verify COD.
    - Advance order status from `Pending` → `Processing` → `Shipped` → `Delivered`.
 3. **Catalog & Inventory:**
+   - From the admin home, tap the top-right Add product control. Confirm the product creation form opens directly without needing another tap; verify the control is easy to activate and has an accessible label.
    - Create a uniquely named category; confirm it appears only after the server accepts it. Try a blank/overlong name and an existing slug; verify a helpful error appears and the dialog stays usable.
    - Open Products screen, tap `+ Add` to add a new item with camera/gallery photos.
    - Edit an existing product's price or stock quantity.

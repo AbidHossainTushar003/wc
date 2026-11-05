@@ -11,8 +11,8 @@
     <!-- Top Navigation Bar -->
     <ImageView
         android:id="@+id/btnBack"
-        android:layout_width="32dp"
-        android:layout_height="32dp"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
         android:src="@android:drawable/ic_menu_revert"
         app:tint="#FFFFFF"
         android:contentDescription="Back"
@@ -34,11 +34,11 @@
 
     <ImageView
         android:id="@+id/btnAdd"
-        android:layout_width="32dp"
-        android:layout_height="32dp"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
         android:src="@android:drawable/ic_input_add"
         app:tint="#FFFFFF"
-        android:contentDescription="Add"
+        android:contentDescription="Add product"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
