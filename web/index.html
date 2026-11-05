@@ -29,6 +29,7 @@
     }
   </script>
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/homepage.css">
   <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
 </head>
 <body>
@@ -110,12 +111,12 @@
     
     <!-- Hero Banner -->
     <section class="hero-banner">
-      <div>
+      <div class="hero-copy">
         <div class="hero-tag">
           <span>🇧🇩 Premium Lifestyle Destination</span>
         </div>
-        <h1 class="hero-title">Experience Quality Delivered To Your <span>Doorstep</span></h1>
-        <p class="hero-subtitle">Hand-picked collection of premium Panjabis, Arabian Oud, handcrafted Bangladeshi leather, and electronics tailored for the discerning lifestyle of Dhaka.</p>
+        <h1 class="hero-title">Everyday finds, delivered to your <span>doorstep</span></h1>
+        <p class="hero-subtitle">Explore curated fashion, fragrances, leather goods, and gadgets. Delivery costs and estimates are clear at checkout.</p>
         <div class="hero-cta-group">
           <a href="shop.html" class="btn-primary">Shop The Collection →</a>
           <a href="track-order.html" class="btn-secondary">Track Delivery</a>
@@ -125,9 +126,6 @@
           <span>✓ Cash on Delivery</span>
           <span>✓ 100% Quality Assurance</span>
         </div>
-      </div>
-      <div class="hero-card-preview">
-        <img src="assets/product-placeholder.svg" alt="Product photo placeholder" style="width: 100%; border-radius: 16px;">
       </div>
     </section>
 
@@ -172,7 +170,7 @@
         </div>
         <a href="shop.html" class="view-all-link">Browse All →</a>
       </div>
-      <div class="category-grid" id="home-categories-grid">
+      <div class="category-grid" id="home-categories-grid" aria-busy="true" aria-live="polite">
         <!-- Rendered dynamically via JS with fallback -->
       </div>
     </section>
@@ -186,7 +184,7 @@
         </div>
         <a href="shop.html?filter=featured" class="view-all-link">View All Featured →</a>
       </div>
-      <div class="products-grid" id="featured-products-grid">
+      <div class="products-grid" id="featured-products-grid" aria-busy="true" aria-live="polite">
         <!-- Rendered via JS -->
       </div>
     </section>
@@ -194,7 +192,7 @@
     <!-- Trending Flash Deal Banner -->
     <section style="background: linear-gradient(135deg, #f05423 0%, #c2380d 100%); color: #fff; border-radius: 20px; padding: 40px; margin-bottom: 56px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 24px; box-shadow: var(--shadow-lg);">
       <div>
-        <span style="background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 999px; font-weight: 700; font-size: 0.8rem; text-transform: uppercase;">Limited Time Offer</span>
+        <span style="background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 999px; font-weight: 700; font-size: 0.8rem; text-transform: uppercase;">Explore the collection</span>
         <h2 style="font-size: 2.2rem; font-weight: 900; margin: 12px 0 8px; font-family: var(--font-brand);">Discover Our Latest Collection</h2>
         <p style="color: #ffe6de; max-width: 520px; font-size: 1rem;">Explore quality products selected for everyday living.</p>
       </div>
@@ -212,7 +210,7 @@
         </div>
         <a href="shop.html?sort=newest" class="view-all-link">View All New Arrivals →</a>
       </div>
-      <div class="products-grid" id="trending-products-grid">
+      <div class="products-grid" id="trending-products-grid" aria-busy="true" aria-live="polite">
         <!-- Rendered via JS -->
       </div>
     </section>
@@ -310,30 +308,39 @@
         catContainer.innerHTML = categories.map(cat => {
           const image = Store.isSafeProductImage(cat.image) ? cat.image : 'assets/category-placeholder.svg';
           return `
-          <a href="category.html?cat=${encodeURIComponent(String(cat.slug || ''))}" class="category-card">
-            <div class="category-img-wrap">
-              <img src="${Store.escapeHtml(image)}" alt="${Store.escapeHtml(cat.name)}" loading="lazy" width="320" height="220">
-            </div>
-            <div class="category-title">${Store.escapeHtml(cat.name)}</div>
-            <div class="category-count">${Number(cat.product_count) || 0} Items</div>
-          </a>
-        `;
+            <a href="category.html?cat=${encodeURIComponent(String(cat.slug || ''))}" class="category-card">
+              <div class="category-img-wrap">
+                <img src="${Store.escapeHtml(image)}" alt="${Store.escapeHtml(cat.name)}" loading="lazy" width="320" height="220">
+              </div>
+              <div class="category-title">${Store.escapeHtml(cat.name)}</div>
+              <div class="category-count">${Number(cat.product_count) || 0} Items</div>
+            </a>
+          `;
         }).join('');
+      } else if (catContainer) {
+        catContainer.innerHTML = '<p class="catalog-empty-state" role="status">No categories are available yet. <a href="shop.html">Browse all products</a>.</p>';
       }
+      if (catContainer) catContainer.setAttribute('aria-busy', 'false');
 
       // 2. Fetch & render featured products
       const featured = await Store.fetchProducts({ featured: 1 });
       const featContainer = document.getElementById('featured-products-grid');
       if (featContainer && featured.length) {
         featContainer.innerHTML = featured.slice(0, 4).map(p => renderProductCard(p)).join('');
+      } else if (featContainer) {
+        featContainer.innerHTML = '<p class="catalog-empty-state" role="status">No featured products are available yet. <a href="shop.html">Browse the collection</a>.</p>';
       }
+      if (featContainer) featContainer.setAttribute('aria-busy', 'false');
 
       // 3. Fetch & render trending products
       const trending = await Store.fetchProducts({ trending: 1 });
       const trendContainer = document.getElementById('trending-products-grid');
       if (trendContainer && trending.length) {
         trendContainer.innerHTML = trending.slice(0, 4).map(p => renderProductCard(p)).join('');
+      } else if (trendContainer) {
+        trendContainer.innerHTML = '<p class="catalog-empty-state" role="status">No new arrivals are available yet. <a href="shop.html">Browse all products</a>.</p>';
       }
+      if (trendContainer) trendContainer.setAttribute('aria-busy', 'false');
     });
 
     function renderProductCard(product) {
@@ -352,7 +359,7 @@
               ${discountPercent > 0 ? `<span class="badge badge-sale">-${discountPercent}%</span>` : ''}
               ${product.is_featured ? `<span class="badge badge-featured">Featured</span>` : ''}
             </div>
-            <button class="product-wishlist-btn ${isSaved ? 'active' : ''}" data-toggle-wishlist data-product="${Store.escapeHtml(JSON.stringify(product))}" title="Wishlist">
+            <button class="product-wishlist-btn ${isSaved ? 'active' : ''}" data-toggle-wishlist data-product="${Store.escapeHtml(JSON.stringify(product))}" aria-label="${isSaved ? 'Remove' : 'Add'} ${Store.escapeHtml(product.name)} ${isSaved ? 'from' : 'to'} wishlist" title="Wishlist">
               ♥
             </button>
           </div>

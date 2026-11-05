@@ -426,7 +426,7 @@ const Store = {
                 <span>Subtotal:</span>
                 <span style="color: #f05423;">${this.formatBDT(subtotal)}</span>
             </div>
-            <p style="font-size: 0.78rem; color: #64748b; margin-bottom: 14px;">🚚 Fast delivery across Dhaka within 24 hours available at checkout.</p>
+            <p style="font-size: 0.78rem; color: #64748b; margin-bottom: 14px;">🚚 Delivery options and estimates are shown at checkout.</p>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <a href="cart.html" class="btn-secondary" style="color: #0e2a47; border-color: #cbd5e1; justify-content: center; text-align: center; padding: 12px;" onclick="Store.closeDrawerCart()">View Cart</a>
                 <a href="checkout.html" class="btn-primary" style="justify-content: center; text-align: center; padding: 12px;" onclick="Store.closeDrawerCart()">Checkout</a>

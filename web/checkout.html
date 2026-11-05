@@ -45,17 +45,17 @@
             </h2>
 
             <div style="margin-bottom: 14px;">
-              <label style="display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 6px;">Full Name *</label>
+              <label for="cust_name" style="display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 6px;">Full Name *</label>
               <input type="text" id="cust_name" required placeholder="e.g. Tanvir Ahmed" style="width: 100%; border: 1px solid #cbd5e1; padding: 10px 14px; border-radius: 8px; font-size: 0.95rem;">
             </div>
 
             <div class="checkout-contact-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
               <div>
-                <label style="display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 6px;">Mobile Phone (WhatsApp) *</label>
+                <label for="cust_phone" style="display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 6px;">Mobile Phone (WhatsApp) *</label>
                 <input type="tel" id="cust_phone" required placeholder="017XXXXXXXX" style="width: 100%; border: 1px solid #cbd5e1; padding: 10px 14px; border-radius: 8px; font-size: 0.95rem;">
               </div>
               <div>
-                <label style="display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 6px;">Email (Optional)</label>
+                <label for="cust_email" style="display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 6px;">Email (Optional)</label>
                 <input type="email" id="cust_email" placeholder="name@example.com" style="width: 100%; border: 1px solid #cbd5e1; padding: 10px 14px; border-radius: 8px; font-size: 0.95rem;">
               </div>
             </div>
@@ -73,12 +73,12 @@
             </div>
 
             <div style="margin-bottom: 14px;">
-              <label style="display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 6px;">Full Delivery Address *</label>
+              <label for="cust_address" style="display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 6px;">Full Delivery Address *</label>
               <textarea id="cust_address" required rows="2" placeholder="House/Flat #, Road #, Sector/Area, Dhaka" style="width: 100%; border: 1px solid #cbd5e1; padding: 10px 14px; border-radius: 8px; font-size: 0.95rem;"></textarea>
             </div>
 
             <div>
-              <label style="display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 6px;">Order Note (Optional)</label>
+              <label for="order_notes" style="display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 6px;">Order Note (Optional)</label>
               <input type="text" id="order_notes" placeholder="Special delivery instructions, preferred delivery time..." style="width: 100%; border: 1px solid #cbd5e1; padding: 10px 14px; border-radius: 8px; font-size: 0.95rem;">
             </div>
           </div>
@@ -119,14 +119,14 @@
                 <input type="radio" name="payment_method" value="Rocket" onchange="togglePaymentFields()">
                 <div>
                   <div style="font-weight: 700; color: #8c1d81;">Rocket Mobile Payment</div>
-                  <div style="font-size: 0.8rem; color: #64748b;">Send Money to our Rocket Personal number: <strong>01560024777</strong></div>
+                  <div style="font-size: 0.8rem; color: #64748b;">Send Money to our Rocket Personal number: <strong>015600247777</strong></div>
                 </div>
               </label>
             </div>
 
             <!-- Trx ID field for mobile payments -->
             <div id="trx-box" style="display: none; background: #fff8f5; border: 1px dashed #f05423; border-radius: 8px; padding: 14px; margin-top: 10px;">
-              <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #0e2a47; margin-bottom: 4px;">Transaction ID (TrxID) *</label>
+              <label for="trx_id" style="display: block; font-size: 0.85rem; font-weight: 700; color: #0e2a47; margin-bottom: 4px;">Transaction ID (TrxID) *</label>
               <input type="text" id="trx_id" placeholder="e.g. BKASH9823471" style="width: 100%; border: 1px solid #cbd5e1; padding: 8px 12px; border-radius: 6px; font-weight: 700; text-transform: uppercase;">
               <div style="font-size: 0.78rem; color: #64748b; margin-top: 4px;">Please complete payment to our number and paste your SMS Transaction ID here.</div>
             </div>

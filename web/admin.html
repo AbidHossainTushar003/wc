@@ -166,7 +166,8 @@
         <label for="admin-password" style="display: block; margin: 16px 0 6px;">Password</label>
         <input id="admin-password" class="admin-input" type="password" autocomplete="current-password" required>
         <label for="admin-totp-code" style="display: block; margin: 16px 0 6px;">Authenticator code</label>
-        <input id="admin-totp-code" class="admin-input" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" required>
+        <input id="admin-totp-code" class="admin-input" type="text" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" aria-describedby="admin-totp-help" required>
+        <small id="admin-totp-help" style="display: block; color: #94a3b8; margin-top: 6px;">Enter the current 6-digit code from your authenticator app.</small>
         <button id="admin-login-button" type="submit" class="admin-btn" style="width: 100%; margin-top: 20px;">Sign in</button>
         <p id="admin-login-error" role="alert" style="display: none; color: #fca5a5; margin-top: 14px;"></p>
       </form>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Order Confirmed | Wonderful Collection Dhaka</title>
+  <title>Order details | Wonderful Collection</title>
   <meta name="robots" content="noindex, nofollow">
   <link rel="stylesheet" href="css/style.css">
   <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
@@ -17,31 +17,31 @@
 
   <main class="page-container" style="max-width: 680px; text-align: center;">
     <div style="background: #fff; border-radius: 20px; border: 1px solid #e2e8f0; padding: 48px 32px; box-shadow: var(--shadow-md); margin-top: 24px;">
-      <div style="width: 80px; height: 80px; background: #ecfdf5; color: #10b981; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto 20px;">
+      <div id="order-success-icon" style="width: 80px; height: 80px; background: #ecfdf5; color: #10b981; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto 20px;" aria-hidden="true">
         ✓
       </div>
 
-      <h1 style="font-size: 2rem; font-weight: 800; color: #0e2a47; margin-bottom: 8px;">Order Confirmed!</h1>
-      <p style="color: #64748b; font-size: 1.05rem; margin-bottom: 24px;">
-        Thank you for choosing <strong>Wonderful Collection</strong>. Your order has been placed successfully and is being prepared for dispatch.
+      <h1 id="order-success-heading" style="font-size: 2rem; font-weight: 800; color: #0e2a47; margin-bottom: 8px;">Order received</h1>
+      <p id="order-success-message" role="status" style="color: #64748b; font-size: 1.05rem; margin-bottom: 24px;">
+        Thank you for choosing <strong>Wonderful Collection</strong>. Your order has been received. Use the order number and phone number to check its status.
       </p>
 
-      <div style="background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 12px; padding: 20px; margin-bottom: 28px; text-align: left;">
+      <div id="order-success-details" style="background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 12px; padding: 20px; margin-bottom: 28px; text-align: left;">
         <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
           <span style="color: #64748b; font-size: 0.9rem;">Order Number:</span>
-          <strong id="disp-order-number" style="color: #0e2a47; font-size: 1rem;">WC-10000</strong>
+          <strong id="disp-order-number" style="color: #0e2a47; font-size: 1rem;">—</strong>
         </div>
         <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
           <span style="color: #64748b; font-size: 0.9rem;">Tracking Code:</span>
-          <strong id="disp-track-code" style="color: #f05423; font-size: 1rem;">TRK-WC-0000</strong>
+          <strong id="disp-track-code" style="color: #f05423; font-size: 1rem;">—</strong>
         </div>
         <div style="display: flex; justify-content: space-between;">
           <span style="color: #64748b; font-size: 0.9rem;">Total Amount:</span>
-          <strong id="disp-total-amount" style="color: #10b981; font-size: 1.15rem;">৳0</strong>
+          <strong id="disp-total-amount" style="color: #10b981; font-size: 1.15rem;">—</strong>
         </div>
       </div>
 
-      <div style="display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-bottom: 28px;">
+      <div id="order-success-actions" style="display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-bottom: 28px;">
         <a id="track-btn-link" href="track-order.html" class="btn-primary" style="padding: 12px 24px;">
           📍 Track Order Delivery
         </a>
@@ -62,9 +62,30 @@
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const params = new URLSearchParams(window.location.search);
-      const order = params.get('order') || 'WC-' + Math.floor(Math.random() * 90000 + 10000);
-      const track = params.get('track') || 'TRK-WC-' + Math.floor(Math.random() * 9000 + 1000);
-      const total = params.get('total') || '0';
+      const order = params.get('order') || '';
+      const track = params.get('track') || '';
+      const totalText = params.get('total') || '';
+      const total = Number(totalText);
+      const hasOrderDetails = /^WC-[A-F0-9]{10}$/.test(order)
+        && /^TRK-WC-[A-F0-9]{10}$/.test(track)
+        && totalText !== ''
+        && Number.isFinite(total)
+        && total >= 0;
+
+      if (!hasOrderDetails) {
+        const icon = document.getElementById('order-success-icon');
+        icon.textContent = '!';
+        icon.style.background = '#fef2f2';
+        icon.style.color = '#b91c1c';
+        document.title = 'Order details unavailable | Wonderful Collection';
+        document.getElementById('order-success-heading').textContent = 'Order details unavailable';
+        document.getElementById('order-success-message').textContent = 'We could not verify order details from this link. Check your order number and phone on the tracking page.';
+        document.getElementById('order-success-details').style.display = 'none';
+        document.getElementById('whatsapp-btn').style.display = 'none';
+        document.getElementById('track-btn-link').textContent = 'Go to order tracking';
+        document.getElementById('track-btn-link').href = 'track-order.html';
+        return;
+      }
 
       document.getElementById('disp-order-number').textContent = order;
       document.getElementById('disp-track-code').textContent = track;

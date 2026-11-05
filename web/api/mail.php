@@ -17,5 +17,5 @@ function sendStoreMail(string $recipient, string $subject, string $body): bool {
         'From: ' . $sender,
         'Content-Type: text/plain; charset=UTF-8'
     ];
-    return mail($recipient, $subject, $body, implode("\r\n", $headers));
+    return @mail($recipient, $subject, $body, implode("\r\n", $headers));
 }
