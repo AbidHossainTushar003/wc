@@ -21,6 +21,7 @@ mail provider was tested.
 | Order success page | A valid test link displayed the supplied order details; a URL without verifiable details displayed a recovery state, hid order-specific actions, and did not invent an order/tracking number. |
 | Admin sign-in | The web form includes the required six-digit authenticator field and sends it with the login request. A local MFA login and forced-password-change flow passed in the isolated test. |
 | Customer sign-in | The isolated fake customer signed in through the web form and reached the profile page; the page showed the profile/order area and had no horizontal overflow at 390 CSS pixels. |
+| Admin mobile layout | At 320, 360, 390, and 430 CSS pixels, the signed-out authenticator field stayed visible with no page overflow. The dashboard shell was shown by a DOM-only toggle (not an authenticated session); its recent-orders table scrolled within its wrapper, with no page overflow. |
 | API access control | Public product/category reads worked locally. Protected admin reads/writes rejected requests without an admin token. These checks do not prove host-level rules. |
 | Mail | Checkout succeeded in the isolated test when mail was disabled. PHP mail warnings are suppressed so they cannot corrupt JSON responses; actual sender configuration and delivery are unverified. |
 

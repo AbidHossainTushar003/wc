@@ -40,10 +40,50 @@
       max-width: 680px;
       margin: 32px auto 48px;
     }
+    .admin-topbar,
+    .admin-topbar > *,
+    .admin-session-controls {
+      min-width: 0;
+    }
+    .admin-topbar {
+      flex-wrap: wrap;
+      gap: 10px 16px;
+    }
+    .admin-store-link {
+      flex: 1 1 220px;
+      overflow-wrap: anywhere;
+    }
+    .admin-session-controls {
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
     @media (max-width: 600px) {
       .admin-grid {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 14px;
+      }
+      .admin-topbar {
+        align-items: flex-start !important;
+        padding: 12px !important;
+      }
+      .admin-session-controls {
+        justify-content: flex-start;
+      }
+      .admin-module-screen {
+        padding: 16px;
+      }
+      .admin-card {
+        min-width: 0;
+        padding: 20px 10px;
+      }
+      .admin-card-title,
+      .admin-header-pill {
+        overflow-wrap: anywhere;
+      }
+      .admin-header-pill {
+        max-width: 100%;
+        padding: 10px 16px;
+        font-size: 1rem;
       }
     }
     .admin-card {
@@ -146,11 +186,11 @@
 <body class="admin-body">
 
   <!-- Top bar with link to front store -->
-  <div style="padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155;">
-    <a href="index.html" style="color: #94a3b8; font-size: 0.88rem; font-weight: 600; display: flex; align-items: center; gap: 6px;">
+  <div class="admin-topbar" style="padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155;">
+    <a class="admin-store-link" href="index.html" style="color: #94a3b8; font-size: 0.88rem; font-weight: 600; display: flex; align-items: center; gap: 6px;">
       ← View Customer Store (wonderfulcollection.store)
     </a>
-    <div style="display: flex; align-items: center; gap: 12px; font-size: 0.85rem; color: #fbbf24; font-weight: 700;">
+    <div class="admin-session-controls" style="display: flex; align-items: center; gap: 12px; font-size: 0.85rem; color: #fbbf24; font-weight: 700;">
       <span id="admin-user-name">Not signed in</span>
       <button id="admin-change-password" type="button" class="admin-btn" onclick="toggleAdminPasswordPanel()" style="display: none; padding: 6px 12px;">Change password</button>
       <button id="admin-logout" type="button" class="admin-btn" onclick="handleAdminLogout()" style="display: none; padding: 6px 12px;">Sign out</button>
