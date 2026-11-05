@@ -33,3 +33,15 @@
   form.
 - Android unit tests and the debug build passed. No live category was created
   during this code change.
+
+## 4. Dashboard/report data accuracy follow-up (2026-11-05)
+
+- Removed weekly revenue bars that were generated from fixed ratios rather than
+  daily API results.
+- Removed the hardcoded fulfillment-hub, express-delivery, payment-ranking, and
+  99.4% fulfillment claims; the current reports API does not return those
+  metrics.
+- Dashboard and report order totals now describe the actual all-status
+  aggregates returned by the API, rather than calling them completed sales.
+- Android unit tests and the debug build passed after this change. No
+  production data was accessed or changed.

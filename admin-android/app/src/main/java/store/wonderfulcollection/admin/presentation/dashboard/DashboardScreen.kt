@@ -105,7 +105,7 @@ class DashboardActivity : AppCompatActivity() {
         when (res) {
             is Resource.Loading -> {
                 val tv = TextView(this).apply {
-                    text = "🔄 Fetching live Dhanmondi Hub analytics..."
+                    text = "Loading store metrics..."
                     setTextColor(0xFF94A3B8.toInt())
                     textSize = 15f
                     setPadding(0, 32, 0, 0)
@@ -116,40 +116,11 @@ class DashboardActivity : AppCompatActivity() {
                 val d = res.data
 
                 // 1. Metric Cards
-                container.addView(createMetricCard("Gross Revenue", "৳%,.2f".format(d.grossRevenue), "Lifetime store sales volume", 0xFFEA580C.toInt()))
-                container.addView(createMetricCard("Total Orders", "${d.totalOrders} Orders", "Successfully processed orders", 0xFFDB2777.toInt()))
-                container.addView(createMetricCard("Average Order Value", "৳%,.2f".format(d.averageOrderValue), "Average basket size per order", 0xFF0284C7.toInt()))
-                container.addView(createMetricCard("Registered Customers", "${d.totalCustomers} Customers", "Active registered buyers", 0xFF7C3AED.toInt()))
+                container.addView(createMetricCard("Order Value Recorded", "৳%,.2f".format(d.grossRevenue), "Sum of order totals across all statuses", 0xFFEA580C.toInt()))
+                container.addView(createMetricCard("Total Orders", "${d.totalOrders} Orders", "Orders recorded in the store", 0xFFDB2777.toInt()))
+                container.addView(createMetricCard("Average Order Total", "৳%,.2f".format(d.averageOrderValue), "Average total across recorded orders", 0xFF0284C7.toInt()))
+                container.addView(createMetricCard("Registered Customers", "${d.totalCustomers} Customers", "Customer accounts recorded", 0xFF7C3AED.toInt()))
                 container.addView(createMetricCard("Low Stock Alerts", "${d.lowStockAlerts} Products", "Items requiring inventory restock", 0xFFD97706.toInt()))
-
-                // 2. Visual Sales Trend Bar Chart Card
-                container.addView(createVisualChartCard(d.grossRevenue))
-
-                // 3. Fulfillment Hub Card
-                val hubCard = LinearLayout(this).apply {
-                    orientation = LinearLayout.VERTICAL
-                    setBackgroundColor(0xFF1E293B.toInt())
-                    setPadding(24, 24, 24, 24)
-                    val lp = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
-                    lp.setMargins(0, 0, 0, 16)
-                    layoutParams = lp
-                }
-                val hubTitle = TextView(this).apply {
-                    text = "🏬 Dhanmondi Fulfillment Hub"
-                    textSize = 16f
-                    setTextColor(0xFF38BDF8.toInt())
-                    paint.isFakeBoldText = true
-                }
-                val hubDesc = TextView(this).apply {
-                    text = "• Location: DHAKA, BANGLADESH\n• Express Delivery: 2-4 Hours Active\n• Hub Status: Fully Operational (99.4%)"
-                    textSize = 13f
-                    setTextColor(0xFFF8FAFC.toInt())
-                    setPadding(0, 8, 0, 0)
-                    setLineSpacing(6f, 1f)
-                }
-                hubCard.addView(hubTitle)
-                hubCard.addView(hubDesc)
-                container.addView(hubCard)
             }
             is Resource.Error -> {
                 val errCard = LinearLayout(this).apply {
@@ -223,70 +194,4 @@ class DashboardActivity : AppCompatActivity() {
         return card
     }
 
-    private fun createVisualChartCard(totalRevenue: Double): LinearLayout {
-        val card = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setBackgroundColor(0xFF1E293B.toInt())
-            setPadding(24, 24, 24, 24)
-            val lp = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
-            lp.setMargins(0, 0, 0, 16)
-            layoutParams = lp
-        }
-
-        val titleTv = TextView(this).apply {
-            text = "📈 Weekly Sales Revenue Trend"
-            textSize = 16f
-            setTextColor(0xFF38BDF8.toInt())
-            paint.isFakeBoldText = true
-            setPadding(0, 0, 0, 16)
-        }
-        card.addView(titleTv)
-
-        // Visual breakdown bars for days of the week
-        val days = listOf("Sat", "Sun", "Mon", "Tue", "Wed", "Thu", "Fri")
-        val ratios = listOf(0.65f, 0.45f, 0.80f, 0.55f, 0.90f, 0.70f, 1.0f)
-
-        days.forEachIndexed { index, day ->
-            val row = LinearLayout(this).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.CENTER_VERTICAL
-                setPadding(0, 6, 0, 6)
-            }
-
-            val dayTv = TextView(this).apply {
-                text = day
-                textSize = 12f
-                setTextColor(0xFF94A3B8.toInt())
-                layoutParams = LinearLayout.LayoutParams(60, LinearLayout.LayoutParams.WRAP_CONTENT)
-            }
-            row.addView(dayTv)
-
-            val barContainer = LinearLayout(this).apply {
-                orientation = LinearLayout.HORIZONTAL
-                layoutParams = LinearLayout.LayoutParams(0, 16, 1f).apply {
-                    setMargins(12, 0, 12, 0)
-                }
-                setBackgroundColor(0xFF0F172A.toInt())
-            }
-
-            val fillWidth = (ratios[index] * 200).toInt().coerceAtLeast(10)
-            val fillBar = View(this).apply {
-                setBackgroundColor(0xFFEA580C.toInt())
-                layoutParams = LinearLayout.LayoutParams(fillWidth, LinearLayout.LayoutParams.MATCH_PARENT)
-            }
-            barContainer.addView(fillBar)
-            row.addView(barContainer)
-
-            val amtTv = TextView(this).apply {
-                text = "৳%,.0f".format(totalRevenue * (ratios[index] * 0.15))
-                textSize = 11f
-                setTextColor(0xFFF8FAFC.toInt())
-            }
-            row.addView(amtTv)
-
-            card.addView(row)
-        }
-
-        return card
-    }
 }

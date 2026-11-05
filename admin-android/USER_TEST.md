@@ -3,7 +3,7 @@
 Follow this checklist with the phone in hand:
 1. **Morning Routine:**
    - Launch the app and sign in with the owner-provisioned username, password, and current six-digit authenticator code.
-   - Review Executive Dashboard KPI cards (Gross Revenue, Orders, Low Stock).
+   - Review the API-backed recorded order-value, order-count, average-order-total, customer, and low-stock metrics. Confirm no synthetic weekly trend or unsupported delivery-performance claim is shown.
 2. **Order Fulfillment:**
    - Open Orders screen, filter by `Pending`.
    - Tap an order to view customer details, tap WhatsApp/Call buttons to verify COD.

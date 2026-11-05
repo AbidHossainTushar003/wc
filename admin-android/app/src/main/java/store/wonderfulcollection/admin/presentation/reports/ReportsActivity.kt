@@ -100,7 +100,7 @@ class ReportsActivity : AppCompatActivity() {
             paint.isFakeBoldText = true
         }
         val b1 = TextView(this).apply {
-            text = "• Gross Lifetime Revenue: ৳%,.2f\n• Completed Order Volume: %d\n• Average Basket Size: ৳%,.2f\n• Total Promo Discounts Issued: ৳%,.2f".format(
+            text = "• Order Value Recorded (all statuses): ৳%,.2f\n• Orders Recorded: %d\n• Average Order Total: ৳%,.2f\n• Discounts Recorded: ৳%,.2f".format(
                 d.grossRevenue, d.totalOrders, d.averageOrderValue, d.totalDiscounts
             )
             textSize = 14f
@@ -112,30 +112,5 @@ class ReportsActivity : AppCompatActivity() {
         card1.addView(b1)
         container.addView(card1)
 
-        // Card 2: Dhanmondi Hub Performance
-        val card2 = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setBackgroundColor(0xFF1E293B.toInt())
-            setPadding(24, 24, 24, 24)
-            val lp = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
-            lp.setMargins(0, 0, 0, 16)
-            layoutParams = lp
-        }
-        val t2 = TextView(this).apply {
-            text = "🏬 Delivery Performance"
-            textSize = 16f
-            setTextColor(0xFF10B981.toInt())
-            paint.isFakeBoldText = true
-        }
-        val b2 = TextView(this).apply {
-            text = "• Express Deliveries (2-4h): Active & Optimized\n• Delivery Area: DHAKA, BANGLADESH\n• Top Payment Methods: Cash on Delivery, bKash, Nagad\n• Fulfillment Rate: 99.4%"
-            textSize = 14f
-            setTextColor(0xFFF8FAFC.toInt())
-            setPadding(0, 8, 0, 0)
-            setLineSpacing(8f, 1f)
-        }
-        card2.addView(t2)
-        card2.addView(b2)
-        container.addView(card2)
     }
 }

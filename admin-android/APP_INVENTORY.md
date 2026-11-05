@@ -5,7 +5,7 @@
    - Launcher activity. Displays top bar, admin sign-in status, and the 3x3 Grid of 9 rounded white cards (Dashboard, Products, Categories, Orders, Customers, Coupons, Inventory, Reports, Settings).
    - Dialogs: Admin Login prompt (username, password, and required six-digit TOTP code).
 2. **`DashboardActivity` (`store.wonderfulcollection.admin.presentation.dashboard.DashboardActivity`)**:
-   - Screen 1: Executive Dashboard with KPI cards (Gross Revenue, Total Orders, Average Order Value, Registered Customers, Low Stock Alerts), Weekly Sales Trend Bar Chart, and Dhanmondi Fulfillment Hub status card.
+   - Screen 1: Executive Dashboard with API-backed metrics (recorded order value, order count, average order total, registered customers, and low-stock count). Weekly trends and fulfillment performance are not provided by the current API.
 3. **`ProductsActivity` (`store.wonderfulcollection.admin.presentation.products.ProductsActivity`)**:
    - Screen 2: Products Inventory management. Search bar, product listing cards, Add Product button (`+ Add`), and tap-to-edit product modal (Name, short desc, regular price, sale price, stock).
 4. **`CategoriesActivity` (`store.wonderfulcollection.admin.presentation.categories.CategoriesActivity`)**:
@@ -19,7 +19,7 @@
 8. **`InventoryActivity` (`store.wonderfulcollection.admin.presentation.inventory.InventoryActivity`)**:
    - Screen 7: Stock & Inventory management. Low-stock indicators, stock adjustment controls.
 9. **`ReportsActivity` (`store.wonderfulcollection.admin.presentation.reports.ReportsActivity`)**:
-   - Screen 8: Reports & Financial metrics overview.
+   - Screen 8: API-backed order-value, order-count, average-order-total, and discount totals. Delivery performance is not provided by the current API.
 10. **`SettingsActivity` (`store.wonderfulcollection.admin.presentation.settings.SettingsActivity`)**:
     - Screen 9: Store configuration, merchant details, and Backend API endpoint URL configuration.
 
