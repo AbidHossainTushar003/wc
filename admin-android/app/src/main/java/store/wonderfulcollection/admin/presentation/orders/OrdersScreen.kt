@@ -3,6 +3,8 @@ package store.wonderfulcollection.admin.presentation.orders
 import android.R
 import android.app.Application
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -291,9 +293,56 @@ class OrdersActivity : AppCompatActivity() {
                                 textSize = 13f
                                 setTextColor(0xFFF8FAFC.toInt())
                                 setLineSpacing(6f, 1f)
-                                setPadding(0, 10, 0, 14)
+                                setPadding(0, 10, 0, 10)
                             }
                             card.addView(details)
+
+                            val contactRow = LinearLayout(this).apply {
+                                orientation = LinearLayout.HORIZONTAL
+                                setPadding(0, 0, 0, 12)
+                            }
+                            val btnCall = Button(this).apply {
+                                text = "📞 Call"
+                                textSize = 11f
+                                setBackgroundColor(0xFF0284C7.toInt())
+                                setTextColor(0xFFFFFFFF.toInt())
+                                setOnClickListener {
+                                    val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:${o.customerPhone}"))
+                                    context.startActivity(intent)
+                                }
+                                val lp = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply { setMargins(0, 0, 6, 0) }
+                                layoutParams = lp
+                            }
+                            val btnSms = Button(this).apply {
+                                text = "💬 SMS"
+                                textSize = 11f
+                                setBackgroundColor(0xFF0891B2.toInt())
+                                setTextColor(0xFFFFFFFF.toInt())
+                                setOnClickListener {
+                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("smsto:${o.customerPhone}"))
+                                    context.startActivity(intent)
+                                }
+                                val lp = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply { setMargins(0, 0, 6, 0) }
+                                layoutParams = lp
+                            }
+                            val btnWhatsapp = Button(this).apply {
+                                text = "💚 WhatsApp"
+                                textSize = 11f
+                                setBackgroundColor(0xFF10B981.toInt())
+                                setTextColor(0xFFFFFFFF.toInt())
+                                setOnClickListener {
+                                    val phoneNum = o.customerPhone.replace(Regex("[^0-9]"), "")
+                                    val formattedPhone = if (phoneNum.startsWith("88")) phoneNum else "88$phoneNum"
+                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://wa.me/$formattedPhone"))
+                                    context.startActivity(intent)
+                                }
+                                val lp = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+                                layoutParams = lp
+                            }
+                            contactRow.addView(btnCall)
+                            contactRow.addView(btnSms)
+                            contactRow.addView(btnWhatsapp)
+                            card.addView(contactRow)
 
                             val nextStatus = when (o.orderStatus) {
                                 "Pending" -> "Processing"
