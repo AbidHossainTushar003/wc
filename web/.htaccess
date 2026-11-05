@@ -3,8 +3,9 @@ Options -Indexes
 <IfModule mod_rewrite.c>
     RewriteEngine On
     RewriteCond %{HTTPS} !=on
+    RewriteCond %{HTTP:X-Forwarded-Proto} !https [NC]
     RewriteRule ^ https://wonderfulcollection.store%{REQUEST_URI} [R=301,L]
-    RewriteRule (^|/)config\.local\.php$ - [F,L,NC]
+    RewriteRule (^|/)config\.local\.php(?:\.template)?$ - [F,L,NC]
     RewriteRule \.(sqlite|sql|md)$ - [F,L,NC]
     RewriteCond %{REQUEST_URI} !^/\.well-known/ [NC]
     RewriteRule (^|/)\. - [F,L]
@@ -14,7 +15,7 @@ Options -Indexes
     RewriteRule ^api/([A-Za-z0-9_-]+)$ api/$1.php [L,QSA]
 </IfModule>
 
-<FilesMatch "(?i)(^\.|\.sqlite$|\.sql$|\.md$|^config\.local\.php$)">
+<FilesMatch "(?i)(^\.|\.sqlite$|\.sql$|\.md$|^config\.local\.php(?:\.template)?$)">
     <IfModule mod_authz_core.c>
         Require all denied
     </IfModule>
@@ -35,7 +36,11 @@ ErrorDocument 404 /404.html
     Header always set Content-Security-Policy "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; img-src 'self' https: data:; font-src 'self' https://fonts.gstatic.com data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; script-src 'self' 'unsafe-inline'; connect-src 'self' https://nominatim.openstreetmap.org; upgrade-insecure-requests"
     <IfModule mod_setenvif.c>
         SetEnvIf Request_URI "^/api/" NO_CACHE
-        Header always set Cache-Control "no-store, no-cache, must-revalidate" env=NO_CACHE
+        Header always set Cache-Control "no-store, no-cache, must-revalidate, max-age=0" env=NO_CACHE
+        Header always set CDN-Cache-Control "no-store" env=NO_CACHE
+        Header always set Surrogate-Control "no-store" env=NO_CACHE
+        Header always set Pragma "no-cache" env=NO_CACHE
+        Header always set Expires "0" env=NO_CACHE
     </IfModule>
 </IfModule>
 

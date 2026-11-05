@@ -1,6 +1,6 @@
 Options -Indexes
 
-<FilesMatch "(?i)(^\.|config\.local\.php$|\.sqlite$|\.sql$|\.md$)">
+<FilesMatch "(?i)(^\.|config\.local\.php(?:\.template)?$|\.sqlite$|\.sql$|\.md$)">
     <IfModule mod_authz_core.c>
         Require all denied
     </IfModule>

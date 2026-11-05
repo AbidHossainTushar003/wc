@@ -1,9 +1,10 @@
 # Wonderful Collection staging-first release runbook
 
-**Release package:** `deploy/wonderful-deploy-phase16-20261104.zip`
-**SHA-256:** `184BAA7A7885600EB0E829967C52119E30C4FFDDEC5E8B88989305AD52DF02F4`
-**Contents:** web files only; `index.html` is at the ZIP root. The package excludes
-`.sqlite`, `.sql`, `.md`, `api/config.local.php`, and development files.
+**Release package:** `deploy/wonderful-deploy-final-20261105.zip`
+**SHA-256:** `AA21DE87DF2D3BEEA182589C65AB02F9F453DC86F830F0320314E2AAE4F03518`
+**Contents:** web files only; `index.html` is at the ZIP root. The package includes
+the placeholder-only `api/config.local.php.template` and excludes
+`api/config.local.php`, `.sqlite`, `.sql`, `.md`, and development files.
 
 Do not upload to production until every staging check below passes. Never send
 passwords, tokens, database credentials, or the TOTP secret in chat or commit
@@ -64,16 +65,18 @@ them to Git.
 1. On Windows, verify the local package hash before upload:
 
    ```powershell
-   Get-FileHash .\deploy\wonderful-deploy-phase16-20261104.zip -Algorithm SHA256
+   Get-FileHash .\deploy\wonderful-deploy-final-20261105.zip -Algorithm SHA256
    ```
 
    It must match the SHA-256 printed at the top of this runbook.
 2. In cPanel, open **Files → File Manager** and navigate to the staging
-   document root. Upload `wonderful-deploy-phase16-20261104.zip`, select it,
+   document root. Upload `wonderful-deploy-final-20261105.zip`, select it,
    choose **Extract**, and extract into that document root. Confirm `index.html`
    appears directly at the root, with no extra `web/` directory.
-3. The ZIP does not contain `api/config.local.php`; do not overwrite or delete
-   the staging config when extracting. If no staging config exists, create
+3. The ZIP contains `api/config.local.php.template` with placeholders only;
+   the template is blocked from web access. It does not contain
+   `api/config.local.php`; do not overwrite or delete the staging config when
+   extracting. If no staging config exists, copy or rename the template to
    `api/config.local.php` in File Manager and enter only the staging values:
 
    ```php
