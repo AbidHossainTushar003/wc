@@ -3,7 +3,7 @@
 ## 1. Activities & Screens
 1. **`MainActivity` (`store.wonderfulcollection.admin.presentation.main.MainActivity`)**:
    - Launcher activity. Displays top bar, admin sign-in status, and the 3x3 Grid of 9 rounded white cards (Dashboard, Products, Categories, Orders, Customers, Coupons, Inventory, Reports, Settings).
-   - Dialogs: Admin Login prompt (username, password, optional TOTP).
+   - Dialogs: Admin Login prompt (username, password, and required six-digit TOTP code).
 2. **`DashboardActivity` (`store.wonderfulcollection.admin.presentation.dashboard.DashboardActivity`)**:
    - Screen 1: Executive Dashboard with KPI cards (Gross Revenue, Total Orders, Average Order Value, Registered Customers, Low Stock Alerts), Weekly Sales Trend Bar Chart, and Dhanmondi Fulfillment Hub status card.
 3. **`ProductsActivity` (`store.wonderfulcollection.admin.presentation.products.ProductsActivity`)**:

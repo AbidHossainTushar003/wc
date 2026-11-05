@@ -5,6 +5,7 @@ import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -35,10 +36,11 @@ class InventoryViewModel(
         }
     }
 
-    fun adjust(productId: Long, delta: Int) {
+    fun adjust(productId: Long, delta: Int, onComplete: (Result<Unit>) -> Unit) {
         viewModelScope.launch {
-            adjustStockUseCase(productId, delta)
-                .onSuccess { loadInventory() }
+            val result = adjustStockUseCase(productId, delta)
+            result.onSuccess { loadInventory() }
+            onComplete(result)
         }
     }
 }
@@ -48,6 +50,30 @@ class InventoryActivity : AppCompatActivity() {
     private val viewModel = InventoryViewModel()
     private lateinit var swipeRefresh: SwipeRefreshLayout
     private lateinit var listContainer: LinearLayout
+
+    private fun adjustStock(productId: Long, delta: Int, buttons: List<Button>) {
+        buttons.forEach { it.isEnabled = false }
+        viewModel.adjust(productId, delta) { result ->
+            buttons.forEach { it.isEnabled = true }
+            result.onSuccess {
+                val message = if (delta < 0) {
+                    "Stock decreased by ${-delta}."
+                } else {
+                    "Stock increased by $delta."
+                }
+                Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+            }.onFailure { error ->
+                Toast.makeText(
+                    this,
+                    error.message ?: "Could not update stock. Please try again.",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }
+    }
+
+    private fun dp(value: Int): Int =
+        (value * resources.displayMetrics.density + 0.5f).toInt()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,7 +86,7 @@ class InventoryActivity : AppCompatActivity() {
         val scroll = ScrollView(this)
         val container = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(32, 48, 32, 48)
+            setPadding(dp(16), dp(24), dp(16), dp(24))
         }
         scroll.addView(container)
         swipeRefresh.addView(scroll)
@@ -69,7 +95,7 @@ class InventoryActivity : AppCompatActivity() {
         // Header Row
         val headerRow = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
-            setPadding(0, 0, 0, 24)
+            setPadding(0, 0, 0, dp(12))
         }
 
         val btnBack = Button(this).apply {
@@ -112,9 +138,9 @@ class InventoryActivity : AppCompatActivity() {
                             val card = LinearLayout(this).apply {
                                 orientation = LinearLayout.VERTICAL
                                 setBackgroundColor(0xFF1E293B.toInt())
-                                setPadding(24, 24, 24, 24)
+                                setPadding(dp(16), dp(16), dp(16), dp(16))
                                 val lp = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
-                                lp.setMargins(0, 0, 0, 16)
+                                lp.setMargins(0, 0, 0, dp(12))
                                 layoutParams = lp
                             }
 
@@ -132,39 +158,56 @@ class InventoryActivity : AppCompatActivity() {
                                 textSize = 13f
                                 setTextColor(color)
                                 paint.isFakeBoldText = true
-                                setPadding(0, 6, 0, 12)
+                                setPadding(0, dp(4), 0, dp(8))
                             }
                             card.addView(status)
 
                             val actions = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
 
                             val btnMinus = Button(this).apply {
-                                text = "-1"
-                                textSize = 12f
-                                setOnClickListener { viewModel.adjust(item.id, -1) }
+                                text = "−1"
+                                textSize = 14f
+                                isEnabled = item.stockQuantity > 0
+                                contentDescription = "Decrease ${item.name} stock by one"
+                                minHeight = dp(48)
+                                minWidth = dp(48)
                                 val lpBtn = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT)
-                                lpBtn.setMargins(0, 0, 12, 0)
+                                lpBtn.setMargins(0, 0, dp(8), 0)
                                 layoutParams = lpBtn
                             }
                             actions.addView(btnMinus)
 
                             val btnPlus = Button(this).apply {
                                 text = "+1"
-                                textSize = 12f
-                                setOnClickListener { viewModel.adjust(item.id, 1) }
+                                textSize = 14f
+                                contentDescription = "Increase ${item.name} stock by one"
+                                minHeight = dp(48)
+                                minWidth = dp(48)
                                 val lpBtn = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT)
-                                lpBtn.setMargins(0, 0, 12, 0)
+                                lpBtn.setMargins(0, 0, dp(8), 0)
                                 layoutParams = lpBtn
                             }
                             actions.addView(btnPlus)
 
                             val btnPlus5 = Button(this).apply {
                                 text = "+5"
-                                textSize = 12f
-                                setOnClickListener { viewModel.adjust(item.id, 5) }
+                                textSize = 14f
+                                contentDescription = "Increase ${item.name} stock by five"
+                                minHeight = dp(48)
+                                minWidth = dp(48)
                                 layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT)
                             }
                             actions.addView(btnPlus5)
+
+                            btnMinus.setOnClickListener {
+                                if (item.stockQuantity > 0) adjustStock(item.id, -1, listOf(btnMinus, btnPlus, btnPlus5))
+                            }
+                            btnPlus.setOnClickListener {
+                                adjustStock(item.id, 1, listOf(btnMinus, btnPlus, btnPlus5))
+                            }
+                            btnPlus5.setOnClickListener {
+                                adjustStock(item.id, 5, listOf(btnMinus, btnPlus, btnPlus5))
+                            }
 
                             card.addView(actions)
                             listContainer.addView(card)
