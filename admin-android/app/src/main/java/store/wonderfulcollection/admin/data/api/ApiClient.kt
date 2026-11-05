@@ -3,12 +3,15 @@ package store.wonderfulcollection.admin.data.api
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
+import android.content.Context
+import store.wonderfulcollection.admin.BuildConfig
 import store.wonderfulcollection.admin.domain.model.ProductImageFile
 import java.io.ByteArrayOutputStream
 import java.io.BufferedReader
 import java.io.DataOutputStream
 import java.io.InputStreamReader
 import java.io.OutputStreamWriter
+import java.net.URI
 import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
@@ -18,13 +21,28 @@ import java.net.URLEncoder
  * Uses native Java HttpURLConnection + Kotlin Coroutines Dispatchers.IO.
  */
 class ApiClient(
-    var baseUrl: String = "http://10.0.2.2:3000/api",
+    baseUrl: String = "https://wonderfulcollection.store/api",
 ) {
+    var baseUrl: String = normalizeApiBaseUrl(baseUrl, BuildConfig.DEBUG)
+        private set
+
     var adminToken: String? = null
         private set
 
+    private var tokenStorage: SecureTokenStorage? = null
+
+    fun updateBaseUrl(value: String) {
+        baseUrl = normalizeApiBaseUrl(value, BuildConfig.DEBUG)
+    }
+
+    fun attachTokenStorage(context: Context) {
+        tokenStorage = SecureTokenStorage(context.applicationContext)
+        adminToken = tokenStorage?.getToken()
+    }
+
     fun setAdminToken(token: String?) {
         adminToken = token
+        tokenStorage?.saveToken(token)
     }
 
     private fun clearTokenOnUnauthorized(code: Int) {
@@ -33,21 +51,35 @@ class ApiClient(
         }
     }
 
-    suspend fun loginAdmin(username: String, password: String, totpCode: String): Result<String> {
+    suspend fun loginAdmin(username: String, password: String): Result<String> {
         val body = JSONObject()
             .put("action", "admin_login")
             .put("username", username)
             .put("password", password)
-            .put("totp_code", totpCode)
-        return post("auth", body).map { response ->
-            val data = response.getJSONObject("data")
-            if (data.optBoolean("must_change_password")) {
-                throw IllegalStateException("Complete the required password change in the web admin panel before using the Android app.")
-            }
-            val token = data.getString("token")
-            setAdminToken(token)
-            token
+        return post("auth", body).fold(
+            onSuccess = { response ->
+                val data = response.optJSONObject("data")
+                if (data == null) {
+                    Result.failure(IllegalStateException("Invalid authentication response from server."))
+                } else {
+                    handleAdminLoginResponse(
+                        data.optBoolean("must_change_password"),
+                        data.optString("token")
+                    )
+                }
+            },
+            onFailure = { Result.failure(it) }
+        )
+    }
+
+    internal fun handleAdminLoginResponse(mustChangePassword: Boolean, token: String?): Result<String> {
+        if (mustChangePassword) {
+            return Result.failure(IllegalStateException("Complete the required password change in the web admin panel before using the Android app."))
         }
+        val validToken = token?.takeIf(String::isNotBlank)
+            ?: return Result.failure(IllegalStateException("Invalid authentication response from server."))
+        setAdminToken(validToken)
+        return Result.success(validToken)
     }
 
     suspend fun get(endpoint: String, params: Map<String, String> = emptyMap()): Result<JSONObject> = withContext(Dispatchers.IO) {
@@ -58,6 +90,7 @@ class ApiClient(
 
             val url = URL("$baseUrl/$endpoint$queryString")
             val conn = url.openConnection() as HttpURLConnection
+            conn.instanceFollowRedirects = false
             conn.requestMethod = "GET"
             conn.setRequestProperty("Accept", "application/json")
             adminToken?.let { conn.setRequestProperty("Authorization", "Bearer $it") }
@@ -105,6 +138,7 @@ class ApiClient(
             }
 
             val conn = URL("$baseUrl/product-images").openConnection() as HttpURLConnection
+            conn.instanceFollowRedirects = false
             conn.requestMethod = "POST"
             conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=$boundary")
             conn.setRequestProperty("Accept", "application/json")
@@ -143,6 +177,7 @@ class ApiClient(
 
             val url = URL("$baseUrl/$endpoint$queryString")
             val conn = url.openConnection() as HttpURLConnection
+            conn.instanceFollowRedirects = false
             conn.requestMethod = "DELETE"
             conn.setRequestProperty("Accept", "application/json")
             adminToken?.let { conn.setRequestProperty("Authorization", "Bearer $it") }
@@ -169,6 +204,7 @@ class ApiClient(
         try {
             val url = URL("$baseUrl/$endpoint")
             val conn = url.openConnection() as HttpURLConnection
+            conn.instanceFollowRedirects = false
             conn.requestMethod = method
             conn.setRequestProperty("Content-Type", "application/json; charset=UTF-8")
             conn.setRequestProperty("Accept", "application/json")
@@ -198,5 +234,36 @@ class ApiClient(
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+
+    internal fun normalizeApiBaseUrl(value: String, allowDevelopmentEndpoint: Boolean): String {
+        val uri = try {
+            URI(value.trim())
+        } catch (error: Exception) {
+            throw IllegalArgumentException("Enter a valid API URL.", error)
+        }
+        val path = uri.path?.trimEnd('/') ?: ""
+        require(uri.userInfo == null && uri.query == null && uri.fragment == null) {
+            "API URL must not contain credentials, query parameters, or a fragment."
+        }
+        require(path == "/api") { "API URL must end in /api." }
+
+        val productionHost = "wonderfulcollection.store".equals(uri.host, ignoreCase = true)
+        if (productionHost && uri.scheme.equals("https", ignoreCase = true) && uri.port in listOf(-1, 443)) {
+            return "https://wonderfulcollection.store/api"
+        }
+
+        val host = uri.host ?: ""
+        val isLocalDevHost = host == "10.0.2.2" || host == "localhost" || host == "127.0.0.1" ||
+            host.startsWith("192.168.") || host.startsWith("10.") || host.startsWith("172.")
+
+        if (allowDevelopmentEndpoint
+            && isLocalDevHost
+            && uri.scheme.equals("http", ignoreCase = true)
+            && uri.port == 3000) {
+            return "http://$host:3000/api"
+        }
+
+        throw IllegalArgumentException("Only the production HTTPS API or the debug emulator API is allowed.")
     }
 }
