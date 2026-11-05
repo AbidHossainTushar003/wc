@@ -135,7 +135,11 @@ switch ($method) {
             'dhaka' => 'Inside Dhaka',
             'outside_dhaka' => 'Outside Dhaka'
         ][$deliveryZone];
-        $idempotencyKey = isset($data['idempotency_key']) && is_string($data['idempotency_key']) ? trim($data['idempotency_key']) : '';
+        $idempotencyKey = is_string($data['idempotency_key'] ?? null) ? trim($data['idempotency_key']) : '';
+        if ($idempotencyKey === '' || strlen($idempotencyKey) > 128
+            || !preg_match('/\A[A-Za-z0-9._:-]+\z/', $idempotencyKey)) {
+            jsonResponse(['error' => 'A valid checkout request key is required. Please reload checkout and try again.'], 422);
+        }
         if ($idempotencyKey !== '') {
             $duplicateStmt = $pdo->prepare('SELECT id, order_number, tracking_code, total FROM orders WHERE idempotency_key = ? LIMIT 1');
             $duplicateStmt->execute([$idempotencyKey]);
@@ -150,7 +154,7 @@ switch ($method) {
                         'tracking_code' => $duplicateOrder['tracking_code'],
                         'total' => (float)$duplicateOrder['total']
                     ]
-                ], 409);
+                ]);
             }
         }
         $paymentMethod = $data['payment_method'] ?? 'Cash on Delivery';
@@ -301,9 +305,9 @@ switch ($method) {
             $orderStmt = $pdo->prepare("
                 INSERT INTO orders (
                     order_number, customer_id, customer_name, customer_phone, customer_email,
-                    delivery_address, delivery_area, delivery_fee, subtotal, discount, total,
+                    delivery_address, delivery_area, delivery_fee, subtotal, discount, coupon_id, total,
                     delivery_zone, payment_method, payment_status, trx_id, order_status, tracking_code, idempotency_key, notes
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending', ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending', ?, ?, ?)
             ");
             try {
                 $orderStmt->execute([
@@ -317,6 +321,7 @@ switch ($method) {
                     $deliveryFee,
                     $subtotal,
                     $discount,
+                    $coupon ? (int)$coupon['id'] : null,
                     $total,
                     $deliveryZone,
                     $paymentMethod,
@@ -328,6 +333,24 @@ switch ($method) {
                 ]);
             } catch (PDOException $e) {
                 $databaseError = is_array($e->errorInfo ?? null) ? (string)($e->errorInfo[2] ?? '') : '';
+                $duplicateKeyStmt = $pdo->prepare('SELECT id, order_number, tracking_code, total FROM orders WHERE idempotency_key = ? LIMIT 1' . $lockClause);
+                $duplicateKeyStmt->execute([$idempotencyKey]);
+                $existingOrder = $duplicateKeyStmt->fetch();
+                if ($existingOrder) {
+                    if ($pdo->inTransaction()) {
+                        $pdo->rollBack();
+                    }
+                    jsonResponse([
+                        'status' => 'success',
+                        'message' => 'This order request was already submitted.',
+                        'data' => [
+                            'order_id' => (int)$existingOrder['id'],
+                            'order_number' => $existingOrder['order_number'],
+                            'tracking_code' => $existingOrder['tracking_code'],
+                            'total' => (float)$existingOrder['total']
+                        ]
+                    ]);
+                }
                 if ($trxId !== '' && stripos($databaseError, 'uq_orders_payment_trx_id') !== false) {
                     throw new DomainException('This transaction ID has already been used for this payment method.');
                 }
@@ -479,7 +502,7 @@ switch ($method) {
         try {
             $driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
             $lockClause = $driver === 'mysql' ? ' FOR UPDATE' : '';
-            $orderStmt = $pdo->prepare('SELECT order_status FROM orders WHERE id = ?' . $lockClause);
+            $orderStmt = $pdo->prepare('SELECT order_status, coupon_id FROM orders WHERE id = ?' . $lockClause);
             $orderStmt->execute([$orderId]);
             $order = $orderStmt->fetch();
             if (!$order) {
@@ -524,6 +547,15 @@ switch ($method) {
                     if ($restoreStockStmt->rowCount() !== 1) {
                         throw new DomainException('Product stock could not be restored for this order.');
                     }
+                }
+
+                if ($order['coupon_id'] !== null) {
+                    $releaseCouponUse = $pdo->prepare('
+                        UPDATE coupons
+                        SET times_used = CASE WHEN times_used > 0 THEN times_used - 1 ELSE 0 END
+                        WHERE id = ?
+                    ');
+                    $releaseCouponUse->execute([(int)$order['coupon_id']]);
                 }
             }
 

@@ -321,6 +321,18 @@
       }
     }
 
+    function getCheckoutIdempotencyKey() {
+      const keyName = 'wc_checkout_idempotency_key';
+      let key = sessionStorage.getItem(keyName);
+      if (!/^[a-f0-9]{64}$/.test(key || '')) {
+        const bytes = new Uint8Array(32);
+        crypto.getRandomValues(bytes);
+        key = Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('');
+        sessionStorage.setItem(keyName, key);
+      }
+      return key;
+    }
+
     async function handlePlaceOrder(e) {
       e.preventDefault();
       const btn = document.getElementById('submit-order-btn');
@@ -335,6 +347,7 @@
       };
 
       const payload = {
+        idempotency_key: getCheckoutIdempotencyKey(),
         customer_name: document.getElementById('cust_name').value.trim(),
         customer_phone: document.getElementById('cust_phone').value.trim(),
         customer_email: document.getElementById('cust_email').value.trim(),
@@ -366,6 +379,7 @@
           `${res.error || 'The order total changed.'}\n\nNew total: ${Store.formatBDT(serverTotal)}\n\nPlace the order at this total?`
         );
         if (!accepted) {
+          sessionStorage.removeItem('wc_checkout_idempotency_key');
           res = { error: 'Order not placed. Review your cart and try again.' };
           break;
         }
@@ -376,6 +390,7 @@
 
       if (res.status === 'success') {
         const orderData = res.data;
+        sessionStorage.removeItem('wc_checkout_idempotency_key');
         Store.clearCart();
         const orderParams = new URLSearchParams({
           order: String(orderData.order_number),
