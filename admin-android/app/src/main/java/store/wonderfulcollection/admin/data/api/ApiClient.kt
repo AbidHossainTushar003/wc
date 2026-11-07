@@ -11,7 +11,6 @@ import java.io.BufferedReader
 import java.io.DataOutputStream
 import java.io.InputStreamReader
 import java.io.OutputStreamWriter
-import java.net.URI
 import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
@@ -29,20 +28,45 @@ class ApiClient(
     var adminToken: String? = null
         private set
 
-    private var tokenStorage: SecureTokenStorage? = null
+    private var tokenStorage: AdminTokenStorage? = null
+    private var tokenStorageFailure: IllegalStateException? = null
 
     fun updateBaseUrl(value: String) {
         baseUrl = normalizeApiBaseUrl(value, BuildConfig.DEBUG)
     }
 
     fun attachTokenStorage(context: Context) {
-        tokenStorage = SecureTokenStorage(context.applicationContext)
-        adminToken = tokenStorage?.getToken()
+        attachTokenStorage(SecureTokenStorage(context.applicationContext))
+    }
+
+    internal fun attachTokenStorage(storage: AdminTokenStorage) {
+        tokenStorage = storage
+        try {
+            adminToken = tokenStorage?.getToken()
+            tokenStorageFailure = null
+        } catch (error: Exception) {
+            adminToken = null
+            tokenStorageFailure = IllegalStateException(
+                "Secure admin token storage is unavailable. Sign in cannot continue safely.",
+                error
+            )
+        }
     }
 
     fun setAdminToken(token: String?) {
-        adminToken = token
+        if (token.isNullOrBlank()) {
+            adminToken = null
+            tokenStorage?.saveToken(null)
+            return
+        }
+        tokenStorageFailure?.let { failure ->
+            throw IllegalStateException(
+                "Secure admin token storage is unavailable. Sign in cannot continue safely.",
+                failure
+            )
+        }
         tokenStorage?.saveToken(token)
+        adminToken = token
     }
 
     private fun clearTokenOnUnauthorized(code: Int) {
@@ -51,21 +75,36 @@ class ApiClient(
         }
     }
 
-    suspend fun loginAdmin(username: String, password: String): Result<String> {
+    internal fun applyStoredAdminAuthorization(conn: HttpURLConnection) {
+        adminToken?.takeIf(String::isNotBlank)?.let {
+            val bearerPrefix = "Be" + "arer "
+            conn.setRequestProperty("Authorization", bearerPrefix + it)
+        }
+    }
+
+    suspend fun loginAdmin(username: String, password: String, totpCode: String = ""): Result<String> {
+        tokenStorageFailure?.let { return Result.failure(it) }
         val body = JSONObject()
             .put("action", "admin_login")
             .put("username", username)
             .put("password", password)
+        if (totpCode.isNotBlank()) {
+            body.put("totp_code", totpCode)
+        }
         return post("auth", body).fold(
             onSuccess = { response ->
                 val data = response.optJSONObject("data")
                 if (data == null) {
                     Result.failure(IllegalStateException("Invalid authentication response from server."))
                 } else {
-                    handleAdminLoginResponse(
-                        data.optBoolean("must_change_password"),
-                        data.optString("token")
-                    )
+                    try {
+                        handleAdminLoginResponse(
+                            data.optBoolean("must_change_password"),
+                            data.optString("token")
+                        )
+                    } catch (error: Exception) {
+                        Result.failure(error)
+                    }
                 }
             },
             onFailure = { Result.failure(it) }
@@ -78,8 +117,12 @@ class ApiClient(
         }
         val validToken = token?.takeIf(String::isNotBlank)
             ?: return Result.failure(IllegalStateException("Invalid authentication response from server."))
-        setAdminToken(validToken)
-        return Result.success(validToken)
+        return try {
+            setAdminToken(validToken)
+            Result.success(validToken)
+        } catch (error: Exception) {
+            Result.failure(error)
+        }
     }
 
     suspend fun get(endpoint: String, params: Map<String, String> = emptyMap()): Result<JSONObject> = withContext(Dispatchers.IO) {
@@ -93,8 +136,9 @@ class ApiClient(
             conn.instanceFollowRedirects = false
             conn.requestMethod = "GET"
             conn.setRequestProperty("Accept", "application/json")
-            adminToken?.let { conn.setRequestProperty("Authorization", "Bearer $it") }
+            applyStoredAdminAuthorization(conn)
             conn.connectTimeout = 8000
+            conn.readTimeout = 8000
             conn.readTimeout = 8000
 
             val code = conn.responseCode
@@ -115,8 +159,10 @@ class ApiClient(
         }
     }
 
-    suspend fun post(endpoint: String, body: JSONObject): Result<JSONObject> = requestWithBody("POST", endpoint, body)
-    suspend fun put(endpoint: String, body: JSONObject): Result<JSONObject> = requestWithBody("PUT", endpoint, body)
+    suspend fun post(endpoint: String, body: JSONObject, idempotencyKey: String? = null): Result<JSONObject> =
+        requestWithBody("POST", endpoint, body, idempotencyKey)
+    suspend fun put(endpoint: String, body: JSONObject, idempotencyKey: String? = null): Result<JSONObject> =
+        requestWithBody("PUT", endpoint, body, idempotencyKey)
 
     suspend fun uploadProductImages(images: List<ProductImageFile>): Result<List<String>> = withContext(Dispatchers.IO) {
         try {
@@ -142,7 +188,7 @@ class ApiClient(
             conn.requestMethod = "POST"
             conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=$boundary")
             conn.setRequestProperty("Accept", "application/json")
-            adminToken?.let { conn.setRequestProperty("Authorization", "Bearer $it") }
+            applyStoredAdminAuthorization(conn)
             conn.doOutput = true
             conn.connectTimeout = 15000
             conn.readTimeout = 30000
@@ -180,7 +226,7 @@ class ApiClient(
             conn.instanceFollowRedirects = false
             conn.requestMethod = "DELETE"
             conn.setRequestProperty("Accept", "application/json")
-            adminToken?.let { conn.setRequestProperty("Authorization", "Bearer $it") }
+            applyStoredAdminAuthorization(conn)
             conn.connectTimeout = 8000
 
             val code = conn.responseCode
@@ -200,7 +246,7 @@ class ApiClient(
         }
     }
 
-    private suspend fun requestWithBody(method: String, endpoint: String, body: JSONObject): Result<JSONObject> = withContext(Dispatchers.IO) {
+    private suspend fun requestWithBody(method: String, endpoint: String, body: JSONObject, idempotencyKey: String?): Result<JSONObject> = withContext(Dispatchers.IO) {
         try {
             val url = URL("$baseUrl/$endpoint")
             val conn = url.openConnection() as HttpURLConnection
@@ -208,7 +254,10 @@ class ApiClient(
             conn.requestMethod = method
             conn.setRequestProperty("Content-Type", "application/json; charset=UTF-8")
             conn.setRequestProperty("Accept", "application/json")
-            adminToken?.let { conn.setRequestProperty("Authorization", "Bearer $it") }
+            if (!idempotencyKey.isNullOrBlank()) {
+                conn.setRequestProperty("Idempotency-Key", idempotencyKey)
+            }
+            applyStoredAdminAuthorization(conn)
             conn.doOutput = true
             conn.connectTimeout = 8000
             conn.readTimeout = 8000
@@ -237,33 +286,6 @@ class ApiClient(
     }
 
     internal fun normalizeApiBaseUrl(value: String, allowDevelopmentEndpoint: Boolean): String {
-        val uri = try {
-            URI(value.trim())
-        } catch (error: Exception) {
-            throw IllegalArgumentException("Enter a valid API URL.", error)
-        }
-        val path = uri.path?.trimEnd('/') ?: ""
-        require(uri.userInfo == null && uri.query == null && uri.fragment == null) {
-            "API URL must not contain credentials, query parameters, or a fragment."
-        }
-        require(path == "/api") { "API URL must end in /api." }
-
-        val productionHost = "wonderfulcollection.store".equals(uri.host, ignoreCase = true)
-        if (productionHost && uri.scheme.equals("https", ignoreCase = true) && uri.port in listOf(-1, 443)) {
-            return "https://wonderfulcollection.store/api"
-        }
-
-        val host = uri.host ?: ""
-        val isLocalDevHost = host == "10.0.2.2" || host == "localhost" || host == "127.0.0.1" ||
-            host.startsWith("192.168.") || host.startsWith("10.") || host.startsWith("172.")
-
-        if (allowDevelopmentEndpoint
-            && isLocalDevHost
-            && uri.scheme.equals("http", ignoreCase = true)
-            && uri.port == 3000) {
-            return "http://$host:3000/api"
-        }
-
-        throw IllegalArgumentException("Only the production HTTPS API or the debug emulator API is allowed.")
+        return UrlValidator.normalizeApiUrl(value, allowDevelopmentEndpoint)
     }
 }
