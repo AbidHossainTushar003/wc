@@ -5,12 +5,20 @@ import org.json.JSONObject
 import store.wonderfulcollection.admin.data.api.ApiClient
 import store.wonderfulcollection.admin.domain.model.*
 import store.wonderfulcollection.admin.domain.repository.*
+import java.util.UUID
 
 private const val FALLBACK_PRODUCT_IMAGE = "https://wonderfulcollection.store/assets/product-placeholder.svg"
 
 private fun firstProductImage(images: JSONArray?): String =
     images?.takeIf { it.length() > 0 }?.optString(0)?.takeIf { it.isNotBlank() }
         ?: FALLBACK_PRODUCT_IMAGE
+
+internal fun productPricingError(regularPrice: Double, salePrice: Double?): String? = when {
+    !regularPrice.isFinite() || regularPrice <= 0.0 -> "Regular price must be greater than zero."
+    salePrice != null && (!salePrice.isFinite() || salePrice <= 0.0 || salePrice >= regularPrice) ->
+        "Sale price must be greater than zero and less than regular price."
+    else -> null
+}
 
 class ProductRepositoryImpl(private val api: ApiClient) : ProductRepository {
     override suspend fun getProducts(category: String?, query: String?): Result<List<Product>> {
@@ -80,6 +88,10 @@ class ProductRepositoryImpl(private val api: ApiClient) : ProductRepository {
         isTrending: Boolean,
         imageFiles: List<ProductImageFile>
     ): Result<Long> {
+        productPricingError(regularPrice, salePrice)?.let {
+            return Result.failure(IllegalArgumentException(it))
+        }
+
         val imageUrls = if (imageFiles.isEmpty()) {
             Result.success(emptyList())
         } else {
@@ -104,7 +116,7 @@ class ProductRepositoryImpl(private val api: ApiClient) : ProductRepository {
             imageUrls.getOrThrow().forEach { jsonArr.put(it) }
             put("images", jsonArr)
         }
-        return api.post("products", body).map { json ->
+        return api.post("products", body, UUID.randomUUID().toString()).map { json ->
             json.optLong("id", System.currentTimeMillis())
         }
     }
@@ -115,8 +127,13 @@ class ProductRepositoryImpl(private val api: ApiClient) : ProductRepository {
         shortDescription: String,
         regularPrice: Double,
         salePrice: Double?,
-        stock: Int
+        stock: Int,
+        expectedStock: Int
     ): Result<Unit> {
+        productPricingError(regularPrice, salePrice)?.let {
+            return Result.failure(IllegalArgumentException(it))
+        }
+
         val body = JSONObject().apply {
             put("id", id)
             put("name", name)
@@ -124,8 +141,9 @@ class ProductRepositoryImpl(private val api: ApiClient) : ProductRepository {
             put("regular_price", regularPrice)
             if (salePrice != null) put("sale_price", salePrice) else put("sale_price", JSONObject.NULL)
             put("stock_quantity", stock)
+            put("expected_stock", expectedStock)
         }
-        return api.put("products", body).map { }
+        return api.put("products", body, UUID.randomUUID().toString()).map { }
     }
 
     override suspend fun deleteProduct(id: Long): Result<Unit> {
@@ -230,30 +248,31 @@ class InventoryRepositoryImpl(private val api: ApiClient) : InventoryRepository 
             put("action", "adjust")
             put("delta", delta)
         }
-        return api.post("inventory", body).map { }
+        return api.post("inventory", body, UUID.randomUUID().toString()).map { }
     }
 
-    override suspend fun setStock(productId: Long, exactQuantity: Int): Result<Unit> {
+    override suspend fun setStock(productId: Long, exactQuantity: Int, expectedStock: Int): Result<Unit> {
         val body = JSONObject().apply {
             put("product_id", productId)
             put("stock_quantity", exactQuantity)
+            put("expected_stock", expectedStock)
         }
-        return api.post("inventory", body).map { }
+        return api.post("inventory", body, UUID.randomUUID().toString()).map { }
     }
 }
 
 class DashboardRepositoryImpl(private val api: ApiClient) : DashboardRepository {
     override suspend fun getDashboardOverview(): Result<DashboardOverview> {
         return api.get("reports").map { json ->
-            val data = json.getJSONObject("data")
-            val ov = data.getJSONObject("overview")
+            val data = json.optJSONObject("data") ?: json
+            val ov = data.optJSONObject("overview") ?: data
             DashboardOverview(
-                grossRevenue = ov.optDouble("gross_revenue"),
-                totalOrders = ov.optInt("total_orders"),
-                averageOrderValue = ov.optDouble("average_order_value"),
-                totalDiscounts = ov.optDouble("total_discounts"),
-                totalCustomers = ov.optInt("total_customers"),
-                lowStockAlerts = ov.optInt("low_stock_alerts"),
+                grossRevenue = ov.optDouble("gross_revenue", 0.0),
+                totalOrders = ov.optInt("total_orders", 0),
+                averageOrderValue = ov.optDouble("average_order_value", 0.0),
+                totalDiscounts = ov.optDouble("total_discounts", 0.0),
+                totalCustomers = ov.optInt("total_customers", 0),
+                lowStockAlerts = ov.optInt("low_stock_alerts", 0),
                 recentOrders = emptyList()
             )
         }
@@ -305,7 +324,7 @@ class CustomerRepositoryImpl(private val api: ApiClient) : CustomerRepository {
                         email = obj.optString("email"),
                         phone = obj.optString("phone"),
                         address = obj.optString("address"),
-                        area = obj.optString("area", "Dhanmondi"),
+                        area = obj.optString("area", "Dhaka"),
                         city = obj.optString("city", "Dhaka"),
                         totalOrders = obj.optInt("total_orders", 1),
                         totalSpent = obj.optDouble("total_spent", 0.0)
@@ -333,6 +352,7 @@ class CouponRepositoryImpl(private val api: ApiClient) : CouponRepository {
                         minOrder = obj.optDouble("min_order"),
                         maxDiscount = if (obj.has("max_discount")) obj.optDouble("max_discount") else null,
                         expiryDate = obj.optString("expiry_date", "2028-12-31"),
+                        usageLimit = obj.optInt("usage_limit", 0),
                         timesUsed = obj.optInt("times_used", 0),
                         isActive = obj.optInt("is_active", 1) == 1
                     )
@@ -362,7 +382,7 @@ class SettingsRepositoryImpl(private val api: ApiClient) : SettingsRepository {
                 storePhone = data.optString("store_phone", "+880 1560-024777"),
                 storeEmail = data.optString("store_email", "contact@wonderfulcollection.store"),
                 storeAddress = data.optString("store_address", "DHAKA, BANGLADESH"),
-                deliveryFeeDhanmondi = data.optDouble("delivery_fee_dhanmondi", 60.0),
+                deliveryFeeLocalDhaka = data.optDouble("delivery_fee_local_dhaka", 60.0),
                 deliveryFeeDhaka = data.optDouble("delivery_fee_dhaka", 80.0),
                 deliveryFeeOutsideDhaka = data.optDouble("delivery_fee_outside_dhaka", 130.0),
                 bkashNumber = data.optString("bkash_number", "01560024777"),
