@@ -41,28 +41,28 @@
       <form onsubmit="handleSaveProfile(event)">
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
           <div>
-            <label style="display: block; font-size: 0.88rem; font-weight: 700; margin-bottom: 6px;">Full Name</label>
+            <label for="prof_name" style="display: block; font-size: 0.88rem; font-weight: 700; margin-bottom: 6px;">Full Name</label>
             <input type="text" id="prof_name" required style="width: 100%; border: 1px solid #cbd5e1; padding: 12px 14px; border-radius: 8px;">
           </div>
           <div>
-            <label style="display: block; font-size: 0.88rem; font-weight: 700; margin-bottom: 6px;">Email Address</label>
+            <label for="prof_email" style="display: block; font-size: 0.88rem; font-weight: 700; margin-bottom: 6px;">Email Address</label>
             <input type="email" id="prof_email" readonly style="width: 100%; border: 1px solid #e2e8f0; background: #f8fafc; padding: 12px 14px; border-radius: 8px; color: #64748b;">
           </div>
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
           <div>
-            <label style="display: block; font-size: 0.88rem; font-weight: 700; margin-bottom: 6px;">Phone Number (WhatsApp)</label>
+            <label for="prof_phone" style="display: block; font-size: 0.88rem; font-weight: 700; margin-bottom: 6px;">Phone Number (WhatsApp)</label>
             <input type="tel" id="prof_phone" required pattern="01[3-9][0-9]{8}" inputmode="numeric" title="Enter an 11-digit Bangladesh mobile number starting with 013 to 019." style="width: 100%; border: 1px solid #cbd5e1; padding: 12px 14px; border-radius: 8px;">
           </div>
           <div>
-            <label style="display: block; font-size: 0.88rem; font-weight: 700; margin-bottom: 6px;">Primary Area in Dhaka</label>
+            <label for="prof_area" style="display: block; font-size: 0.88rem; font-weight: 700; margin-bottom: 6px;">Primary Area in Dhaka</label>
             <input type="text" id="prof_area" value="Dhaka" style="width: 100%; border: 1px solid #cbd5e1; padding: 12px 14px; border-radius: 8px;">
           </div>
         </div>
 
         <div style="margin-bottom: 24px;">
-          <label style="display: block; font-size: 0.88rem; font-weight: 700; margin-bottom: 6px;">Default Delivery Address</label>
+          <label for="prof_address" style="display: block; font-size: 0.88rem; font-weight: 700; margin-bottom: 6px;">Default Delivery Address</label>
           <textarea id="prof_address" rows="3" style="width: 100%; border: 1px solid #cbd5e1; padding: 12px 14px; border-radius: 8px;"></textarea>
         </div>
 
