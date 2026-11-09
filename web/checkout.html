@@ -52,7 +52,7 @@
             <div class="checkout-contact-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
               <div>
                 <label for="cust_phone" style="display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 6px;">Mobile Phone (WhatsApp) *</label>
-                <input type="tel" id="cust_phone" required placeholder="017XXXXXXXX" style="width: 100%; border: 1px solid #cbd5e1; padding: 10px 14px; border-radius: 8px; font-size: 0.95rem;">
+                <input type="tel" id="cust_phone" required pattern="01[3-9][0-9]{8}" inputmode="numeric" title="Enter an 11-digit Bangladesh mobile number starting with 013 to 019." placeholder="017XXXXXXXX" style="width: 100%; border: 1px solid #cbd5e1; padding: 10px 14px; border-radius: 8px; font-size: 0.95rem;">
               </div>
               <div>
                 <label for="cust_email" style="display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 6px;">Email (Optional)</label>
