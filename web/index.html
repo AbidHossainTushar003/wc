@@ -3,34 +3,37 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Wonderful Collection | Top Online Shopping in Dhaka, Bangladesh 🇧🇩</title>
-  <meta name="description" content="Wonderful Collection offers curated lifestyle products, cash on delivery, and mobile payments across Bangladesh.">
-  <link rel="canonical" href="https://wonderfulcollection.store/">
+  <title>Home | Shopademia</title>
+  <meta name="description" content="Shopademia offers curated lifestyle products, cash on delivery, and mobile payments across Bangladesh.">
+  <link rel="canonical" href="https://shopademia.store/">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="Wonderful Collection | Shopping in Bangladesh">
+  <meta property="og:title" content="Shopademia | Shopping in Bangladesh">
   <meta property="og:description" content="Shop curated lifestyle products with delivery across Bangladesh.">
-  <meta property="og:url" content="https://wonderfulcollection.store/">
-  <meta property="og:image" content="https://wonderfulcollection.store/assets/logo.svg">
+  <meta property="og:url" content="https://shopademia.store/">
+  <meta property="og:image" content="https://shopademia.store/assets/og-image.png">
   <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="Wonderful Collection | Shopping in Bangladesh">
+  <meta name="twitter:title" content="Shopademia | Shopping in Bangladesh">
   <meta name="twitter:description" content="Shop curated lifestyle products with delivery across Bangladesh.">
-  <meta name="twitter:image" content="https://wonderfulcollection.store/assets/logo.svg">
+  <meta name="twitter:image" content="https://shopademia.store/assets/og-image.png">
   <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "Organization",
-      "name": "Wonderful Collection",
-      "url": "https://wonderfulcollection.store/",
-      "logo": "https://wonderfulcollection.store/assets/logo.svg",
+      "name": "Shopademia",
+      "url": "https://shopademia.store/",
+      "logo": "https://shopademia.store/assets/logo-shopademia.jpg",
       "areaServed": {
         "@type": "Country",
         "name": "Bangladesh"
       }
     }
   </script>
-  <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="css/homepage.css">
-  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/style.css?v=20261113-chat-dock-v3">
+  <link rel="stylesheet" href="css/consent.css?v=20261112-consent">
+  <link rel="stylesheet" href="css/homepage.css?v=20261112-hero-slides">
+  <link rel="icon" href="assets/favicon.ico" sizes="any">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
 </head>
 <body>
 
@@ -39,8 +42,8 @@
     <div class="top-bar-notice" aria-label="Store announcement">
       <div class="announcement-marquee">
         <div class="announcement-marquee-track">
-          <span class="announcement-marquee-copy" id="announcement-copy">🚚 Delivery availability and estimates are shown at checkout. Cash on delivery &amp; bKash available.</span>
-          <span class="announcement-marquee-copy" aria-hidden="true">🚚 Delivery availability and estimates are shown at checkout. Cash on delivery &amp; bKash available.</span>
+          <span class="announcement-marquee-copy" id="announcement-copy">🚚 Delivery availability and payment options are shown at checkout.</span>
+          <span class="announcement-marquee-copy" aria-hidden="true">🚚 Delivery availability and payment options are shown at checkout.</span>
         </div>
       </div>
     </div>
@@ -54,7 +57,7 @@
   <header class="site-header">
     <div class="header-container">
       <a href="index.html" class="brand-logo-wrap">
-        <img width="741" height="265" src="assets/logo.jpg" alt="Wonderful Collection" class="brand-logo-img">
+        <img width="741" height="265" src="assets/logo-shopademia.jpg" alt="Shopademia" class="brand-logo-img">
       </a>
 
       <!-- Search Bar -->
@@ -88,9 +91,10 @@
   </header>
 
   <!-- Navigation Bar -->
-  <nav class="site-nav">
+  <nav class="site-nav" aria-label="Primary navigation">
     <div class="nav-container">
-      <ul class="nav-links">
+      <button class="nav-menu-toggle" type="button" aria-expanded="false" aria-controls="nav-menu-panel">Menu / More</button>
+      <ul class="nav-links" id="nav-links">
         <li><a href="index.html" class="active">Home</a></li>
         <li><a href="shop.html">All Products</a></li>
         <li><a href="category.html?cat=mens-fashion">Men's Fashion</a></li>
@@ -100,8 +104,15 @@
         <li><a href="category.html?cat=leather-accessories">Leather</a></li>
         <li><a href="category.html?cat=home-decor">Home Decor</a></li>
       </ul>
-      <div class="nav-location-pill">
-        <button id="nav-location-button" type="button" title="If you allow location access, coordinates are looked up through OpenStreetMap." aria-label="Detect your location for delivery">📍 Use my location</button>
+      <div class="nav-menu-panel" id="nav-menu-panel" hidden>
+        <div class="nav-menu-heading">
+          <strong>Explore Shopademia</strong>
+          <button class="nav-menu-close" type="button" aria-label="Close navigation menu">Close</button>
+        </div>
+        <div class="nav-menu-links" id="nav-menu-links"></div>
+        <div class="nav-location-pill">
+          <button id="nav-location-button" type="button" title="If you allow location access, coordinates are looked up through OpenStreetMap." aria-label="Detect your location for delivery">📍 Use my location</button>
+        </div>
       </div>
     </div>
   </nav>
@@ -110,23 +121,13 @@
   <main class="page-container">
     
     <!-- Hero Banner -->
-    <section class="hero-banner">
-      <div class="hero-copy">
-        <div class="hero-tag">
-          <span>🇧🇩 Premium Lifestyle Destination</span>
-        </div>
-        <h1 class="hero-title">Everyday finds, delivered to your <span>doorstep</span></h1>
-        <p class="hero-subtitle">Explore curated fashion, fragrances, leather goods, and gadgets. Delivery costs and estimates are clear at checkout.</p>
-        <div class="hero-cta-group">
-          <a href="shop.html" class="btn-primary">Shop The Collection →</a>
-          <a href="track-order.html" class="btn-secondary">Track Delivery</a>
-        </div>
-        <div class="hero-features-list">
-          <span>✓ Delivery estimates at checkout</span>
-          <span>✓ Cash on Delivery</span>
-          <span>✓ 100% Quality Assurance</span>
-        </div>
+    <section class="hero-carousel" id="homepage-hero" aria-label="Featured Shopademia collections" aria-roledescription="carousel">
+      <div class="hero-slides" id="hero-slides" aria-live="off">
       </div>
+      <div class="hero-carousel-controls" id="hero-carousel-controls" hidden>
+        <div class="hero-carousel-dots" id="hero-carousel-dots" role="group" aria-label="Choose a featured slide"></div>
+      </div>
+      <p class="visually-hidden" id="hero-carousel-status" aria-live="polite"></p>
     </section>
 
     <!-- Trust Badges -->
@@ -142,21 +143,21 @@
         <div class="trust-icon-box">💵</div>
         <div>
           <div class="trust-title">Cash on Delivery</div>
-          <div class="trust-desc">Pay only after inspecting in Dhaka</div>
+          <div class="trust-desc">Available where the checkout shows it</div>
         </div>
       </div>
       <div class="trust-item">
         <div class="trust-icon-box">📱</div>
         <div>
-          <div class="trust-title">bKash & Nagad Verified</div>
-          <div class="trust-desc">Smooth & instant mobile payments</div>
+          <div class="trust-title">Mobile wallet support</div>
+          <div class="trust-desc">Check the final payment options at checkout</div>
         </div>
       </div>
       <div class="trust-item">
         <div class="trust-icon-box">⭐</div>
         <div>
-          <div class="trust-title">7-Day Return Policy</div>
-          <div class="trust-desc">Hassle-free exchanges guaranteed</div>
+          <div class="trust-title">Support & returns</div>
+          <div class="trust-desc">Return eligibility is confirmed by the support team</div>
         </div>
       </div>
     </section>
@@ -190,14 +191,14 @@
     </section>
 
     <!-- Trending Flash Deal Banner -->
-    <section style="background: linear-gradient(135deg, #f05423 0%, #c2380d 100%); color: #fff; border-radius: 20px; padding: 40px; margin-bottom: 56px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 24px; box-shadow: var(--shadow-lg);">
-      <div>
-        <span style="background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 999px; font-weight: 700; font-size: 0.8rem; text-transform: uppercase;">Explore the collection</span>
-        <h2 style="font-size: 2.2rem; font-weight: 900; margin: 12px 0 8px; font-family: var(--font-brand);">Discover Our Latest Collection</h2>
-        <p style="color: #ffe6de; max-width: 520px; font-size: 1rem;">Explore quality products selected for everyday living.</p>
+    <section class="homepage-promo-banner" id="homepage-promo-banner" style="background: linear-gradient(125deg, #26231f 0%, #514739 100%); color: #fff; border-radius: 20px; padding: 40px; margin-bottom: 56px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 24px; box-shadow: var(--shadow-lg);">
+      <div class="homepage-promo-copy">
+        <span id="homepage-promo-eyebrow" style="background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 999px; font-weight: 700; font-size: 0.8rem; text-transform: uppercase;">Explore the collection</span>
+        <h2 id="homepage-promo-title" style="font-size: 2.2rem; font-weight: 900; margin: 12px 0 8px; font-family: var(--font-brand);">Discover Our Latest Collection</h2>
+        <p id="homepage-promo-description" style="color: #f3eee5; max-width: 520px; font-size: 1rem;">Explore quality products selected for everyday living.</p>
       </div>
       <div>
-        <a href="shop.html" class="btn-secondary" style="background: #ffffff; color: var(--accent-orange); border: none; font-weight: 800; font-size: 1.05rem; padding: 16px 32px; box-shadow: 0 4px 15px rgba(0,0,0,0.15);">Shop Collection →</a>
+        <a id="homepage-promo-link" href="shop.html" class="btn-secondary" style="background: #ffffff; color: var(--accent-orange); border: none; font-weight: 800; font-size: 1.05rem; padding: 16px 32px; box-shadow: 0 4px 15px rgba(0,0,0,0.15);">Shop Collection →</a>
       </div>
     </section>
 
@@ -206,7 +207,7 @@
       <div class="section-header">
         <div>
           <h2 class="section-title">Trending In Dhaka</h2>
-          <p class="section-subtitle">Freshly dropped additions to Wonderful Collection</p>
+          <p class="section-subtitle">Freshly dropped additions to Shopademia</p>
         </div>
         <a href="shop.html?sort=newest" class="view-all-link">View All New Arrivals →</a>
       </div>
@@ -237,9 +238,9 @@
     <div class="footer-container">
       <div class="footer-brand">
         <a href="index.html">
-          <img src="assets/logo.jpg" alt="Wonderful Collection" style="height: 48px; background: #fff; padding: 4px 8px; border-radius: 8px;">
+          <img src="assets/logo-shopademia.jpg" alt="Shopademia" style="width: 134px; height: auto; background: #2f2f2f; padding: 4px 8px; border-radius: 8px;">
         </a>
-        <p>Wonderful Collection: Your top online shopping service in Dhaka, Bangladesh. Providing premium lifestyle fashion, authentic Arabian fragrances, gadgets, and genuine leather goods with unrivaled speed and care.</p>
+        <p>Shopademia: Your top online shopping service in Dhaka, Bangladesh. Providing premium lifestyle fashion, authentic Arabian fragrances, gadgets, and genuine leather goods with unrivaled speed and care.</p>
         <div style="font-weight: 700; color: #fff; margin-top: 10px;">📞 Support: +880 1560-024777</div>
       </div>
 
@@ -263,19 +264,18 @@
           <li><a href="refund-policy.html">Returns & Refunds</a></li>
           <li><a href="faq.html">FAQ</a></li>
           <li><a href="contact.html">Contact Us</a></li>
-          <li><a href="admin.html">Store Admin App</a></li>
         </ul>
       </div>
 
       <div>
         <h3 class="footer-heading">Legal & Policies</h3>
         <ul class="footer-menu">
-          <li><a href="about.html">About Wonderful Collection</a></li>
+          <li><a href="about.html">About Shopademia</a></li>
           <li><a href="privacy.html">Privacy Policy</a></li>
           <li><a href="terms.html">Terms & Conditions</a></li>
         </ul>
         <div style="margin-top: 20px;">
-          <div style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 8px;">Order by Phone / WhatsApp:</div>
+          <div style="font-size: 0.8rem; color: #70695f; margin-bottom: 8px;">Order by Phone / WhatsApp:</div>
           <a href="https://wa.me/8801560024777" target="_blank" style="display: inline-flex; align-items: center; gap: 8px; background: #075e54; color: #fff; padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 0.88rem;">
             <span>💬 WhatsApp Support</span>
           </a>
@@ -285,12 +285,17 @@
 
     <div class="footer-bottom">
       <div class="footer-bottom-container">
-        <div>© 2026 Wonderful Collection (wonderfulcollection.store). All rights reserved. Dhaka, Bangladesh 🇧🇩</div>
+        <div>© 2026 Shopademia (shopademia.store). All rights reserved. Dhaka, Bangladesh 🇧🇩</div>
+        <nav class="footer-social-links" aria-label="Shopademia social media">
+          <a href="https://www.instagram.com/ShopademiaBD" target="_blank" rel="noopener noreferrer">Instagram · ShopademiaBD</a>
+          <a href="https://x.com/SHOPADEMIA" target="_blank" rel="noopener noreferrer">X · SHOPADEMIA</a>
+          <a href="https://www.facebook.com/SHOPADEMIA" target="_blank" rel="noopener noreferrer">Facebook · SHOPADEMIA</a>
+        </nav>
         <div class="payment-methods-strip">
           <span>We Accept:</span>
-          <span class="pay-badge" style="color: #fff; font-weight: bold; background: #b20f52;">bKash</span>
-          <span class="pay-badge" style="color: #fff; font-weight: bold; background: #9a4a00;">Nagad</span>
-          <span class="pay-badge" style="color: #fff; font-weight: bold; background: #6b1762;">Rocket</span>
+          <span class="pay-badge" data-payment-wallet="bkash" hidden style="color: #fff; font-weight: bold; background: #b20f52;">bKash</span>
+          <span class="pay-badge" data-payment-wallet="nagad" hidden style="color: #fff; font-weight: bold; background: #9a4a00;">Nagad</span>
+          <span class="pay-badge" data-payment-wallet="rocket" hidden style="color: #fff; font-weight: bold; background: #6b1762;">Rocket</span>
           <span class="pay-badge">Cash on Delivery</span>
         </div>
       </div>
@@ -298,19 +303,31 @@
   </footer>
 
   <!-- Scripts -->
-  <script src="js/store.js?v=20261109"></script>
+  <script src="js/store.js?v=20261113-storefront-final-v3"></script>
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
       // 1. Fetch & render categories
       const categories = await Store.fetchCategories();
       const catContainer = document.getElementById('home-categories-grid');
       if (catContainer && categories.length) {
+        const categoryIcons = {
+          'mens-fashion': '👔',
+          'womens-fashion': '👗',
+          'perfumes-attar': '🧴',
+          'gadgets-electronics': '🎧',
+          'leather-accessories': '👜',
+          'home-decor': '🪴'
+        };
         catContainer.innerHTML = categories.map(cat => {
-          const image = Store.isSafeProductImage(cat.image) ? cat.image : 'assets/category-placeholder.svg';
+          const hasImage = Store.isSafeProductImage(cat.image) && cat.image !== 'assets/category-placeholder.svg';
+          const image = hasImage ? cat.image : 'assets/category-placeholder.svg';
+          const categoryVisual = hasImage
+            ? `<img src="${Store.escapeHtml(image)}" alt="" loading="lazy" width="72" height="72">`
+            : `<span class="category-placeholder-icon" aria-hidden="true">${categoryIcons[cat.slug] || '✦'}</span>`;
           return `
             <a href="category.html?cat=${encodeURIComponent(String(cat.slug || ''))}" class="category-card">
               <div class="category-img-wrap">
-                <img src="${Store.escapeHtml(image)}" alt="${Store.escapeHtml(cat.name)}" loading="lazy" width="320" height="220">
+                ${categoryVisual}
               </div>
               <div class="category-title">${Store.escapeHtml(cat.name)}</div>
               <div class="category-count">${Number(cat.product_count) || 0} Items</div>
@@ -353,7 +370,7 @@
         <div class="product-card">
           <div class="product-thumb-wrap">
             <a href="product.html?id=${Number(product.id)}">
-              <img src="${Store.escapeHtml(image)}" alt="${Store.escapeHtml(product.name)}" loading="lazy" onerror="this.onerror=null;this.src='assets/product-placeholder.svg'">
+              <img src="${Store.escapeHtml(image)}" alt="${Store.escapeHtml(product.name)}" loading="lazy" data-image-fallback="assets/product-placeholder.svg">
             </a>
             <div class="product-badges">
               ${discountPercent > 0 ? `<span class="badge badge-sale">-${discountPercent}%</span>` : ''}
@@ -385,5 +402,6 @@
       `;
     }
   </script>
+  <script defer src="js/consent.js?v=20261112-consent"></script>
 </body>
 </html>

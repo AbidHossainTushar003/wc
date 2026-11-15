@@ -9,6 +9,7 @@ require_once __DIR__ . '/audit.php';
 $pdo = Database::getConnection();
 $admin = requireAdminToken($pdo);
 $method = $_SERVER['REQUEST_METHOD'];
+requireAdminPermission($admin, 'suppliers', $method === 'GET' ? 'read' : 'create');
 
 switch ($method) {
     case 'GET':
@@ -28,9 +29,19 @@ switch ($method) {
             jsonResponse(['error' => 'Supplier name and phone are required.'], 422);
         }
 
-        $stmt = $pdo->prepare("INSERT INTO suppliers (name, contact_person, phone, email, address) VALUES (?, ?, ?, ?, ?)");
-        $stmt->execute([$name, $contactPerson, $phone, $email, $address]);
-        logAudit($pdo, (int)$admin['id'], 'create', 'supplier', (int)$pdo->lastInsertId(), null, $data);
+        try {
+            $pdo->beginTransaction();
+            $stmt = $pdo->prepare("INSERT INTO suppliers (name, contact_person, phone, email, address) VALUES (?, ?, ?, ?, ?)");
+            $stmt->execute([$name, $contactPerson, $phone, $email, $address]);
+            logAuditRequired($pdo, (int)$admin['id'], 'create', 'supplier', (int)$pdo->lastInsertId(), null, $data);
+            $pdo->commit();
+        } catch (Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            error_log('Shopademia supplier creation failed: ' . $e->getMessage());
+            jsonResponse(['error' => 'Could not create supplier. Please try again.'], 500);
+        }
 
         jsonResponse(['status' => 'success', 'message' => 'Supplier added successfully.']);
         break;

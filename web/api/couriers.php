@@ -36,12 +36,39 @@ if ($method === 'POST' && isset($_GET['webhook'])) {
         jsonResponse(['error' => 'Invalid webhook payload'], 400);
     }
 
-    $stmt = $pdo->prepare("UPDATE courier_parcels SET status = ? WHERE tracking_code = ?");
-    $stmt->execute([$status, $trackingCode]);
+    enforceApiRateLimit($pdo, 'courier_webhook', 120, 900);
+    try {
+        $pdo->beginTransaction();
+        $lock = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql' ? ' FOR UPDATE' : '';
+        $lookup = $pdo->prepare('SELECT id, status FROM courier_parcels WHERE tracking_code = ?' . $lock);
+        $lookup->execute([$trackingCode]);
+        $parcel = $lookup->fetch();
+        if ($parcel && $parcel['status'] !== $status) {
+            $stmt = $pdo->prepare('UPDATE courier_parcels SET status = ? WHERE id = ?');
+            $stmt->execute([$status, (int)$parcel['id']]);
+            logAuditRequired(
+                $pdo,
+                null,
+                'webhook_status',
+                'courier_parcel',
+                (int)$parcel['id'],
+                ['status' => $parcel['status']],
+                ['status' => $status]
+            );
+        }
+        $pdo->commit();
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        error_log('Shopademia courier webhook update failed: ' . $e->getMessage());
+        jsonResponse(['error' => 'Could not process courier update. Please try again.'], 500);
+    }
     jsonResponse(['status' => 'success']);
 }
 
 $admin = requireAdminToken($pdo);
+requireAdminPermission($admin, 'couriers', $method === 'GET' ? 'read' : 'create');
 switch ($method) {
     case 'GET':
         $stmt = $pdo->query("SELECT cp.*, o.order_number, o.customer_name FROM courier_parcels cp LEFT JOIN orders o ON cp.order_id = o.id ORDER BY cp.id DESC");
@@ -58,11 +85,20 @@ switch ($method) {
             jsonResponse(['error' => 'Valid order ID required for courier parcel creation.'], 422);
         }
 
-        $trackingCode = 'TRK-' . strtoupper($courierName) . '-' . rand(100000, 999999);
-        $stmt = $pdo->prepare("INSERT INTO courier_parcels (order_id, courier_name, tracking_code, cod_amount, status) VALUES (?, ?, ?, ?, 'Pending')");
-        $stmt->execute([$orderId, $courierName, $trackingCode, $codAmount]);
-
-        logAudit($pdo, (int)$admin['id'], 'create', 'courier_parcel', (int)$pdo->lastInsertId(), null, $data);
+        $trackingCode = 'TRK-' . strtoupper($courierName) . '-' . strtoupper(bin2hex(random_bytes(5)));
+        try {
+            $pdo->beginTransaction();
+            $stmt = $pdo->prepare("INSERT INTO courier_parcels (order_id, courier_name, tracking_code, cod_amount, status) VALUES (?, ?, ?, ?, 'Pending')");
+            $stmt->execute([$orderId, $courierName, $trackingCode, $codAmount]);
+            logAuditRequired($pdo, (int)$admin['id'], 'create', 'courier_parcel', (int)$pdo->lastInsertId(), null, $data);
+            $pdo->commit();
+        } catch (Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            error_log('Shopademia courier parcel creation failed: ' . $e->getMessage());
+            jsonResponse(['error' => 'Could not create courier parcel. Please try again.'], 500);
+        }
         jsonResponse(['status' => 'success', 'message' => 'Parcel created with courier successfully.', 'data' => ['tracking_code' => $trackingCode]]);
         break;
 

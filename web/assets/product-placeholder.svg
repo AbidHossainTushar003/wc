@@ -1,8 +1,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" role="img" aria-labelledby="title">
-  <title id="title">Product photo needed</title>
-  <rect width="640" height="640" fill="#f1f5f9"/>
-  <rect x="176" y="156" width="288" height="288" rx="28" fill="#fff" stroke="#cbd5e1" stroke-width="12"/>
-  <path d="M216 384l72-82 54 56 40-43 42 69H216z" fill="#cbd5e1"/>
-  <circle cx="380" cy="236" r="26" fill="#f05423" opacity=".8"/>
-  <text x="320" y="500" fill="#475569" font-family="Arial,sans-serif" font-size="27" text-anchor="middle">Product photo needed</text>
+  <title id="title">Shopademia product preview</title>
+  <defs>
+    <linearGradient id="surface" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f8f5ef"/>
+      <stop offset="1" stop-color="#e9e1d4"/>
+    </linearGradient>
+    <linearGradient id="panel" x1="0" y1="0" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#fffefc"/>
+      <stop offset="1" stop-color="#f3eee5"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="640" fill="url(#surface)"/>
+  <circle cx="510" cy="122" r="92" fill="#b08d57" opacity=".12"/>
+  <circle cx="126" cy="530" r="142" fill="#26231f" opacity=".04"/>
+  <rect x="168" y="130" width="304" height="380" rx="28" fill="url(#panel)" stroke="#d7ccba" stroke-width="3"/>
+  <path d="M250 202h140l22 238H228l22-238z" fill="#e8dfd1"/>
+  <path d="M275 205c0-25 20-45 45-45s45 20 45 45" fill="none" stroke="#806338" stroke-width="12" stroke-linecap="round"/>
+  <path d="M257 267h126M247 402h146" stroke="#b08d57" stroke-width="4" opacity=".58"/>
+  <circle cx="320" cy="330" r="11" fill="#806338" opacity=".65"/>
+  <path d="M320 84v22m-11-11h22" stroke="#b08d57" stroke-width="5" stroke-linecap="round" opacity=".72"/>
 </svg>

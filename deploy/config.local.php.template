@@ -1,5 +1,6 @@
 <?php
 define('DB_HOST', 'localhost');
+define('DB_PORT', 3306);
 define('DB_NAME', 'wonderfu_REPLACE_WITH_DATABASE_NAME');
 define('DB_USER', 'wonderfu_REPLACE_WITH_DATABASE_USER');
 define('DB_PASS', 'REPLACE_WITH_DATABASE_PASSWORD');
@@ -7,4 +8,6 @@ define('DEV_MODE', false);
 define('MAIL_FROM', 'REPLACE_WITH_VERIFIED_SENDER_ADDRESS');
 define('MAIL_TO', 'REPLACE_WITH_STORE_NOTIFICATION_ADDRESS');
 define('ADMIN_TOTP_SECRET', '');
+define('FEEDBACK_TOKEN_SECRET', '');
+define('SITE_BASE_URL', 'https://REPLACE_WITH_STAGING_HOST');
 define('COURIER_WEBHOOK_SECRET', '');

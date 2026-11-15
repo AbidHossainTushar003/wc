@@ -4,22 +4,27 @@
  */
 
 function logAudit(PDO $pdo, ?int $adminId, string $action, string $entityType, ?int $entityId, ?array $oldValues, ?array $newValues): void {
-    $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
-    try {
-        $stmt = $pdo->prepare("
-            INSERT INTO audit_logs (admin_id, action, entity_type, entity_id, old_values, new_values, ip_address)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        ");
-        $stmt->execute([
-            $adminId,
-            $action,
-            $entityType,
-            $entityId,
-            $oldValues ? json_encode($oldValues) : null,
-            $newValues ? json_encode($newValues) : null,
-            $ip
-        ]);
-    } catch (PDOException $e) {
-        error_log('Wonderful Collection audit log insertion failed: ' . $e->getMessage());
+    logAuditRequired($pdo, $adminId, $action, $entityType, $entityId, $oldValues, $newValues);
+}
+
+function logAuditRequired(PDO $pdo, ?int $adminId, string $action, string $entityType, ?int $entityId, ?array $oldValues, ?array $newValues): void {
+    $oldJson = $oldValues === null ? null : json_encode($oldValues);
+    $newJson = $newValues === null ? null : json_encode($newValues);
+    if (($oldValues !== null && $oldJson === false) || ($newValues !== null && $newJson === false)) {
+        throw new RuntimeException('Audit values could not be encoded.');
     }
+
+    $stmt = $pdo->prepare("
+        INSERT INTO audit_logs (admin_id, action, entity_type, entity_id, old_values, new_values, ip_address)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    ");
+    $stmt->execute([
+        $adminId,
+        $action,
+        $entityType,
+        $entityId,
+        $oldJson,
+        $newJson,
+        $_SERVER['REMOTE_ADDR'] ?? 'unknown'
+    ]);
 }

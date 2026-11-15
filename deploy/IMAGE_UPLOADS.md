@@ -6,7 +6,7 @@ The fresh production SQL schema starts with empty product, category, coupon, and
 
 These are image follow-ups for the current live records. Product IDs may change if the catalog is recreated from the empty production schema:
 
-- Products 1–3 (`Dhanmondi Signature Collection #50/#13/#17`): upload approved photos to replace `assets/product-placeholder.svg`. The name/slug cleanup is separately authorized, but the live records have not yet been changed.
+- Products 1–3 (legacy Signature Collection #50/#13/#17): upload approved photos to replace `assets/product-placeholder.svg`. The name/slug cleanup is separately authorized, but the live records have not yet been changed.
 - Product 4 (`kid`): confirm the product identity, then upload its approved photo to replace the shared placeholder.
 - Product 5 (`sari`): upload the real product photo and replace both the external Unsplash URL and the Android-only `content://` URI.
 - Product 6 (`gshhs`): its existing image files respond successfully; keep them only if they match the confirmed product.

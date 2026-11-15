@@ -3,20 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Shop All Products | Wonderful Collection Dhaka</title>
-  <meta name="description" content="Explore the latest lifestyle, personal-care, and gift products at Wonderful Collection.">
-  <link rel="canonical" href="https://wonderfulcollection.store/shop.html">
+  <title>Shop All Products | Shopademia</title>
+  <meta name="description" content="Explore the latest lifestyle, personal-care, and gift products at Shopademia.">
+  <link rel="canonical" href="https://shopademia.store/shop.html">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="Shop All Products | Wonderful Collection">
-  <meta property="og:description" content="Explore the latest lifestyle, personal-care, and gift products at Wonderful Collection.">
-  <meta property="og:url" content="https://wonderfulcollection.store/shop.html">
-  <meta property="og:image" content="https://wonderfulcollection.store/assets/logo.svg">
+  <meta property="og:title" content="Shop All Products | Shopademia">
+  <meta property="og:description" content="Explore the latest lifestyle, personal-care, and gift products at Shopademia.">
+  <meta property="og:url" content="https://shopademia.store/shop.html">
+  <meta property="og:image" content="https://shopademia.store/assets/og-image.png">
   <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="Shop All Products | Wonderful Collection">
-  <meta name="twitter:description" content="Explore the latest lifestyle, personal-care, and gift products at Wonderful Collection.">
-  <meta name="twitter:image" content="https://wonderfulcollection.store/assets/logo.svg">
-  <link rel="stylesheet" href="css/style.css">
-  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+  <meta name="twitter:title" content="Shop All Products | Shopademia">
+  <meta name="twitter:description" content="Explore the latest lifestyle, personal-care, and gift products at Shopademia.">
+  <meta name="twitter:image" content="https://shopademia.store/assets/og-image.png">
+  <link rel="stylesheet" href="css/style.css?v=20261113-chat-dock-v3">
+  <link rel="stylesheet" href="css/consent.css?v=20261112-consent">
+  <link rel="icon" href="assets/favicon.ico" sizes="any">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
 </head>
 <body>
   <div class="top-bar">
@@ -37,7 +40,7 @@
   <header class="site-header">
     <div class="header-container">
       <a href="index.html" class="brand-logo-wrap">
-        <img width="741" height="265" src="assets/logo.jpg" alt="Wonderful Collection" class="brand-logo-img">
+        <img width="741" height="265" src="assets/logo-shopademia.jpg" alt="Shopademia" class="brand-logo-img">
       </a>
       <div class="header-search">
         <form action="search.html" method="GET" class="search-input-wrap">
@@ -55,9 +58,10 @@
     </div>
   </header>
 
-  <nav class="site-nav">
+  <nav class="site-nav" aria-label="Primary navigation">
     <div class="nav-container">
-      <ul class="nav-links">
+      <button class="nav-menu-toggle" type="button" aria-expanded="false" aria-controls="nav-menu-panel">Menu / More</button>
+      <ul class="nav-links" id="nav-links">
         <li><a href="index.html">Home</a></li>
         <li><a href="shop.html" class="active">All Products</a></li>
         <li><a href="category.html?cat=mens-fashion">Men's Fashion</a></li>
@@ -67,26 +71,31 @@
         <li><a href="category.html?cat=leather-accessories">Leather</a></li>
         <li><a href="category.html?cat=home-decor">Home Decor</a></li>
       </ul>
-      <div class="nav-location-pill">📍 Dhaka, Bangladesh</div>
+      <div class="nav-menu-panel" id="nav-menu-panel" hidden>
+        <div class="nav-menu-heading"><strong>Explore Shopademia</strong><button class="nav-menu-close" type="button" aria-label="Close navigation menu">Close</button></div>
+        <div class="nav-menu-links" id="nav-menu-links"></div>
+        <div class="nav-location-pill"><button id="nav-location-button" type="button" aria-label="Detect your location for delivery">📍 Use my location</button></div>
+      </div>
     </div>
   </nav>
 
   <main class="page-container">
     <div style="margin-bottom: 24px;">
-      <h1 style="font-size: 2rem; font-weight: 800; color: #0e2a47;">Shop Collection</h1>
-      <p style="color: #64748b;">Browse our premium lifestyle products available for express delivery in Dhaka.</p>
+      <h1 style="font-size: 2rem; font-weight: 800; color: #26231f;">Shop Collection</h1>
+      <p style="color: #69645b;">Browse our premium lifestyle products available for express delivery in Dhaka.</p>
     </div>
 
     <!-- Filters and Sort Bar -->
-    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 32px;">
+    <div style="background: #ffffff; border: 1px solid #e8e2d8; border-radius: 12px; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 32px;">
       <div style="display: flex; gap: 12px; flex-wrap: wrap;" id="category-filter-chips">
-        <button onclick="filterCategory('', this)" class="cat-chip active" style="padding: 6px 14px; border-radius: 999px; border: 1px solid #0e2a47; background: #0e2a47; color: #fff; font-size: 0.82rem; font-weight: 700; cursor: pointer;">All</button>
+        <button data-csp-click="filterCategory" class="cat-chip active" style="padding: 6px 14px; border-radius: 999px; border: 1px solid #26231f; background: #26231f; color: #fff; font-size: 0.82rem; font-weight: 700; cursor: pointer;">All</button>
       </div>
 
       <div style="display: flex; align-items: center; gap: 10px;">
-        <label for="sortSelect" style="font-size: 0.88rem; font-weight: 600; color: #475569;">Sort by:</label>
-        <select id="sortSelect" onchange="onSortChange(this.value)" style="border: 1px solid #cbd5e1; border-radius: 8px; padding: 6px 12px; font-size: 0.88rem; outline: none; background: #fff;">
+        <label for="sortSelect" style="font-size: 0.88rem; font-weight: 600; color: #625d54;">Sort by:</label>
+        <select id="sortSelect" data-csp-change="onSortChange" style="border: 1px solid #d6cec1; border-radius: 8px; padding: 6px 12px; font-size: 0.88rem; outline: none; background: #fff;">
           <option value="newest">Newest Arrivals</option>
+          <option value="sale">Offers & Deals</option>
           <option value="price_asc">Price: Low to High</option>
           <option value="price_desc">Price: High to Low</option>
         </select>
@@ -174,13 +183,15 @@
   </div>
 
   <footer class="site-footer">
-    <div class="footer-bottom"><div class="footer-bottom-container"><div>© 2026 Wonderful Collection (wonderfulcollection.store) - Dhaka, Bangladesh 🇧🇩</div></div></div>
+    <div class="footer-bottom"><div class="footer-bottom-container"><div>© 2026 Shopademia (shopademia.store) - Dhaka, Bangladesh 🇧🇩</div><nav class="footer-social-links" aria-label="Shopademia social media"><a href="https://www.instagram.com/ShopademiaBD" target="_blank" rel="noopener noreferrer">Instagram · ShopademiaBD</a><a href="https://x.com/SHOPADEMIA" target="_blank" rel="noopener noreferrer">X · SHOPADEMIA</a><a href="https://www.facebook.com/SHOPADEMIA" target="_blank" rel="noopener noreferrer">Facebook · SHOPADEMIA</a></nav></div></div>
   </footer>
 
-  <script src="js/store.js?v=20261109"></script>
+  <script src="js/store.js?v=20261113-storefront-final-v3"></script>
   <script>
     let currentCategory = '';
-    let currentSort = 'newest';
+    const requestedSort = new URLSearchParams(location.search).get('sort');
+    let currentSort = ['sale', 'price_asc', 'price_desc'].includes(requestedSort) ? requestedSort : 'newest';
+    document.getElementById('sortSelect').value = currentSort;
 
     async function loadShop() {
       const params = {};
@@ -194,7 +205,7 @@
 
       const products = await Store.fetchProducts(params);
       if (!products.length) {
-        grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 48px; color: #64748b;">No products found in this selection.</div>`;
+        grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 48px; color: #69645b;">No products found in this selection.</div>`;
         grid.setAttribute('aria-busy', 'false');
         if (status) status.textContent = 'No products found in this selection.';
         return;
@@ -211,7 +222,7 @@
         const button = document.createElement('button');
         button.className = 'cat-chip';
         button.textContent = category.name;
-        button.style.cssText = 'padding: 6px 14px; border-radius: 999px; border: 1px solid #cbd5e1; background: #fff; color: #0e2a47; font-size: 0.82rem; font-weight: 600; cursor: pointer;';
+        button.style.cssText = 'padding: 6px 14px; border-radius: 999px; border: 1px solid #d6cec1; background: #fff; color: #26231f; font-size: 0.82rem; font-weight: 600; cursor: pointer;';
         button.addEventListener('click', () => filterCategory(category.slug, button));
         filters.appendChild(button);
       });
@@ -221,13 +232,13 @@
       currentCategory = catSlug;
       document.querySelectorAll('#category-filter-chips button').forEach(btn => {
         btn.style.background = '#fff';
-        btn.style.color = '#0e2a47';
-        btn.style.borderColor = '#cbd5e1';
+        btn.style.color = '#26231f';
+        btn.style.borderColor = '#d6cec1';
         btn.classList.remove('active');
       });
-      button.style.background = '#0e2a47';
+      button.style.background = '#26231f';
       button.style.color = '#fff';
-      button.style.borderColor = '#0e2a47';
+      button.style.borderColor = '#26231f';
       button.classList.add('active');
       loadShop();
     }
@@ -244,7 +255,7 @@
       return `
         <div class="product-card">
           <div class="product-thumb-wrap">
-            <a href="product.html?id=${Number(product.id)}"><img src="${Store.escapeHtml(image)}" alt="${Store.escapeHtml(product.name)}" onerror="this.onerror=null;this.src='assets/product-placeholder.svg'"></a>
+            <a href="product.html?id=${Number(product.id)}"><img src="${Store.escapeHtml(image)}" alt="${Store.escapeHtml(product.name)}" data-image-fallback="assets/product-placeholder.svg"></a>
             <button class="product-wishlist-btn ${isSaved ? 'active' : ''}" data-toggle-wishlist data-product="${Store.escapeHtml(JSON.stringify(product))}">♥</button>
           </div>
           <div class="product-body">
@@ -266,5 +277,6 @@
       loadShop();
     });
   </script>
+  <script defer src="js/consent.js?v=20261112-consent"></script>
 </body>
 </html>

@@ -1,21 +1,32 @@
 Options -Indexes
 
+<IfModule mod_mime.c>
+    AddType application/manifest+json .webmanifest
+</IfModule>
+
 <IfModule mod_rewrite.c>
     RewriteEngine On
+    RewriteCond %{HTTP_HOST} ^www\.shopademia\.store$ [NC]
+    RewriteRule ^ https://shopademia.store%{REQUEST_URI} [R=301,L]
     RewriteCond %{HTTPS} !=on
-    RewriteCond %{HTTP:X-Forwarded-Proto} !https [NC]
-    RewriteRule ^ https://wonderfulcollection.store%{REQUEST_URI} [R=301,L]
+    RewriteCond %{HTTP:X-Forwarded-Proto} !^https$ [NC]
+    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
     RewriteRule (^|/)config\.local\.php(?:\.template)?$ - [F,L,NC]
-    RewriteRule \.(sqlite|sql|md)$ - [F,L,NC]
+    RewriteRule ^admin/?$ admin.html [L]
+    RewriteRule \.(sqlite|db|sql|md|zip|7z|rar|tar|gz|bz2|xz)$ - [F,L,NC]
     RewriteCond %{REQUEST_URI} !^/\.well-known/ [NC]
     RewriteRule (^|/)\. - [F,L]
     RewriteRule ^sitemap\.xml$ api/sitemap.php [L]
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteRule ^api/([A-Za-z0-9_-]+)$ api/$1.php [L,QSA]
+    RewriteRule ^$ render-storefront.php?path=index.html [QSA,L]
+    RewriteCond %{REQUEST_URI} !^/admin(?:/|\.html|$) [NC]
+    RewriteCond %{REQUEST_URI} !^/api(?:/|$) [NC]
+    RewriteRule ^(.+\.html)$ render-storefront.php?path=$1 [QSA,L]
 </IfModule>
 
-<FilesMatch "(?i)(^\.|\.sqlite$|\.sql$|\.md$|^config\.local\.php(?:\.template)?$)">
+<FilesMatch "(?i)(^\.|\.sqlite$|\.db$|\.sql$|\.md$|\.zip$|\.7z$|\.rar$|\.tar$|\.gz$|\.bz2$|\.xz$|^(?:config|db)\.php$|^config\.local\.php(?:\.template)?$)">
     <IfModule mod_authz_core.c>
         Require all denied
     </IfModule>
@@ -25,7 +36,7 @@ Options -Indexes
     </IfModule>
 </FilesMatch>
 
-ErrorDocument 404 /404.html
+ErrorDocument 404 /render-storefront.php?path=404.html
 
 <IfModule mod_headers.c>
     Header always set X-Content-Type-Options "nosniff"
@@ -33,14 +44,31 @@ ErrorDocument 404 /404.html
     Header always set Referrer-Policy "strict-origin-when-cross-origin"
     Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(self)"
     Header always set Strict-Transport-Security "max-age=31536000"
-    Header always set Content-Security-Policy "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; img-src 'self' https: data:; font-src 'self' https://fonts.gstatic.com data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; script-src 'self' 'unsafe-inline'; connect-src 'self' https://nominatim.openstreetmap.org; upgrade-insecure-requests"
+    Header always set Report-To "{\"group\":\"csp-endpoint\",\"max_age\":86400,\"endpoints\":[{\"url\":\"/api/csp-report.php\"}]}"
+    Header always set Content-Security-Policy-Report-Only "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; img-src 'self' https: data: blob:; font-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'sha256-/e+HuzURQYw6A5L1VgFWkAnbQlZ7upo60sujCIjgSJA=' 'sha256-1bzjQNVWZLoOMvrhWg0tX2EyHtBDjLmSE0ypG9ITg1Q=' 'sha256-22TqfmIvsr04ihzVpWFQpuCsW6YAQIatqFHq0P0nvSY=' 'sha256-609K9gyzh1ln3PivksDUy3np+OXjjFNmWJy08ZipbLg=' 'sha256-622iTWypOCSfNqaQXTvSyOc1yyLezT6nS72EU436NJA=' 'sha256-9k0CAoXdHY3wsgqQq6QTiIkSdZfo8crw+213RmTj5RQ=' 'sha256-CNsIfrlYQ4ApN3plxH3mUpy9MzRzNaxFUbXDHh+rfAg=' 'sha256-CoSbjKcPCoI7XUcxyLg4wigO5QA8Cy15SYhM42Eeih4=' 'sha256-PF/MnmjGX7hQghlGLt2+TqJyZpBFmVvzlIY/IuZkyFc=' 'sha256-SbfH+178bgQPUniB4+RgFs4AvOxXULffbvSwEBzCUzI=' 'sha256-VGSKGzp5N50PHt/wydUkC/BVHWYtR7S81UJy4blyMd8=' 'sha256-YQmjlcNabB6s52SD/xK4XbTc3ey/FyGbZT1MKPTCYz4=' 'sha256-fazYGNafDIsJ3ihL9U++YFEyI3EUJWr2gXAj66HQHGQ=' 'sha256-fgL8t5lqYo0gs8XbyUymwjdmCaLeg5U9M07kkxbjCCs=' 'sha256-gV4jZkQd0mJ66ng3vAMOGo5YNfyNRyZ6MOTDGvO7C1k=' 'sha256-ovCAKu4Bbx1xXfadGFPbEp/L6VsagYQUzVwWjlojl94=' 'sha256-qqxDA8Kq1M6XsXPUzp32ax4tswpvy4C4m+LbL+t/ENs=' 'sha256-uYsbM5P38D3ZYOlGT+wu2WYRuEgih9Nk/xGswPfAzmQ=' 'sha256-wIoXsjMAchVP+3BSkeC6+Z/FulxDn5ocSrLx2NXRwto=' 'sha256-zbTzERaI2V5htaR7hqVhQi1pXroGViQB5l1wd5zuztw=' 'sha256-80jSriDt4DNU9/BrFmZWHnzWthl9tU5ZhFqxxWJJsYU='; script-src-attr 'none'; connect-src 'self' https://nominatim.openstreetmap.org; report-uri /api/csp-report.php; report-to csp-endpoint"
+    Header always set Content-Security-Policy "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; img-src 'self' https: data: blob:; font-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'sha256-/e+HuzURQYw6A5L1VgFWkAnbQlZ7upo60sujCIjgSJA=' 'sha256-1bzjQNVWZLoOMvrhWg0tX2EyHtBDjLmSE0ypG9ITg1Q=' 'sha256-22TqfmIvsr04ihzVpWFQpuCsW6YAQIatqFHq0P0nvSY=' 'sha256-609K9gyzh1ln3PivksDUy3np+OXjjFNmWJy08ZipbLg=' 'sha256-622iTWypOCSfNqaQXTvSyOc1yyLezT6nS72EU436NJA=' 'sha256-9k0CAoXdHY3wsgqQq6QTiIkSdZfo8crw+213RmTj5RQ=' 'sha256-CNsIfrlYQ4ApN3plxH3mUpy9MzRzNaxFUbXDHh+rfAg=' 'sha256-CoSbjKcPCoI7XUcxyLg4wigO5QA8Cy15SYhM42Eeih4=' 'sha256-PF/MnmjGX7hQghlGLt2+TqJyZpBFmVvzlIY/IuZkyFc=' 'sha256-SbfH+178bgQPUniB4+RgFs4AvOxXULffbvSwEBzCUzI=' 'sha256-VGSKGzp5N50PHt/wydUkC/BVHWYtR7S81UJy4blyMd8=' 'sha256-YQmjlcNabB6s52SD/xK4XbTc3ey/FyGbZT1MKPTCYz4=' 'sha256-fazYGNafDIsJ3ihL9U++YFEyI3EUJWr2gXAj66HQHGQ=' 'sha256-fgL8t5lqYo0gs8XbyUymwjdmCaLeg5U9M07kkxbjCCs=' 'sha256-gV4jZkQd0mJ66ng3vAMOGo5YNfyNRyZ6MOTDGvO7C1k=' 'sha256-ovCAKu4Bbx1xXfadGFPbEp/L6VsagYQUzVwWjlojl94=' 'sha256-qqxDA8Kq1M6XsXPUzp32ax4tswpvy4C4m+LbL+t/ENs=' 'sha256-uYsbM5P38D3ZYOlGT+wu2WYRuEgih9Nk/xGswPfAzmQ=' 'sha256-wIoXsjMAchVP+3BSkeC6+Z/FulxDn5ocSrLx2NXRwto=' 'sha256-zbTzERaI2V5htaR7hqVhQi1pXroGViQB5l1wd5zuztw=' 'sha256-80jSriDt4DNU9/BrFmZWHnzWthl9tU5ZhFqxxWJJsYU='; script-src-attr 'none'; connect-src 'self' https://nominatim.openstreetmap.org; upgrade-insecure-requests"
+    Header always edit Content-Security-Policy "script-src 'self'" "script-src 'self' 'sha256-9WuSYnsEdwn70Q/lDDA9yzQV4X3iDcN+96CYh1a/Lnk=' 'sha256-C13wk28pmbZGfe60gqIvbJaJZ8Rma5eQaRtYIVfuLZY=' 'sha256-EOVJwFA6Z0F+cQ3rjO3pDq1C4wHswUPVG3duVEXMVGg=' 'sha256-MHeD9zfOk6FGR5TFoZtNkRfiQPdN0Lca90KW2142g0U=' 'sha256-O8tO2V7TVhVfJFhWduRxu05lUhf9yEYTXiXiMSndUEY=' 'sha256-XLG9Fp68vLJhajZpxQSIcM2Gy/HaEjUtLLn5RIyiKxw=' 'sha256-dbxmGbQp1b98mBy5HKu/4egQG4wgRH9mEbQ+MWLSBJQ=' 'sha256-mhXTPlc6zi2XjlaKuMVY6UDApfHj8UTbG8czNVMfqKE=' 'sha256-q/1dO3/FWvOcj1KZC04GTlrW5QavH/l3LfL1y4ucW9c=' 'sha256-qLxlr4ubYVpywN9eI0FA6ejL3C7sPzHBqddyubEuoYA='"
+    Header always edit Content-Security-Policy-Report-Only "script-src 'self'" "script-src 'self' 'sha256-9WuSYnsEdwn70Q/lDDA9yzQV4X3iDcN+96CYh1a/Lnk=' 'sha256-C13wk28pmbZGfe60qgIvbJaJZ8Rma5eQaRtYIVfuLZY=' 'sha256-EOVJwFA6Z0F+cQ3rjO3pDq1C4wHswUPVG3duVEXMVGg=' 'sha256-MHeD9zfOk6FGR5TFoZtNkRfiQPdN0Lca90KW2142g0U=' 'sha256-O8tO2V7TVhVfJFhWduRxu05lUhf9yEYTXiXiMSndUEY=' 'sha256-XLG9Fp68vLJhajZpxQSIcM2Gy/HaEjUtLLn5RIyiKxw=' 'sha256-dbxmGbQp1b98mBy5HKu/4egQG4wgRH9mEbQ+MWLSBJQ=' 'sha256-mhXTPlc6zi2XjlaKuMVY6UDApfHj8UTbG8czNVMfqKE=' 'sha256-q/1dO3/FWvOcj1KZC04GTlrW5QavH/l3LfL1y4ucW9c=' 'sha256-qLxlr4ubYVpywN9eI0FA6ejL3C7sPzHBqddyubEuoYA='"
+
+    Header always set Content-Security-Policy "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; img-src 'self' https: data: blob:; font-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'sha256-/e+HuzURQYw6A5L1VgFWkAnbQlZ7upo60sujCIjgSJA=' 'sha256-1bzjQNVWZLoOMvrhWg0tX2EyHtBDjLmSE0ypG9ITg1Q=' 'sha256-22TqfmIvsr04ihzVpWFQpuCsW6YAQIatqFHq0P0nvSY=' 'sha256-609K9gyzh1ln3PivksDUy3np+OXjjFNmWJy08ZipbLg=' 'sha256-622iTWypOCSfNqaQXTvSyOc1yyLezT6nS72EU436NJA=' 'sha256-9k0CAoXdHY3wsgqQq6QTiIkSdZfo8crw+213RmTj5RQ=' 'sha256-CNsIfrlYQ4ApN3plxH3mUpy9MzRzNaxFUbXDHh+rfAg=' 'sha256-CoSbjKcPCoI7XUcxyLg4wigO5QA8Cy15SYhM42Eeih4=' 'sha256-PF/MnmjGX7hQghlGLt2+TqJyZpBFmVvzlIY/IuZkyFc=' 'sha256-SbfH+178bgQPUniB4+RgFs4AvOxXULffbvSwEBzCUzI=' 'sha256-VGSKGzp5N50PHt/wydUkC/BVHWYtR7S81UJy4blyMd8=' 'sha256-YQmjlcNabB6s52SD/xK4XbTc3ey/FyGbZT1MKPTCYz4=' 'sha256-fazYGNafDIsJ3ihL9U++YFEyI3EUJWr2gXAj66HQHGQ=' 'sha256-fgL8t5lqYo0gs8XbyUymwjdmCaLeg5U9M07kkxbjCCs=' 'sha256-gV4jZkQd0mJ66ng3vAMOGo5YNfyNRyZ6MOTDGvO7C1k=' 'sha256-ovCAKu4Bbx1xXfadGFPbEp/L6VsagYQUzVwWjlojl94=' 'sha256-qqxDA8Kq1M6XsXPUzp32ax4tswpvy4C4m+LbL+t/ENs=' 'sha256-uYsbM5P38D3ZYOlGT+wu2WYRuEgih9Nk/xGswPfAzmQ=' 'sha256-wIoXsjMAchVP+3BSkeC6+Z/FulxDn5ocSrLx2NXRwto=' 'sha256-zbTzERaI2V5htaR7hqVhQi1pXroGViQB5l1wd5zuztw=' 'sha256-80jSriDt4DNU9/BrFmZWHnzWthl9tU5ZhFqxxWJJsYU=' 'sha256-9WuSYnsEdwn70Q/lDDA9yzQV4X3iDcN+96CYh1a/Lnk=' 'sha256-C13wk28pmbZGfe60gqIvbJaJZ8Rma5eQaRtYIVfuLZY=' 'sha256-EOVJwFA6Z0F+cQ3rjO3pDq1C4wHswUPVG3duVEXMVGg=' 'sha256-MHeD9zfOk6FGR5TFoZtNkRfiQPdN0Lca90KW2142g0U=' 'sha256-O8tO2V7TVhVfJFhWduRxu05lUhf9yEYTXiXiMSndUEY=' 'sha256-XLG9Fp68vLJhajZpxQSIcM2Gy/HaEjUtLLn5RIyiKxw=' 'sha256-dbxmGbQp1b98mBy5HKu/4egQG4wgRH9mEbQ+MWLSBJQ=' 'sha256-mhXTPlc6zi2XjlaKuMVY6UDApfHj8UTbG8czNVMfqKE=' 'sha256-q/1dO3/FWvOcj1KZC04GTlrW5QavH/l3LfL1y4ucW9c=' 'sha256-qLxlr4ubYVpywN9eI0FA6ejL3C7sPzHBqddyubEuoYA='; script-src-attr 'none'; connect-src 'self' https://nominatim.openstreetmap.org; upgrade-insecure-requests"
+    Header always set Content-Security-Policy-Report-Only "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; img-src 'self' https: data: blob:; font-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'sha256-/e+HuzURQYw6A5L1VgFWkAnbQlZ7upo60sujCIjgSJA=' 'sha256-1bzjQNVWZLoOMvrhWg0tX2EyHtBDjLmSE0ypG9ITg1Q=' 'sha256-22TqfmIvsr04ihzVpWFQpuCsW6YAQIatqFHq0P0nvSY=' 'sha256-609K9gyzh1ln3PivksDUy3np+OXjjFNmWJy08ZipbLg=' 'sha256-622iTWypOCSfNqaQXTvSyOc1yyLezT6nS72EU436NJA=' 'sha256-9k0CAoXdHY3wsgqQq6QTiIkSdZfo8crw+213RmTj5RQ=' 'sha256-CNsIfrlYQ4ApN3plxH3mUpy9MzRzNaxFUbXDHh+rfAg=' 'sha256-CoSbjKcPCoI7XUcxyLg4wigO5QA8Cy15SYhM42Eeih4=' 'sha256-PF/MnmjGX7hQghlGLt2+TqJyZpBFmVvzlIY/IuZkyFc=' 'sha256-SbfH+178bgQPUniB4+RgFs4AvOxXULffbvSwEBzCUzI=' 'sha256-VGSKGzp5N50PHt/wydUkC/BVHWYtR7S81UJy4blyMd8=' 'sha256-YQmjlcNabB6s52SD/xK4XbTc3ey/FyGbZT1MKPTCYz4=' 'sha256-fazYGNafDIsJ3ihL9U++YFEyI3EUJWr2gXAj66HQHGQ=' 'sha256-fgL8t5lqYo0gs8XbyUymwjdmCaLeg5U9M07kkxbjCCs=' 'sha256-gV4jZkQd0mJ66ng3vAMOGo5YNfyNRyZ6MOTDGvO7C1k=' 'sha256-ovCAKu4Bbx1xXfadGFPbEp/L6VsagYQUzVwWjlojl94=' 'sha256-qqxDA8Kq1M6XsXPUzp32ax4tswpvy4C4m+LbL+t/ENs=' 'sha256-uYsbM5P38D3ZYOlGT+wu2WYRuEgih9Nk/xGswPfAzmQ=' 'sha256-wIoXsjMAchVP+3BSkeC6+Z/FulxDn5ocSrLx2NXRwto=' 'sha256-zbTzERaI2V5htaR7hqVhQi1pXroGViQB5l1wd5zuztw=' 'sha256-80jSriDt4DNU9/BrFmZWHnzWthl9tU5ZhFqxxWJJsYU=' 'sha256-9WuSYnsEdwn70Q/lDDA9yzQV4X3iDcN+96CYh1a/Lnk=' 'sha256-C13wk28pmbZGfe60gqIvbJaJZ8Rma5eQaRtYIVfuLZY=' 'sha256-EOVJwFA6Z0F+cQ3rjO3pDq1C4wHswUPVG3duVEXMVGg=' 'sha256-MHeD9zfOk6FGR5TFoZtNkRfiQPdN0Lca90KW2142g0U=' 'sha256-O8tO2V7TVhVfJFhWduRxu05lUhf9yEYTXiXiMSndUEY=' 'sha256-XLG9Fp68vLJhajZpxQSIcM2Gy/HaEjUtLLn5RIyiKxw=' 'sha256-dbxmGbQp1b98mBy5HKu/4egQG4wgRH9mEbQ+MWLSBJQ=' 'sha256-mhXTPlc6zi2XjlaKuMVY6UDApfHj8UTbG8czNVMfqKE=' 'sha256-q/1dO3/FWvOcj1KZC04GTlrW5QavH/l3LfL1y4ucW9c=' 'sha256-qLxlr4ubYVpywN9eI0FA6ejL3C7sPzHBqddyubEuoYA='; script-src-attr 'none'; connect-src 'self' https://nominatim.openstreetmap.org; report-uri /api/csp-report.php; report-to csp-endpoint"
     <IfModule mod_setenvif.c>
+        SetEnvIfNoCase Host "^staging\.shopademia\.store$" WC_STAGING_HOST
+        Header always set X-WC-Environment "staging" env=WC_STAGING_HOST
+        Header always set X-Robots-Tag "noindex, nofollow" env=WC_STAGING_HOST
         SetEnvIf Request_URI "^/api/" NO_CACHE
+        SetEnvIf Request_URI "^/$|^/(?!admin(?:/|\.html|$)|api(?:/|$)).*\.html$|^/render-storefront\.php$" TRACKING_PUBLIC=1
+        SetEnvIf REDIRECT_STATUS "^404$" TRACKING_PUBLIC=1
         Header always set Cache-Control "no-store, no-cache, must-revalidate, max-age=0" env=NO_CACHE
         Header always set CDN-Cache-Control "no-store" env=NO_CACHE
         Header always set Surrogate-Control "no-store" env=NO_CACHE
         Header always set Pragma "no-cache" env=NO_CACHE
         Header always set Expires "0" env=NO_CACHE
+        <If "reqenv('TRACKING_PUBLIC') == '1'">
+            Header always unset Content-Security-Policy
+            Header always unset Content-Security-Policy-Report-Only
+            Header always set Content-Security-Policy "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; img-src 'self' https: data: blob:; font-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' https: 'unsafe-inline'; script-src-attr 'none'; connect-src 'self' https://nominatim.openstreetmap.org https:; frame-src 'self' https://www.googletagmanager.com; upgrade-insecure-requests"
+        </If>
     </IfModule>
 </IfModule>
 

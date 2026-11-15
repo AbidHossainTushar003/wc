@@ -3,22 +3,26 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Product Details | Wonderful Collection Dhaka</title>
-  <meta name="description" content="Browse product details and current availability from Wonderful Collection.">
-  <link id="product-canonical" rel="canonical" href="https://wonderfulcollection.store/product.html">
+  <title>Product Details | Shopademia</title>
+  <meta name="description" content="Browse product details and current availability from Shopademia.">
+  <meta name="keywords" content="">
+  <link id="product-canonical" rel="canonical" href="https://shopademia.store/product.html">
   <meta property="og:type" content="product">
-  <meta property="og:title" content="Product Details | Wonderful Collection">
-  <meta property="og:description" content="Browse product details and current availability from Wonderful Collection.">
-  <meta property="og:url" content="https://wonderfulcollection.store/product.html">
-  <meta property="og:image" content="https://wonderfulcollection.store/assets/logo.svg">
+  <meta property="og:title" content="Product Details | Shopademia">
+  <meta property="og:description" content="Browse product details and current availability from Shopademia.">
+  <meta property="og:url" content="https://shopademia.store/product.html">
+  <meta property="og:image" content="https://shopademia.store/assets/og-image.png">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Product Details | Wonderful Collection">
-  <meta name="twitter:description" content="Browse product details and current availability from Wonderful Collection.">
-  <meta name="twitter:image" content="https://wonderfulcollection.store/assets/logo.svg">
+  <meta name="twitter:title" content="Product Details | Shopademia">
+  <meta name="twitter:description" content="Browse product details and current availability from Shopademia.">
+  <meta name="twitter:image" content="https://shopademia.store/assets/og-image.png">
   <script id="product-jsonld" type="application/ld+json"></script>
   <script id="product-breadcrumb-jsonld" type="application/ld+json"></script>
-  <link rel="stylesheet" href="css/style.css">
-  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/style.css?v=20261113-chat-dock-v3">
+  <link rel="stylesheet" href="css/consent.css?v=20261112-consent">
+  <link rel="icon" href="assets/favicon.ico" sizes="any">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
 </head>
 <body>
   <div class="top-bar">
@@ -38,7 +42,7 @@
 
   <header class="site-header">
     <div class="header-container">
-      <a href="index.html" class="brand-logo-wrap"><img width="741" height="265" src="assets/logo.jpg" alt="Wonderful Collection" class="brand-logo-img"></a>
+      <a href="index.html" class="brand-logo-wrap"><img width="741" height="265" src="assets/logo-shopademia.jpg" alt="Shopademia" class="brand-logo-img"></a>
       <div class="header-search">
         <form action="search.html" method="GET" class="search-input-wrap">
           <input type="text" name="q" class="search-input" placeholder="Search..." required>
@@ -53,9 +57,10 @@
     </div>
   </header>
 
-  <nav class="site-nav">
+  <nav class="site-nav" aria-label="Primary navigation">
     <div class="nav-container">
-      <ul class="nav-links">
+      <button class="nav-menu-toggle" type="button" aria-expanded="false" aria-controls="nav-menu-panel">Menu / More</button>
+      <ul class="nav-links" id="nav-links">
         <li><a href="index.html">Home</a></li>
         <li><a href="shop.html">All Products</a></li>
         <li><a href="category.html?cat=mens-fashion">Men's Fashion</a></li>
@@ -65,7 +70,11 @@
         <li><a href="category.html?cat=leather-accessories">Leather</a></li>
         <li><a href="category.html?cat=home-decor">Home Decor</a></li>
       </ul>
-      <div class="nav-location-pill">📍 Dhaka, Bangladesh</div>
+      <div class="nav-menu-panel" id="nav-menu-panel" hidden>
+        <div class="nav-menu-heading"><strong>Explore Shopademia</strong><button class="nav-menu-close" type="button" aria-label="Close navigation menu">Close</button></div>
+        <div class="nav-menu-links" id="nav-menu-links"></div>
+        <div class="nav-location-pill"><button id="nav-location-button" type="button" aria-label="Detect your location for delivery">📍 Use my location</button></div>
+      </div>
     </div>
   </nav>
 
@@ -104,10 +113,10 @@
   </div>
 
   <footer class="site-footer">
-    <div class="footer-bottom"><div class="footer-bottom-container"><div>© 2026 Wonderful Collection - Dhaka, Bangladesh 🇧🇩</div></div></div>
+    <div class="footer-bottom"><div class="footer-bottom-container"><div>© 2026 Shopademia - Dhaka, Bangladesh 🇧🇩</div><nav class="footer-social-links" aria-label="Shopademia social media"><a href="https://www.instagram.com/ShopademiaBD" target="_blank" rel="noopener noreferrer">Instagram · ShopademiaBD</a><a href="https://x.com/SHOPADEMIA" target="_blank" rel="noopener noreferrer">X · SHOPADEMIA</a><a href="https://www.facebook.com/SHOPADEMIA" target="_blank" rel="noopener noreferrer">Facebook · SHOPADEMIA</a></nav></div></div>
   </footer>
 
-  <script src="js/store.js?v=20261109"></script>
+  <script src="js/store.js?v=20261113-storefront-final-v3"></script>
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
       const urlParams = new URLSearchParams(window.location.search);
@@ -120,27 +129,39 @@
         container.innerHTML = `
           <div style="text-align: center; padding: 80px 20px;">
             <h2>Product Not Found</h2>
-            <p style="color: #64748b; margin: 12px 0 24px;">The item you are looking for may have been updated or moved.</p>
+            <p style="color: #69645b; margin: 12px 0 24px;">The item you are looking for may have been updated or moved.</p>
             <a href="shop.html" class="btn-primary">Browse All Products</a>
           </div>
         `;
         container.setAttribute('aria-busy', 'false');
         return;
       }
+      Store.recordProductView(product);
 
       const productName = String(product.name || 'Product');
-      const productDescription = String(product.short_desc || product.description || 'Shop this product from Wonderful Collection.')
+      const productDescription = String(product.meta_description || product.short_desc || product.description || 'Shop this product from Shopademia.')
         .replace(/\s+/g, ' ')
         .slice(0, 160);
-      const productUrl = `https://wonderfulcollection.store/product.html?id=${encodeURIComponent(String(Number(product.id)))}`;
+      const productUrl = `https://shopademia.store/product.html?id=${encodeURIComponent(String(Number(product.id)))}`;
+      const canonicalUrl = (() => {
+        try {
+          const candidate = new URL(product.canonical_url || productUrl);
+          return candidate.protocol === 'https:' && ['shopademia.store', 'www.shopademia.store'].includes(candidate.hostname.toLowerCase())
+            ? candidate.href
+            : productUrl;
+        } catch {
+          return productUrl;
+        }
+      })();
       const productImage = Store.productImage(product);
       const productIdentifier = product.sku || `Product ${Number(product.id)}`;
-      document.title = `${productName} | ${productIdentifier} | Wonderful Collection`;
+      document.title = String(product.seo_title || `${productName} | ${productIdentifier} | Shopademia`).slice(0, 70);
       document.querySelector('meta[name="description"]').content = productDescription;
-      document.querySelector('#product-canonical').href = productUrl;
+      document.querySelector('meta[name="keywords"]').content = String(product.focus_keyword || '').slice(0, 100);
+      document.querySelector('#product-canonical').href = canonicalUrl;
       document.querySelector('meta[property="og:title"]').content = document.title;
       document.querySelector('meta[property="og:description"]').content = productDescription;
-      document.querySelector('meta[property="og:url"]').content = productUrl;
+      document.querySelector('meta[property="og:url"]').content = canonicalUrl;
       document.querySelector('meta[property="og:image"]').content = new URL(productImage, window.location.href).href;
       document.querySelector('meta[name="twitter:title"]').content = document.title;
       document.querySelector('meta[name="twitter:description"]').content = productDescription;
@@ -159,15 +180,15 @@
           availability: Number(product.stock_quantity) > 0
             ? 'https://schema.org/InStock'
             : 'https://schema.org/OutOfStock',
-          url: productUrl
+          url: canonicalUrl
         }
       }).replace(/</g, '\\u003c');
       document.getElementById('product-breadcrumb-jsonld').textContent = JSON.stringify({
         '@context': 'https://schema.org',
         '@type': 'BreadcrumbList',
         itemListElement: [
-          { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://wonderfulcollection.store/' },
-          { '@type': 'ListItem', position: 2, name: 'Shop', item: 'https://wonderfulcollection.store/shop.html' },
+          { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://shopademia.store/' },
+          { '@type': 'ListItem', position: 2, name: 'Shop', item: 'https://shopademia.store/shop.html' },
           { '@type': 'ListItem', position: 3, name: productName, item: productUrl }
         ]
       }).replace(/</g, '\\u003c');
@@ -176,19 +197,20 @@
       const images = (Array.isArray(product.images) && product.images.length ? product.images : [Store.productImage(product)])
         .map(image => Store.isSafeProductImage(image) ? image : 'assets/product-placeholder.svg');
       const stock = Number(product.stock_quantity) || 0;
+      const canPurchase = Number(product.is_sellable) === 1 && stock > 0;
       const discount = product.sale_price ? Math.round(((product.regular_price - product.sale_price) / product.regular_price) * 100) : 0;
 
       container.innerHTML = `
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 48px; margin-bottom: 56px;">
+        <div class="product-detail-layout" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 48px; margin-bottom: 56px;">
           <!-- Left: Gallery -->
           <div>
-            <div style="border-radius: 16px; overflow: hidden; border: 1px solid #e2e8f0; background: #fff; box-shadow: var(--shadow-md); margin-bottom: 16px;">
-              <img id="main-product-img" src="${Store.escapeHtml(images[0])}" alt="${Store.escapeHtml(product.name)}" onerror="this.onerror=null;this.src='assets/product-placeholder.svg'" style="width: 100%; height: 440px; object-fit: cover;">
+            <div style="border-radius: 16px; overflow: hidden; border: 1px solid #e8e2d8; background: #fff; box-shadow: var(--shadow-md); margin-bottom: 16px;">
+              <img id="main-product-img" src="${Store.escapeHtml(images[0])}" alt="${Store.escapeHtml(product.alt_text || product.name)}" data-image-fallback="assets/product-placeholder.svg" style="width: 100%; height: 440px; object-fit: cover;">
             </div>
             ${images.length > 1 ? `
               <div style="display: flex; gap: 12px;">
                 ${images.map((img, i) => `
-                  <img src="${Store.escapeHtml(img)}" alt="Product image ${i + 1}" data-product-image="${Store.escapeHtml(img)}" onerror="this.onerror=null;this.src='assets/product-placeholder.svg'" style="width: 76px; height: 76px; object-fit: cover; border-radius: 8px; cursor: pointer; border: 2px solid ${i === 0 ? 'var(--accent-orange)' : '#cbd5e1'};">
+                  <img src="${Store.escapeHtml(img)}" alt="Product image ${i + 1}" data-product-image="${Store.escapeHtml(img)}" data-image-fallback="assets/product-placeholder.svg" style="width: 76px; height: 76px; object-fit: cover; border-radius: 8px; cursor: pointer; border: 2px solid ${i === 0 ? 'var(--accent-orange)' : '#d6cec1'};">
                 `).join('')}
               </div>
             ` : ''}
@@ -199,75 +221,110 @@
             <div style="font-size: 0.85rem; font-weight: 700; color: var(--accent-orange); text-transform: uppercase; margin-bottom: 8px;">
               ${Store.escapeHtml(product.category_name)} &bull; SKU: ${Store.escapeHtml(product.sku)}
             </div>
-            <h1 style="font-size: 2.2rem; font-weight: 800; color: #0e2a47; line-height: 1.25; margin-bottom: 16px;">
-              ${Store.escapeHtml(product.name)}
+            <h1 style="font-size: 2.2rem; font-weight: 800; color: #26231f; line-height: 1.25; margin-bottom: 16px;">
+                ${Store.escapeHtml(product.h1 || product.name)}
             </h1>
 
             <!-- Pricing -->
             <div style="display: flex; align-items: baseline; gap: 12px; margin-bottom: 20px;">
-              <span style="font-size: 2rem; font-weight: 800; color: #c2410c;">${Store.formatBDT(currentPrice)}</span>
+              <span style="font-size: 2rem; font-weight: 800; color: #302d28;">${Store.formatBDT(currentPrice)}</span>
               ${product.sale_price ? `
-                <span style="font-size: 1.2rem; color: #64748b; text-decoration: line-through;">${Store.formatBDT(product.regular_price)}</span>
-                <span style="background: #fff3f0; color: #c2410c; padding: 4px 10px; border-radius: 999px; font-weight: 800; font-size: 0.82rem;">Save ${discount}%</span>
+                <span style="font-size: 1.2rem; color: #69645b; text-decoration: line-through;">${Store.formatBDT(product.regular_price)}</span>
+                <span style="background: #f1ede5; color: #302d28; padding: 4px 10px; border-radius: 999px; font-weight: 800; font-size: 0.82rem;">Save ${discount}%</span>
               ` : ''}
             </div>
+            <p class="product-stock-status" aria-live="polite">
+              ${stock > 0 ? `<span class="product-stock-dot"></span>${stock} in stock` : '<span class="product-stock-dot is-out"></span>Currently out of stock'}
+            </p>
 
             <!-- Delivery information -->
-            <div style="background: #f1f5f9; border-left: 4px solid #f05423; padding: 14px 18px; border-radius: 8px; margin-bottom: 24px; font-size: 0.9rem;">
-              <div style="font-weight: 700; color: #0e2a47; margin-bottom: 4px;">🚚 Delivery information</div>
-              <div style="color: #475569;">Available delivery options and estimated times are shown during checkout.</div>
+            <div style="background: #f3efe8; border-left: 4px solid #302d28; padding: 14px 18px; border-radius: 8px; margin-bottom: 24px; font-size: 0.9rem;">
+              <div style="font-weight: 700; color: #26231f; margin-bottom: 4px;">🚚 Delivery information</div>
+              <div style="color: #625d54;">Available delivery options and estimated times are shown during checkout.</div>
             </div>
 
-            <p style="color: #475569; font-size: 1rem; line-height: 1.6; margin-bottom: 28px;">
+            <p style="color: #625d54; font-size: 1rem; line-height: 1.6; margin-bottom: 28px;">
               ${Store.escapeHtml(product.short_desc || product.description)}
             </p>
 
             <!-- Quantity & Actions -->
             <div style="display: flex; gap: 16px; align-items: center; margin-bottom: 32px; flex-wrap: wrap;">
-              <div style="display: flex; align-items: center; border: 1.5px solid #cbd5e1; border-radius: 8px; overflow: hidden; background: #fff;">
-                <button type="button" aria-label="Decrease quantity" onclick="adjustDetailQty(-1)" style="border: none; background: #f8fafc; padding: 10px 18px; font-size: 1.2rem; cursor: pointer; font-weight: bold;">-</button>
-                <input type="number" id="detail-qty-input" aria-label="Quantity" value="${stock > 0 ? 1 : 0}" min="1" max="${stock}" style="width: 50px; text-align: center; border: none; font-size: 1rem; font-weight: 700;" readonly ${stock > 0 ? '' : 'disabled'}>
-                <button type="button" aria-label="Increase quantity" onclick="adjustDetailQty(1)" style="border: none; background: #f8fafc; padding: 10px 18px; font-size: 1.2rem; cursor: pointer; font-weight: bold;">+</button>
+              <div style="display: flex; align-items: center; border: 1.5px solid #d6cec1; border-radius: 8px; overflow: hidden; background: #fff;">
+                <button type="button" aria-label="Decrease quantity" data-csp-click="adjustDetailQty" data-quantity-delta="-1" style="border: none; background: #f7f4ee; padding: 10px 18px; font-size: 1.2rem; cursor: pointer; font-weight: bold;">-</button>
+                <input type="number" id="detail-qty-input" aria-label="Quantity" value="${canPurchase ? 1 : 0}" min="1" max="${stock}" style="width: 50px; text-align: center; border: none; font-size: 1rem; font-weight: 700;" readonly ${canPurchase ? '' : 'disabled'}>
+                <button type="button" aria-label="Increase quantity" data-csp-click="adjustDetailQty" data-quantity-delta="1" style="border: none; background: #f7f4ee; padding: 10px 18px; font-size: 1.2rem; cursor: pointer; font-weight: bold;">+</button>
               </div>
 
-              <button id="detail-add-to-cart" class="btn-primary" style="padding: 14px 32px; font-size: 1.05rem;" onclick="addCurrentProductToCart()" ${stock > 0 ? '' : 'disabled'}>
-                ${stock > 0 ? '🛒 Add To Cart' : 'Sold Out'}
+              <button id="detail-add-to-cart" class="btn-primary" style="padding: 14px 32px; font-size: 1.05rem;" data-csp-click="addCurrentProductToCart" ${canPurchase ? '' : 'disabled'}>
+                ${canPurchase ? '🛒 Add To Cart' : (Number(product.is_sellable) === 1 ? 'Sold Out' : 'Not for Sale')}
               </button>
-              <button class="btn-secondary" data-toggle-wishlist data-product="${Store.escapeHtml(JSON.stringify(product))}" style="color: #0e2a47; border-color: #cbd5e1;">
+              <button class="btn-secondary" data-toggle-wishlist data-product="${Store.escapeHtml(JSON.stringify(product))}" style="color: #26231f; border-color: #d6cec1;">
                 ♥ Wishlist
               </button>
             </div>
 
             <!-- Features list -->
-            <div style="border-top: 1px solid #e2e8f0; padding-top: 20px; font-size: 0.88rem; color: #64748b; display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-              <div>✔ 100% Authentic Quality</div>
-              <div>✔ Cash on Delivery Available</div>
-              <div>✔ bKash / Nagad Verified</div>
-              <div>✔ 7-Day Hassle-Free Returns</div>
+            <div style="border-top: 1px solid #e8e2d8; padding-top: 20px; font-size: 0.88rem; color: #69645b; display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+              <div>✔ Product details and stock are checked before checkout</div>
+              <div>✔ Delivery and payment options appear in checkout</div>
+              <div>✔ Support confirms order and return eligibility</div>
+              <div>✔ Product content is reviewed before listing</div>
             </div>
           </div>
         </div>
 
         <!-- Full Description & Reviews Tabs -->
-        <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 32px; box-shadow: var(--shadow-sm); margin-bottom: 48px;">
-          <h2 style="font-size: 1.4rem; font-weight: 800; color: #0e2a47; margin-bottom: 16px;">Product Description & Details</h2>
-          <p style="color: #475569; line-height: 1.7; margin-bottom: 24px; white-space: pre-line;">${Store.escapeHtml(product.description)}</p>
+        <div style="background: #fff; border: 1px solid #e8e2d8; border-radius: 16px; padding: 32px; box-shadow: var(--shadow-sm); margin-bottom: 48px;">
+          <h2 style="font-size: 1.4rem; font-weight: 800; color: #26231f; margin-bottom: 16px;">Product Description & Details</h2>
+          <p style="color: #625d54; line-height: 1.7; margin-bottom: 24px; white-space: pre-line;">${Store.escapeHtml(product.description)}</p>
 
-          <h3 style="font-size: 1.15rem; font-weight: 700; color: #0e2a47; margin: 28px 0 16px;">Customer Reviews from Dhaka</h3>
+          <h3 style="font-size: 1.15rem; font-weight: 700; color: #26231f; margin: 28px 0 16px;">Customer Reviews from Dhaka</h3>
           <div>
             ${(product.reviews && product.reviews.length) ? product.reviews.map(r => `
-              <div style="border-bottom: 1px solid #f1f5f9; padding: 14px 0;">
+              <div style="border-bottom: 1px solid #f3efe8; padding: 14px 0;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                  <span style="font-weight: 700; color: #0e2a47;">${Store.escapeHtml(r.customer_name)}</span>
+                  <span style="font-weight: 700; color: #26231f;">${Store.escapeHtml(r.customer_name)}</span>
                   <span style="color: #a16207; font-size: 0.9rem;">★★★★★</span>
                 </div>
-                <p style="color: #475569; font-size: 0.92rem;">${Store.escapeHtml(r.comment)}</p>
+                <p style="color: #625d54; font-size: 0.92rem;">${Store.escapeHtml(r.comment)}</p>
               </div>
-            `).join('') : '            <p style="color: #64748b;">No customer reviews yet. Be the first to review this product!</p>'}
+            `).join('') : '            <p style="color: #69645b;">No customer reviews yet. Be the first to review this product!</p>'}
           </div>
         </div>
+        <section class="product-recommendations" id="product-recommendations" aria-labelledby="product-recommendations-title" hidden>
+          <div class="product-recommendations-heading">
+            <div><span class="section-eyebrow">Picked for you</span><h2 id="product-recommendations-title">You may also like</h2></div>
+            <a href="shop.html">View all products <span aria-hidden="true">→</span></a>
+          </div>
+          <div class="products-grid" id="product-recommendations-grid"></div>
+        </section>
       `;
       container.setAttribute('aria-busy', 'false');
+      try {
+        const catalog = await Store.fetchProducts();
+        const recommendations = Store.getRecommendedProducts(product, catalog);
+        const section = document.getElementById('product-recommendations');
+        const recommendationsGrid = document.getElementById('product-recommendations-grid');
+        if (recommendations.length && section && recommendationsGrid) {
+          recommendationsGrid.innerHTML = recommendations.map(item => `
+            <article class="product-card">
+              <a class="product-thumb-wrap" href="product.html?id=${Number(item.id)}">
+                <img src="${Store.escapeHtml(Store.productImage(item))}" alt="${Store.escapeHtml(item.alt_text || item.name)}" loading="lazy" data-image-fallback="assets/product-placeholder.svg">
+              </a>
+              <div class="product-body">
+                <div class="product-category-tag">${Store.escapeHtml(item.category_name || '')}</div>
+                <a href="product.html?id=${Number(item.id)}" class="product-title">${Store.escapeHtml(item.name)}</a>
+                <div class="product-pricing"><span class="price-current">${Store.formatBDT(item.sale_price || item.regular_price)}</span></div>
+                <p class="recommended-stock">${Number(item.stock_quantity) > 0 ? `${Number(item.stock_quantity)} in stock` : 'Currently out of stock'}</p>
+                <a class="btn-add-cart" href="product.html?id=${Number(item.id)}">View product</a>
+              </div>
+            </article>
+          `).join('');
+          section.hidden = false;
+        }
+      } catch (error) {
+        console.error('Personalized product recommendations could not be loaded.', error);
+      }
 
       window.currentLoadedProduct = product;
       container.querySelectorAll('[data-product-image]').forEach(thumbnail => {
@@ -293,5 +350,7 @@
       Store.addToCart(window.currentLoadedProduct, qty);
     }
   </script>
+  <script src="js/product-feedback.js?v=20261114-feedback-v1"></script>
+  <script defer src="js/consent.js?v=20261112-consent"></script>
 </body>
 </html>

@@ -52,4 +52,4 @@ test -s "$backup_file"
 chmod 600 -- "$backup_file"
 trap - ERR
 
-printf 'Verified database backup created: %s\n' "$backup_file"
+printf 'Integrity-checked backup created; restore verification is still required: %s\n' "$backup_file"

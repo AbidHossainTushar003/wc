@@ -14,6 +14,16 @@ private const val FALLBACK_PRODUCT_IMAGE = "https://shopademia.store/assets/prod
 internal fun JSONObject.optStringSafe(key: String, default: String = ""): String =
     if (has(key) && !isNull(key)) optString(key) else default
 
+internal fun JSONObject.optStringAny(vararg keys: String): String {
+    for (key in keys) {
+        if (has(key) && !isNull(key)) {
+            val value = optString(key)
+            if (value.isNotBlank()) return value
+        }
+    }
+    return ""
+}
+
 private fun firstProductImage(images: JSONArray?): String =
     images?.takeIf { it.length() > 0 }?.optString(0)?.takeIf { it.isNotBlank() }
         ?: FALLBACK_PRODUCT_IMAGE
@@ -61,11 +71,11 @@ internal fun productSeoValidationError(
 }
 
 internal fun parseProduct(obj: JSONObject): Product {
-    val id = obj.optLong("id", 0L)
+    val id = obj.optLong("id", obj.optLong("product_id", 0L))
     val name = obj.optString("name", obj.optString("product_name", "")).trim()
     val categoryId = obj.optLong("category_id", obj.optLong("categoryId", 0L))
-    val regularPrice = obj.optDouble("regular_price", obj.optDouble("price", 0.0))
-    val stockQuantity = obj.optInt("stock_quantity", obj.optInt("stock", 0))
+    val regularPrice = obj.optDouble("regular_price", obj.optDouble("regularPrice", obj.optDouble("price", 0.0)))
+    val stockQuantity = obj.optInt("stock_quantity", obj.optInt("stock", obj.optInt("stockQuantity", 0)))
     require(id > 0L && name.isNotBlank()) { "Product response is missing required identity fields." }
     require(regularPrice.isFinite() && regularPrice > 0.0 && stockQuantity >= 0) {
         "Product response contains invalid price or stock data."
@@ -74,6 +84,7 @@ internal fun parseProduct(obj: JSONObject): Product {
     val images = when {
         obj.has("images") && !obj.isNull("images") -> obj.optJSONArray("images")
         obj.has("image") && !obj.isNull("image") -> JSONArray().apply { put(obj.optString("image")) }
+        obj.has("image_url") && !obj.isNull("image_url") -> JSONArray().apply { put(obj.optString("image_url")) }
         else -> null
     }
     if (obj.has("images") && !obj.isNull("images") && images == null) {
@@ -84,12 +95,15 @@ internal fun parseProduct(obj: JSONObject): Product {
             when (val value = array.opt(index)) {
                 is String -> value.takeIf(String::isNotBlank)
                     ?: throw IllegalArgumentException("Product response contains an empty image path.")
+                is JSONObject -> value.optStringAny("url", "src", "image", "image_url", "path", "thumbnail", "thumb")
+                    .takeIf(String::isNotBlank)
+                    ?: throw IllegalArgumentException("Product response contains an empty image path.")
                 else -> value?.toString()?.takeIf(String::isNotBlank)
                     ?: throw IllegalArgumentException("Product response contains an empty image path.")
             }
         }
     }.orEmpty()
-    val salePrice = listOf("sale_price", "special_price", "discount_price")
+    val salePrice = listOf("sale_price", "salePrice", "special_price", "discount_price")
         .firstOrNull { obj.has(it) && !obj.isNull(it) }
         ?.let { obj.optDouble(it, Double.NaN) }
         ?.takeIf { it.isFinite() && it > 0.0 }
@@ -97,22 +111,28 @@ internal fun parseProduct(obj: JSONObject): Product {
         "Product response contains an invalid sale price."
     }
 
+    val categoryName = obj.optStringSafe("category_name", obj.optStringSafe("categoryName", obj.optStringSafe("category", "Collection")))
+    val shortDescription = obj.optStringSafe(
+        "short_desc",
+        obj.optStringSafe("short_description", obj.optStringSafe("shortDesc", obj.optStringSafe("description", ""))),
+    )
+
     return Product(
         id = id,
         name = name,
         slug = obj.optStringSafe("slug"),
         categoryId = categoryId,
-        categoryName = obj.optStringSafe("category_name", obj.optStringSafe("category", "Collection")),
+        categoryName = categoryName,
         regularPrice = regularPrice,
         salePrice = salePrice,
         stockQuantity = stockQuantity,
         sku = obj.optStringSafe("sku", obj.optStringSafe("product_sku")),
-        shortDesc = obj.optStringSafe("short_desc", obj.optStringSafe("short_description", obj.optStringSafe("description"))),
+        shortDesc = shortDescription,
         imageUrl = firstProductImage(images),
         isFeatured = obj.optInt("is_featured") == 1,
         isTrending = obj.optInt("is_trending") == 1,
         images = imagePaths,
-        description = obj.optStringSafe("description", obj.optStringSafe("short_desc")),
+        description = obj.optStringSafe("description", obj.optStringSafe("short_desc", shortDescription)),
         isSellable = obj.optInt("is_sellable", 1) == 1,
         seoTitle = obj.optStringSafe("seo_title"),
         metaDescription = obj.optStringSafe("meta_description"),
@@ -319,35 +339,35 @@ class OrderRepositoryImpl(private val api: ApiClient) : OrderRepository {
                     val itObj = itemsArr.getJSONObject(j)
                     itemsList.add(
                         OrderItem(
-                            productId = itObj.optLong("product_id"),
-                            productName = itObj.optStringSafe("product_name"),
-                            price = itObj.optDouble("price"),
-                            quantity = itObj.optInt("quantity", 1),
-                            total = itObj.optDouble("total"),
+                            productId = itObj.optLong("product_id", itObj.optLong("productId", 0L)),
+                            productName = itObj.optStringSafe("product_name", itObj.optStringSafe("productName", itObj.optStringSafe("name", "Product"))),
+                            price = itObj.optDouble("price", itObj.optDouble("unit_price", 0.0)),
+                            quantity = itObj.optInt("quantity", itObj.optInt("qty", 1)),
+                            total = itObj.optDouble("total", itObj.optDouble("line_total", 0.0)),
                         ),
                     )
                 }
 
                 list.add(
                     Order(
-                        id = obj.optLong("id"),
-                        orderNumber = obj.optStringSafe("order_number"),
-                        customerName = obj.optStringSafe("customer_name"),
-                        customerPhone = obj.optStringSafe("customer_phone"),
-                        customerEmail = obj.optStringSafe("customer_email"),
-                        deliveryAddress = obj.optStringSafe("delivery_address"),
-                        deliveryArea = obj.optStringSafe("delivery_area"),
-                        deliveryFee = obj.optDouble("delivery_fee", 60.0),
-                        subtotal = obj.optDouble("subtotal"),
-                        discount = obj.optDouble("discount", 0.0),
-                        total = obj.optDouble("total"),
-                        paymentMethod = obj.optStringSafe("payment_method"),
-                        paymentStatus = obj.optStringSafe("payment_status"),
-                        trxId = if (obj.has("trx_id") && !obj.isNull("trx_id")) obj.optString("trx_id") else null,
-                        orderStatus = obj.optStringSafe("order_status", "Pending"),
-                        trackingCode = obj.optStringSafe("tracking_code"),
+                        id = obj.optLong("id", obj.optLong("order_id", 0L)),
+                        orderNumber = obj.optStringSafe("order_number", obj.optStringSafe("orderNumber", obj.optStringSafe("tracking_code"))),
+                        customerName = obj.optStringSafe("customer_name", obj.optStringSafe("customerName", obj.optStringSafe("name", "Customer"))),
+                        customerPhone = obj.optStringSafe("customer_phone", obj.optStringSafe("customerPhone", obj.optStringSafe("phone"))),
+                        customerEmail = obj.optStringSafe("customer_email", obj.optStringSafe("customerEmail", obj.optStringSafe("email"))),
+                        deliveryAddress = obj.optStringSafe("delivery_address", obj.optStringSafe("deliveryAddress", obj.optStringSafe("address"))),
+                        deliveryArea = obj.optStringSafe("delivery_area", obj.optStringSafe("deliveryArea", obj.optStringSafe("area"))),
+                        deliveryFee = obj.optDouble("delivery_fee", obj.optDouble("deliveryFee", 60.0)),
+                        subtotal = obj.optDouble("subtotal", obj.optDouble("sub_total", 0.0)),
+                        discount = obj.optDouble("discount", obj.optDouble("discount_amount", 0.0)),
+                        total = obj.optDouble("total", obj.optDouble("grand_total", 0.0)),
+                        paymentMethod = obj.optStringSafe("payment_method", obj.optStringSafe("paymentMethod", obj.optStringSafe("method"))),
+                        paymentStatus = obj.optStringSafe("payment_status", obj.optStringSafe("paymentStatus", obj.optStringSafe("status"))),
+                        trxId = if (obj.has("trx_id") && !obj.isNull("trx_id")) obj.optString("trx_id") else if (obj.has("trxId") && !obj.isNull("trxId")) obj.optString("trxId") else null,
+                        orderStatus = obj.optStringSafe("order_status", obj.optStringSafe("orderStatus", obj.optStringSafe("status", "Pending"))),
+                        trackingCode = obj.optStringSafe("tracking_code", obj.optStringSafe("trackingCode")),
                         notes = if (obj.has("notes") && !obj.isNull("notes")) obj.optString("notes") else null,
-                        createdAt = obj.optStringSafe("created_at"),
+                        createdAt = obj.optStringSafe("created_at", obj.optStringSafe("createdAt")),
                         items = itemsList,
                     ),
                 )
@@ -370,33 +390,33 @@ class OrderRepositoryImpl(private val api: ApiClient) : OrderRepository {
                 val itObj = itemsArr.getJSONObject(j)
                 itemsList.add(
                     OrderItem(
-                        productId = itObj.optLong("product_id"),
-                        productName = itObj.optStringSafe("product_name"),
-                        price = itObj.optDouble("price"),
-                        quantity = itObj.optInt("quantity", 1),
-                        total = itObj.optDouble("total"),
+                        productId = itObj.optLong("product_id", itObj.optLong("productId", 0L)),
+                        productName = itObj.optStringSafe("product_name", itObj.optStringSafe("productName", itObj.optStringSafe("name", "Product"))),
+                        price = itObj.optDouble("price", itObj.optDouble("unit_price", 0.0)),
+                        quantity = itObj.optInt("quantity", itObj.optInt("qty", 1)),
+                        total = itObj.optDouble("total", itObj.optDouble("line_total", 0.0)),
                     ),
                 )
             }
             Order(
-                id = obj.optLong("id"),
-                orderNumber = obj.optStringSafe("order_number"),
-                customerName = obj.optStringSafe("customer_name"),
-                customerPhone = obj.optStringSafe("customer_phone"),
-                customerEmail = obj.optStringSafe("customer_email"),
-                deliveryAddress = obj.optStringSafe("delivery_address"),
-                deliveryArea = obj.optStringSafe("delivery_area"),
-                deliveryFee = obj.optDouble("delivery_fee", 60.0),
-                subtotal = obj.optDouble("subtotal"),
-                discount = obj.optDouble("discount", 0.0),
-                total = obj.optDouble("total"),
-                paymentMethod = obj.optStringSafe("payment_method"),
-                paymentStatus = obj.optStringSafe("payment_status"),
-                trxId = if (obj.has("trx_id") && !obj.isNull("trx_id")) obj.optString("trx_id") else null,
-                orderStatus = obj.optStringSafe("order_status", "Pending"),
-                trackingCode = obj.optStringSafe("tracking_code"),
+                id = obj.optLong("id", obj.optLong("order_id", 0L)),
+                orderNumber = obj.optStringSafe("order_number", obj.optStringSafe("orderNumber", obj.optStringSafe("tracking_code"))),
+                customerName = obj.optStringSafe("customer_name", obj.optStringSafe("customerName", obj.optStringSafe("name", "Customer"))),
+                customerPhone = obj.optStringSafe("customer_phone", obj.optStringSafe("customerPhone", obj.optStringSafe("phone"))),
+                customerEmail = obj.optStringSafe("customer_email", obj.optStringSafe("customerEmail", obj.optStringSafe("email"))),
+                deliveryAddress = obj.optStringSafe("delivery_address", obj.optStringSafe("deliveryAddress", obj.optStringSafe("address"))),
+                deliveryArea = obj.optStringSafe("delivery_area", obj.optStringSafe("deliveryArea", obj.optStringSafe("area"))),
+                deliveryFee = obj.optDouble("delivery_fee", obj.optDouble("deliveryFee", 60.0)),
+                subtotal = obj.optDouble("subtotal", obj.optDouble("sub_total", 0.0)),
+                discount = obj.optDouble("discount", obj.optDouble("discount_amount", 0.0)),
+                total = obj.optDouble("total", obj.optDouble("grand_total", 0.0)),
+                paymentMethod = obj.optStringSafe("payment_method", obj.optStringSafe("paymentMethod", obj.optStringSafe("method"))),
+                paymentStatus = obj.optStringSafe("payment_status", obj.optStringSafe("paymentStatus", obj.optStringSafe("status"))),
+                trxId = if (obj.has("trx_id") && !obj.isNull("trx_id")) obj.optString("trx_id") else if (obj.has("trxId") && !obj.isNull("trxId")) obj.optString("trxId") else null,
+                orderStatus = obj.optStringSafe("order_status", obj.optStringSafe("orderStatus", obj.optStringSafe("status", "Pending"))),
+                trackingCode = obj.optStringSafe("tracking_code", obj.optStringSafe("trackingCode")),
                 notes = if (obj.has("notes") && !obj.isNull("notes")) obj.optString("notes") else null,
-                createdAt = obj.optStringSafe("created_at"),
+                createdAt = obj.optStringSafe("created_at", obj.optStringSafe("createdAt")),
                 items = itemsList,
             )
         }
@@ -418,16 +438,25 @@ class InventoryRepositoryImpl(private val api: ApiClient) : InventoryRepository 
             val list = mutableListOf<InventoryItem>()
             for (i in 0 until data.length()) {
                 val obj = data.getJSONObject(i)
+                val categoryValue = obj.opt("category")
+                val categoryName = when (categoryValue) {
+                    is JSONObject -> categoryValue.optStringAny("name", "title", "category_name")
+                    is String -> categoryValue
+                    else -> obj.optStringSafe("category_name", obj.optStringSafe("categoryName", "Collection"))
+                }
                 list.add(
                     InventoryItem(
                         id = obj.optLong("id"),
-                        name = obj.optStringSafe("name"),
-                        sku = obj.optStringSafe("sku"),
-                        stockQuantity = obj.optInt("stock_quantity"),
-                        regularPrice = obj.optDouble("regular_price"),
-                        salePrice = if (obj.has("sale_price") && !obj.isNull("sale_price")) obj.optDouble("sale_price") else null,
-                        categoryName = obj.optStringSafe("category_name", "Collection"),
-                        stockStatus = obj.optStringSafe("stock_status", "In Stock"),
+                        name = obj.optStringSafe("name", obj.optStringSafe("product_name")),
+                        sku = obj.optStringSafe("sku", obj.optStringSafe("product_sku")),
+                        stockQuantity = obj.optInt("stock_quantity", obj.optInt("stock", obj.optInt("stockQuantity", 0))),
+                        regularPrice = obj.optDouble("regular_price", obj.optDouble("regularPrice", obj.optDouble("price", 0.0))),
+                        salePrice = listOf("sale_price", "salePrice", "special_price", "discount_price")
+                            .firstOrNull { obj.has(it) && !obj.isNull(it) }
+                            ?.let { obj.optDouble(it, Double.NaN) }
+                            ?.takeIf { it.isFinite() && it > 0.0 },
+                        categoryName = categoryName.ifBlank { "Collection" },
+                        stockStatus = obj.optStringSafe("stock_status", obj.optStringSafe("status", "In Stock")),
                     ),
                 )
             }
@@ -528,14 +557,27 @@ class CategoryRepositoryImpl(private val api: ApiClient) : CategoryRepository {
             val list = mutableListOf<Category>()
             for (i in 0 until data.length()) {
                 val obj = data.getJSONObject(i)
+                val imageValue = when (val rawImage = obj.opt("image")) {
+                    is JSONObject -> rawImage.optStringAny("url", "src", "image", "image_url", "path", "thumbnail", "thumb")
+                    is String -> rawImage
+                    else -> obj.optStringSafe("image_url", obj.optStringSafe("thumbnail", obj.optStringSafe("category_image")))
+                }
+                val thumbnailValue = when (val rawThumb = obj.opt("thumbnail")) {
+                    is JSONObject -> rawThumb.optStringAny("url", "src", "image", "image_url", "path", "thumbnail", "thumb")
+                    is String -> rawThumb
+                    else -> ""
+                }
+                val imageUrl = (imageValue.ifBlank { thumbnailValue }).ifBlank {
+                    obj.optStringSafe("image_url", obj.optStringSafe("category_image"))
+                }
                 list.add(
                     Category(
                         id = obj.optLong("id"),
-                        name = obj.optStringSafe("name"),
-                        slug = obj.optStringSafe("slug"),
-                        description = obj.optStringSafe("description"),
-                        imageUrl = obj.optStringSafe("image"),
-                        productCount = obj.optInt("product_count", 0),
+                        name = obj.optStringSafe("name", obj.optStringSafe("category_name", obj.optStringSafe("title"))),
+                        slug = obj.optStringSafe("slug", obj.optStringSafe("category_slug")),
+                        description = obj.optStringSafe("description", obj.optStringSafe("short_description")),
+                        imageUrl = imageUrl,
+                        productCount = obj.optInt("product_count", obj.optInt("products_count", obj.optInt("count", 0))),
                     ),
                 )
             }
@@ -559,17 +601,43 @@ class CustomerRepositoryImpl(private val api: ApiClient) : CustomerRepository {
             val list = mutableListOf<Customer>()
             for (i in 0 until data.length()) {
                 val obj = data.getJSONObject(i)
+                val customerPayload = obj.opt("customer")
+                val shippingPayload = obj.opt("shipping")
+                val name = when (customerPayload) {
+                    is JSONObject -> customerPayload.optStringAny("name", "full_name", "customer_name")
+                    else -> obj.optStringSafe("name", obj.optStringSafe("customer_name", obj.optStringSafe("full_name")))
+                }
+                val email = when (customerPayload) {
+                    is JSONObject -> customerPayload.optStringAny("email", "customer_email")
+                    else -> obj.optStringSafe("email", obj.optStringSafe("customer_email"))
+                }
+                val phone = when (customerPayload) {
+                    is JSONObject -> customerPayload.optStringAny("phone", "customer_phone")
+                    else -> obj.optStringSafe("phone", obj.optStringSafe("customer_phone"))
+                }
+                val address = when (shippingPayload) {
+                    is JSONObject -> shippingPayload.optStringAny("address", "delivery_address", "shipping_address")
+                    else -> obj.optStringSafe("address", obj.optStringSafe("delivery_address", obj.optStringSafe("shipping_address")))
+                }
+                val area = when (shippingPayload) {
+                    is JSONObject -> shippingPayload.optStringAny("area", "delivery_area", "area_name")
+                    else -> obj.optStringSafe("area", obj.optStringSafe("delivery_area", obj.optStringSafe("area_name", "Dhaka")))
+                }
+                val city = when (shippingPayload) {
+                    is JSONObject -> shippingPayload.optStringAny("city", "city_name")
+                    else -> obj.optStringSafe("city", obj.optStringSafe("city_name", "Dhaka"))
+                }
                 list.add(
                     Customer(
                         id = obj.optLong("id"),
-                        name = obj.optStringSafe("name"),
-                        email = obj.optStringSafe("email"),
-                        phone = obj.optStringSafe("phone"),
-                        address = obj.optStringSafe("address"),
-                        area = obj.optStringSafe("area", "Dhaka"),
-                        city = obj.optStringSafe("city", "Dhaka"),
-                        totalOrders = obj.optInt("total_orders", 1),
-                        totalSpent = obj.optDouble("total_spent", 0.0)
+                        name = name,
+                        email = email,
+                        phone = phone,
+                        address = address,
+                        area = area,
+                        city = city,
+                        totalOrders = obj.optInt("total_orders", obj.optInt("orders_count", obj.optInt("totalOrders", 1))),
+                        totalSpent = obj.optDouble("total_spent", obj.optDouble("totalSpent", obj.optDouble("spent", 0.0)))
                     )
                 )
             }
@@ -588,15 +656,15 @@ class CouponRepositoryImpl(private val api: ApiClient) : CouponRepository {
                 list.add(
                     Coupon(
                         id = obj.optLong("id"),
-                        code = obj.optStringSafe("code"),
-                        type = obj.optStringSafe("type", "percentage"),
-                        value = obj.optDouble("value"),
-                        minOrder = obj.optDouble("min_order"),
-                        maxDiscount = if (obj.has("max_discount") && !obj.isNull("max_discount")) obj.optDouble("max_discount") else null,
-                        expiryDate = obj.optStringSafe("expiry_date", "2028-12-31"),
-                        usageLimit = obj.optInt("usage_limit", 0),
-                        timesUsed = obj.optInt("times_used", 0),
-                        isActive = obj.optInt("is_active", 1) == 1
+                        code = obj.optStringSafe("code", obj.optStringSafe("coupon_code")),
+                        type = obj.optStringSafe("type", obj.optStringSafe("discount_type", "percentage")),
+                        value = obj.optDouble("value", obj.optDouble("discount_value", 0.0)),
+                        minOrder = obj.optDouble("min_order", obj.optDouble("minimum_order", 0.0)),
+                        maxDiscount = if (obj.has("max_discount") && !obj.isNull("max_discount")) obj.optDouble("max_discount") else if (obj.has("maxDiscount") && !obj.isNull("maxDiscount")) obj.optDouble("maxDiscount") else null,
+                        expiryDate = obj.optStringSafe("expiry_date", obj.optStringSafe("expires_at", "2028-12-31")),
+                        usageLimit = obj.optInt("usage_limit", obj.optInt("usageLimit", 0)),
+                        timesUsed = obj.optInt("times_used", obj.optInt("used_count", 0)),
+                        isActive = obj.optInt("is_active", obj.optInt("isActive", 1)) == 1
                     )
                 )
             }
@@ -620,16 +688,16 @@ class SettingsRepositoryImpl(private val api: ApiClient) : SettingsRepository {
         return api.get("settings").map { json ->
             val data = json.getJSONObject("data")
             StoreSettings(
-                storeName = data.optString("store_name", "Shopademia"),
-                storePhone = data.optString("store_phone", "+880 1560-024777"),
-                storeEmail = data.optString("store_email", "contact@shopademia.store"),
-                storeAddress = data.optString("store_address", "DHAKA, BANGLADESH"),
-                deliveryFeeLocalDhaka = data.optDouble("delivery_fee_local_dhaka", 60.0),
-                deliveryFeeDhaka = data.optDouble("delivery_fee_dhaka", 80.0),
-                deliveryFeeOutsideDhaka = data.optDouble("delivery_fee_outside_dhaka", 130.0),
-                bkashNumber = data.optString("bkash_number", "01560024777"),
-                nagadNumber = data.optString("nagad_number", "01560024777"),
-                announcementText = data.optStringSafe("announcement_text")
+                storeName = data.optString("store_name", data.optString("name", "Shopademia")),
+                storePhone = data.optString("store_phone", data.optString("phone", "+880 1560-024777")),
+                storeEmail = data.optString("store_email", data.optString("email", "contact@shopademia.store")),
+                storeAddress = data.optString("store_address", data.optString("address", "DHAKA, BANGLADESH")),
+                deliveryFeeLocalDhaka = data.optDouble("delivery_fee_local_dhaka", data.optDouble("localDhakaFee", 60.0)),
+                deliveryFeeDhaka = data.optDouble("delivery_fee_dhaka", data.optDouble("dhakaFee", 80.0)),
+                deliveryFeeOutsideDhaka = data.optDouble("delivery_fee_outside_dhaka", data.optDouble("outsideDhakaFee", 130.0)),
+                bkashNumber = data.optString("bkash_number", data.optString("bkash", "01560024777")),
+                nagadNumber = data.optString("nagad_number", data.optString("nagad", "01560024777")),
+                announcementText = data.optStringSafe("announcement_text", data.optStringSafe("announcement"))
             )
         }
     }

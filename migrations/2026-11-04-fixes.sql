@@ -1,4 +1,4 @@
--- Wonderful Collection additive MySQL/MariaDB migration.
+-- Shopademia additive MySQL/MariaDB migration.
 -- Back up first. Run tests/schema-check.sql and resolve duplicate payment references before this migration.
 -- Run each ALTER statement separately in phpMyAdmin. "Duplicate column" means it is already applied; continue.
 -- "Duplicate key name" means that index name already exists; confirm it covers the same columns before continuing.

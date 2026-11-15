@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /api/
 
-Sitemap: https://wonderfulcollection.store/sitemap.xml
+Sitemap: https://shopademia.store/sitemap.xml

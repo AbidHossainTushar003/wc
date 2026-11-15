@@ -5,7 +5,7 @@ $pdo = Database::getConnection();
 header('Content-Type: application/xml; charset=UTF-8');
 header('Cache-Control: public, max-age=300');
 
-$baseUrl = 'https://wonderfulcollection.store';
+$baseUrl = 'https://shopademia.store';
 $paths = [
     '/',
     '/about.html',
@@ -19,17 +19,17 @@ $paths = [
 ];
 
 try {
-    $productStmt = $pdo->query('SELECT id FROM products ORDER BY id');
+    $productStmt = $pdo->query('SELECT id FROM products WHERE is_archived = 0 AND is_sellable = 1 ORDER BY id');
     foreach ($productStmt->fetchAll(PDO::FETCH_COLUMN) as $productId) {
         $paths[] = '/product.html?id=' . rawurlencode((string)(int)$productId);
     }
 
-    $categoryStmt = $pdo->query('SELECT slug FROM categories ORDER BY id');
+    $categoryStmt = $pdo->query('SELECT slug FROM categories WHERE is_archived = 0 ORDER BY id');
     foreach ($categoryStmt->fetchAll(PDO::FETCH_COLUMN) as $slug) {
         $paths[] = '/category.html?cat=' . rawurlencode((string)$slug);
     }
 } catch (PDOException $e) {
-    error_log('Wonderful Collection sitemap query failed.');
+    error_log('Shopademia sitemap query failed.');
     http_response_code(500);
     header('Content-Type: text/plain; charset=UTF-8');
     echo 'Sitemap is temporarily unavailable.';

@@ -3,20 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Panel | Wonderful Collection Backend</title>
+  <title>Admin Panel | Shopademia</title>
+  <meta name="description" content="Shopademia administration panel.">
   <meta name="robots" content="noindex, nofollow">
-  <link rel="stylesheet" href="css/style.css">
-  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/css/style.css?v=20261113-chat-dock-v3">
+  <link rel="icon" href="/assets/favicon.ico" sizes="any">
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
   <style>
     body.admin-body {
-      background-color: #0f172a;
-      color: #f8fafc;
+      background-color: #171613;
+      color: #f7f4ee;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
     }
     .admin-header-pill {
-      background: #fbbf24;
+      background: #dec28f;
       color: #000000;
       font-weight: 900;
       font-size: 1.15rem;
@@ -25,20 +28,23 @@
       border-radius: 999px;
       display: inline-block;
       text-transform: uppercase;
-      box-shadow: 0 4px 15px rgba(251, 191, 36, 0.4);
+      box-shadow: 0 4px 15px rgba(176, 141, 87, 0.32);
     }
     .admin-subtext {
-      color: #38bdf8;
+      color: #dec28f;
       font-size: 0.95rem;
       font-weight: 600;
       margin-top: 8px;
     }
     .admin-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 20px;
-      max-width: 680px;
-      margin: 32px auto 48px;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+      max-width: 1180px;
+      margin: 24px auto 38px;
+    }
+    @media (max-width: 900px) {
+      .admin-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     }
     .admin-topbar,
     .admin-topbar > *,
@@ -88,6 +94,9 @@
     }
     .admin-card {
       background: #ffffff;
+      color: #171613;
+      font: inherit;
+      width: 100%;
       border-radius: 20px;
       padding: 24px 16px;
       display: flex;
@@ -101,16 +110,19 @@
       border: 3px solid transparent;
       user-select: none;
     }
+    #admin-app [hidden] {
+      display: none !important;
+    }
     .admin-card:hover {
       transform: translateY(-6px) scale(1.03);
       box-shadow: 0 14px 28px rgba(0,0,0,0.35);
-      border-color: #fbbf24;
+      border-color: #dec28f;
     }
     .admin-card-icon {
       font-size: 2.4rem;
       line-height: 1;
       margin-bottom: 12px;
-      color: #0f172a;
+      color: #171613;
     }
     .admin-card-title {
       font-size: 1rem;
@@ -119,8 +131,8 @@
     }
     /* Module View Screen */
     .admin-module-screen {
-      background: #1e293b;
-      border: 1px solid #334155;
+      background: #302d28;
+      border: 1px solid #514b42;
       border-radius: 20px;
       padding: 32px;
       max-width: 1040px;
@@ -131,6 +143,17 @@
     .admin-module-screen.active {
       display: block;
       animation: fadeIn 0.3s ease;
+    }
+    .coupon-admin-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+      gap: 24px;
+      align-items: start;
+    }
+    @media (max-width: 760px) {
+      .coupon-admin-layout {
+        grid-template-columns: minmax(0, 1fr);
+      }
     }
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(8px); }
@@ -144,31 +167,31 @@
     }
     .admin-table th {
       padding: 12px;
-      background: #0f172a;
-      color: #94a3b8;
+      background: #171613;
+      color: #b8b0a3;
       font-size: 0.8rem;
       text-transform: uppercase;
       font-weight: 700;
     }
     .admin-table td {
       padding: 12px;
-      border-bottom: 1px solid #334155;
+      border-bottom: 1px solid #514b42;
       font-size: 0.9rem;
     }
     .admin-table tr:hover td {
-      background: #273549;
+      background: #37332d;
     }
     .admin-input {
-      background: #0f172a;
-      border: 1px solid #334155;
-      color: #f8fafc;
+      background: #171613;
+      border: 1px solid #514b42;
+      color: #f7f4ee;
       padding: 10px 14px;
       border-radius: 8px;
       width: 100%;
       font-size: 0.95rem;
     }
     .admin-btn {
-      background: #fbbf24;
+      background: #dec28f;
       color: #000;
       font-weight: 800;
       padding: 10px 20px;
@@ -178,45 +201,276 @@
       transition: all 0.2s;
     }
     .admin-btn:hover {
-      background: #f59e0b;
+      background: #9a7a48;
       transform: translateY(-1px);
+    }
+    .admin-btn:disabled {
+      cursor: wait;
+      opacity: 0.7;
+      transform: none;
+    }
+    .admin-login-screen {
+      max-width: 460px;
+      margin: 8px auto 24px;
+      padding: clamp(24px, 3vw, 32px);
+      border-color: #514b42;
+      background: linear-gradient(160deg, #302d28 0%, #37332d 100%);
+    }
+    .admin-login-brand {
+      display: grid;
+      justify-items: center;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .admin-login-brand img {
+      width: 68px;
+      height: 68px;
+      margin-bottom: 18px;
+      padding: 10px;
+      border: 1px solid #625d54;
+      border-radius: 20px;
+      background: #fff;
+    }
+    .admin-login-eyebrow {
+      color: #dec28f;
+      font-size: 0.75rem;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+    .admin-login-title {
+      margin: 6px 0 8px;
+      color: #f7f4ee;
+      font-size: clamp(1.65rem, 5vw, 2rem);
+      line-height: 1.2;
+    }
+    .admin-login-description {
+      max-width: 330px;
+      color: #d6cec1;
+      font-size: 0.92rem;
+    }
+    .admin-login-form label {
+      display: block;
+      margin: 16px 0 6px;
+      color: #e8e2d8;
+      font-size: 0.88rem;
+      font-weight: 700;
+    }
+    .admin-login-form .admin-input {
+      min-height: 48px;
+    }
+    .admin-login-help {
+      display: block;
+      margin-top: 8px;
+      color: #d6cec1;
+      font-size: 0.8rem;
+      line-height: 1.5;
+    }
+    .admin-login-error {
+      padding: 12px 14px;
+      border: 1px solid #7f1d1d;
+      border-radius: 10px;
+      background: #451a1a;
+      color: #fecaca;
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+    .admin-login-footer {
+      margin-top: 22px;
+      text-align: center;
+    }
+    .admin-login-footer a {
+      color: #d6cec1;
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+    .admin-login-footer a:hover {
+      color: #dec28f;
+    }
+    .admin-grid {
+      max-width: 1020px;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    }
+    .admin-card {
+      min-height: 150px;
+      border: 1px solid rgba(222, 194, 143, .16);
+      background: linear-gradient(155deg, #34312b, #25231f);
+      color: #f7f4ee;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, .22);
+    }
+    .admin-card-icon { color: #dec28f; }
+    .admin-card-title { color: #f7f4ee !important; }
+    .admin-card:hover, .admin-card:focus-visible {
+      border-color: #dec28f;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, .34);
+    }
+    .admin-card:focus-visible, .admin-btn:focus-visible, .admin-input:focus-visible {
+      outline: 3px solid #dec28f;
+      outline-offset: 3px;
+    }
+    .admin-insights {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+      margin: 0 0 22px;
+      padding: 16px;
+      border: 1px solid #514b42;
+      border-radius: 16px;
+      background: linear-gradient(145deg, #25231f, #1d1b18);
+    }
+    .admin-insight-card {
+      min-width: 0;
+      padding: 14px;
+      border: 1px solid #48433b;
+      border-radius: 12px;
+      background: #302d28;
+    }
+    #dash-kpi-cards > div {
+      padding: 18px !important;
+      border: 1px solid #48433b !important;
+      border-radius: 14px !important;
+      background: linear-gradient(145deg, #302d28, #25231f) !important;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, .14);
+    }
+    .admin-insight-label { color: #b8b0a3; font-size: .78rem; }
+    .admin-insight-value { margin-top: 5px; color: #f7f4ee; font-size: 1.25rem; font-weight: 850; overflow-wrap: anywhere; }
+    .admin-module-error { margin: 0 0 18px; padding: 12px 14px; border: 1px solid #7f1d1d; border-radius: 10px; background: #451a1a; color: #fecaca; }
+    .admin-chart { grid-column: 1 / -1; display: grid; gap: 10px; padding: 8px 2px 0; }
+    .admin-chart-row { display: grid; grid-template-columns: minmax(90px, 1fr) minmax(80px, 2fr) auto; align-items: center; gap: 10px; color: #d6cec1; font-size: .82rem; }
+    .admin-chart-track { height: 9px; overflow: hidden; border-radius: 999px; background: #171613; }
+    .admin-chart-fill { height: 100%; min-width: 2px; border-radius: inherit; background: linear-gradient(90deg, #9a7a48, #dec28f); }
+    .admin-audit-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; padding: 0; list-style: none; }
+    .admin-audit-item { padding: 14px; border: 1px solid #514b42; border-radius: 12px; background: #25231f; }
+    .admin-audit-item strong { display: block; margin-bottom: 5px; color: #f7f4ee; }
+    .admin-audit-item span { color: #c9c1b6; font-size: .86rem; line-height: 1.5; }
+    .admin-audit-status { display: inline-block; margin-bottom: 8px; padding: 3px 8px; border-radius: 999px; font-size: .72rem; font-weight: 800; text-transform: uppercase; }
+    .admin-audit-status.complete { background: #123b2d; color: #86efac; }
+    .admin-audit-status.partial { background: #473719; color: #fcd34d; }
+    .admin-audit-status.verify { background: #173248; color: #93c5fd; }
+    .admin-audit-panel { margin: 0 0 28px; padding: 20px; border: 1px solid #514b42; border-radius: 16px; background: linear-gradient(145deg, #25231f, #1d1b18); }
+    .admin-audit-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+    .admin-audit-heading h3 { margin: 0 0 5px; color: #f7f4ee; font-size: 1.15rem; }
+    .admin-audit-heading p { margin: 0; color: #c9c1b6; font-size: .88rem; }
+    .admin-audit-legend { display: flex; gap: 6px; flex-wrap: wrap; }
+    .admin-audit-legend span { padding: 4px 8px; border-radius: 999px; font-size: .7rem; font-weight: 800; }
+    .admin-audit-legend .complete { background: #123b2d; color: #86efac; }
+    .admin-audit-legend .partial { background: #473719; color: #fcd34d; }
+    .admin-audit-legend .verify { background: #173248; color: #93c5fd; }
+    .admin-audit-item button { margin-top: 10px; padding: 0; border: 0; background: transparent; color: #dec28f; font: inherit; font-size: .82rem; font-weight: 800; text-align: left; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+    .admin-audit-item button:focus-visible { outline: 2px solid #dec28f; outline-offset: 3px; border-radius: 2px; }
+    .admin-role-permissions { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 8px; }
+    .admin-role-permissions label { padding: 8px 10px; border: 1px solid #514b42; border-radius: 8px; color: #e8e2d8; }
+    .admin-table { display: table; }
+    .admin-module-screen { max-width: 1200px; }
+    .admin-body .support-dashboard-grid {
+      grid-template-columns: minmax(270px, .82fr) minmax(0, 1.8fr);
+      gap: 18px;
+      align-items: stretch;
+    }
+    .admin-body .support-sidebar-panel,
+    .admin-body .support-thread-panel {
+      min-width: 0;
+      border: 1px solid #514b42;
+      border-radius: 16px;
+      background: linear-gradient(155deg, #25231f, #1d1b18);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, .2);
+    }
+    .admin-body .support-panel-header {
+      min-height: 60px;
+      padding: 14px 18px;
+      border-bottom: 1px solid #48433b;
+      color: #dec28f;
+    }
+    .admin-body .support-conversation-item {
+      border: 1px solid transparent;
+      border-radius: 12px;
+      background: #302d28;
+    }
+    .admin-body .support-conversation-item.is-active {
+      border-color: #dec28f;
+      background: #37332d;
+    }
+    .admin-body #support-admin-messages {
+      min-height: 360px;
+      max-height: 540px;
+      padding: 20px;
+      background: radial-gradient(ellipse at top, rgba(222,194,143,.07), transparent 62%);
+    }
+    .admin-body .support-admin-message[data-sender-type="internal_note"] {
+      border-color: #b7791f;
+      background: #3a2f1e;
+    }
+    .admin-body .support-reply-form {
+      margin: 0 14px 12px;
+      padding: 10px;
+      border: 1px solid #514b42;
+      border-radius: 14px;
+      background: #171613;
+    }
+    .admin-body .support-reply-form .admin-input { border: 0; resize: vertical; }
+    .admin-body [data-support-close-button] { margin: 0 14px 14px; }
+    @media (max-width: 680px) {
+      .admin-insights { padding: 10px; gap: 8px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .admin-insight-card { padding: 11px; }
+      .admin-chart-row { grid-template-columns: minmax(72px, .9fr) minmax(55px, 1fr) auto; gap: 7px; font-size: .75rem; }
+      .admin-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .admin-card { min-height: 128px; }
+      .admin-body .support-dashboard-grid { grid-template-columns: minmax(0, 1fr); }
+      .admin-body #support-admin-messages { min-height: 300px; max-height: 55vh; }
+      #coupons-layout { grid-template-columns: minmax(0, 1fr) !important; }
+      #reports-breakdown-box > div { grid-template-columns: minmax(0, 1fr) !important; }
+      #inv-summary-banner { flex-wrap: wrap; }
+      #mod-products > div:first-child,
+      #mod-orders > div:first-child,
+      #mod-settings > div:first-child { flex-wrap: wrap; }
+      #mod-products > div:first-child > div { width: 100%; flex-wrap: wrap; justify-content: flex-start; }
+      #mod-settings fieldset { min-width: 0; }
+      #mod-orders .feedback-filter-actions { flex-wrap: wrap; }
+      #mod-settings #hero-slides-editor small { overflow-wrap: anywhere; word-break: break-word; }
     }
   </style>
 </head>
 <body class="admin-body">
-
   <!-- Top bar with link to front store -->
-  <div class="admin-topbar" style="padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155;">
-    <a class="admin-store-link" href="index.html" style="color: #94a3b8; font-size: 0.88rem; font-weight: 600; display: flex; align-items: center; gap: 6px;">
-      ← View Customer Store (wonderfulcollection.store)
+  <div class="admin-topbar" style="padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #514b42;">
+    <a class="admin-store-link" href="/index.html" style="color: #b8b0a3; font-size: 0.88rem; font-weight: 600; display: flex; align-items: center; gap: 6px;">
+      ← View Customer Store (shopademia.store)
     </a>
-    <div class="admin-session-controls" style="display: flex; align-items: center; gap: 12px; font-size: 0.85rem; color: #fbbf24; font-weight: 700;">
+    <div class="admin-session-controls" style="display: flex; align-items: center; gap: 12px; font-size: 0.85rem; color: #dec28f; font-weight: 700;">
       <span id="admin-user-name">Not signed in</span>
-      <button id="admin-change-password" type="button" class="admin-btn" onclick="toggleAdminPasswordPanel()" style="display: none; padding: 6px 12px;">Change password</button>
-      <button id="admin-logout" type="button" class="admin-btn" onclick="handleAdminLogout()" style="display: none; padding: 6px 12px;">Sign out</button>
+      <button id="admin-change-password" type="button" class="admin-btn" data-csp-click="toggleAdminPasswordPanel" style="display: none; padding: 6px 12px;">Change password</button>
+      <button id="admin-logout" type="button" class="admin-btn" data-csp-click="handleAdminLogout" style="display: none; padding: 6px 12px;">Sign out</button>
     </div>
   </div>
 
-  <main style="max-width: 1100px; margin: 32px auto; padding: 0 20px; flex: 1; width: 100%;">
-    <section id="admin-login-screen" class="admin-module-screen active" style="max-width: 480px; margin: 40px auto;">
-      <h1 style="margin-bottom: 20px; color: #fbbf24;">Admin sign in</h1>
-      <form onsubmit="handleAdminLogin(event)">
-        <label for="admin-username" style="display: block; margin-bottom: 6px;">Username</label>
-        <input id="admin-username" class="admin-input" autocomplete="username" required>
-        <label for="admin-password" style="display: block; margin: 16px 0 6px;">Password</label>
-        <input id="admin-password" class="admin-input" type="password" autocomplete="current-password" required>
-        <label for="admin-totp-code" style="display: block; margin: 16px 0 6px;">Authenticator code</label>
-        <input id="admin-totp-code" class="admin-input" type="text" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" aria-describedby="admin-totp-help" required>
-        <small id="admin-totp-help" style="display: block; color: #94a3b8; margin-top: 6px;">Enter the current 6-digit code from your authenticator app.</small>
-        <button id="admin-login-button" type="submit" class="admin-btn" style="width: 100%; margin-top: 20px;">Sign in</button>
-        <p id="admin-login-error" role="alert" style="display: none; color: #fca5a5; margin-top: 14px;"></p>
+  <main style="max-width: 1240px; margin: 8px auto; padding: 0 20px; flex: 1; width: 100%;">
+    <section id="admin-login-screen" class="admin-module-screen admin-login-screen active" aria-labelledby="admin-login-title">
+      <div class="admin-login-brand">
+        <img src="/assets/android-chrome-192x192.png" alt="Shopademia">
+        <span class="admin-login-eyebrow">Authorized staff</span>
+        <h1 id="admin-login-title" class="admin-login-title">Welcome back</h1>
+        <p class="admin-login-description">Sign in to manage your store securely.</p>
+      </div>
+      <form id="admin-login-form" class="admin-login-form" method="post" action="/admin/" data-csp-submit="handleAdminLogin">
+        <label for="admin-username">Username</label>
+        <input id="admin-username" class="admin-input" name="username" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" required>
+        <label for="admin-password">Password</label>
+        <input id="admin-password" class="admin-input" name="password" type="password" autocomplete="current-password" required>
+        <label for="admin-totp-code">Authenticator code</label>
+        <input id="admin-totp-code" class="admin-input" name="totp_code" type="text" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" autocapitalize="none" aria-describedby="admin-totp-help" required>
+        <small id="admin-totp-help" class="admin-login-help">Enter the current 6-digit code from your authenticator app.</small>
+        <button id="admin-login-button" type="submit" class="admin-btn" style="width: 100%; min-height: 48px; margin-top: 22px;">Sign in</button>
+        <p id="admin-login-error" class="admin-login-error" role="alert" aria-live="assertive" style="display: none; margin-top: 16px;"></p>
       </form>
+      <div class="admin-login-footer">
+        <a href="/index.html">← Back to Shopademia</a>
+      </div>
     </section>
 
     <div id="admin-app" style="display: none;">
     <section id="admin-password-panel" class="admin-module-screen" style="max-width: 520px; margin: 0 auto 24px;">
-      <form onsubmit="handleAdminPasswordChange(event)">
-        <h2 style="margin-bottom: 16px; color: #fbbf24;">Change admin password</h2>
+      <form data-csp-submit="handleAdminPasswordChange">
+        <h2 style="margin-bottom: 16px; color: #dec28f;">Change admin password</h2>
         <label for="admin-current-password" style="display: block; margin-bottom: 6px;">Current password</label>
         <input id="admin-current-password" class="admin-input" type="password" autocomplete="current-password" required>
         <label for="admin-new-password" style="display: block; margin: 16px 0 6px;">New password (at least 14 characters)</label>
@@ -224,72 +478,79 @@
         <label for="admin-confirm-password" style="display: block; margin: 16px 0 6px;">Confirm new password</label>
         <input id="admin-confirm-password" class="admin-input" type="password" minlength="14" maxlength="72" autocomplete="new-password" required>
         <button type="submit" class="admin-btn" style="margin-top: 20px;">Update password</button>
-        <button type="button" class="admin-btn" onclick="toggleAdminPasswordPanel()" style="margin: 20px 0 0 8px; background: #334155; color: #fff;">Cancel</button>
+        <button type="button" class="admin-btn" data-csp-click="toggleAdminPasswordPanel" style="margin: 20px 0 0 8px; background: #514b42; color: #fff;">Cancel</button>
         <p id="admin-password-error" role="alert" style="display: none; color: #fca5a5; margin-top: 14px;"></p>
       </form>
     </section>
     
-    <!-- Top Branding matching Image 2 -->
-    <div style="text-align: center; margin-bottom: 8px;">
-      <div class="admin-header-pill">ADMIN PANEL &ndash; BACKEND SCREENS</div>
-      <div class="admin-subtext">Only for you (the shop owner)</div>
-    </div>
-
     <!-- 3x3 Grid Matching Image 2 -->
     <div class="admin-grid" id="main-admin-grid">
       <!-- 1. Dashboard -->
-      <div class="admin-card" onclick="openModule('dashboard')">
+      <button type="button" class="admin-card" data-admin-module="dashboard" data-csp-click="openModule" data-csp-value="dashboard">
         <div class="admin-card-icon">📊</div>
         <div class="admin-card-title" style="color: #ea580c;">Dashboard</div>
-      </div>
+      </button>
 
       <!-- 2. Products -->
-      <div class="admin-card" onclick="openModule('products')">
+      <button type="button" class="admin-card" data-admin-module="products" data-csp-click="openModule" data-csp-value="products">
         <div class="admin-card-icon">📦</div>
         <div class="admin-card-title" style="color: #0284c7;">Products</div>
-      </div>
+      </button>
 
       <!-- 3. Categories -->
-      <div class="admin-card" onclick="openModule('categories')">
+      <button type="button" class="admin-card" data-admin-module="categories" data-csp-click="openModule" data-csp-value="categories">
         <div class="admin-card-icon">🗂️</div>
         <div class="admin-card-title" style="color: #0d9488;">Categories</div>
-      </div>
+      </button>
 
       <!-- 4. Orders -->
-      <div class="admin-card" onclick="openModule('orders')">
+      <button type="button" class="admin-card" data-admin-module="orders" data-csp-click="openModule" data-csp-value="orders">
         <div class="admin-card-icon">📑</div>
         <div class="admin-card-title" style="color: #db2777;">Orders</div>
-      </div>
+      </button>
 
       <!-- 5. Customers -->
-      <div class="admin-card" onclick="openModule('customers')">
+      <button type="button" class="admin-card" data-admin-module="customers" data-csp-click="openModule" data-csp-value="customers">
         <div class="admin-card-icon">👥</div>
         <div class="admin-card-title" style="color: #7c3aed;">Customers</div>
-      </div>
+      </button>
 
       <!-- 6. Coupons -->
-      <div class="admin-card" onclick="openModule('coupons')">
+      <button type="button" class="admin-card" data-admin-module="coupons" data-csp-click="openModule" data-csp-value="coupons">
         <div class="admin-card-icon">🏷️</div>
         <div class="admin-card-title" style="color: #0891b2;">Coupons</div>
-      </div>
+      </button>
 
       <!-- 7. Stock / Inventory -->
-      <div class="admin-card" onclick="openModule('inventory')">
+      <button type="button" class="admin-card" data-admin-module="inventory" data-csp-click="openModule" data-csp-value="inventory">
         <div class="admin-card-icon">🗄️</div>
         <div class="admin-card-title" style="color: #d97706;">Stock / Inventory</div>
-      </div>
+      </button>
 
       <!-- 8. Reports -->
-      <div class="admin-card" onclick="openModule('reports')">
+      <button type="button" class="admin-card" data-admin-module="reports" data-csp-click="openModule" data-csp-value="reports">
         <div class="admin-card-icon">📈</div>
         <div class="admin-card-title" style="color: #dc2626;">Reports</div>
-      </div>
+      </button>
 
       <!-- 9. Settings -->
-      <div class="admin-card" onclick="openModule('settings')">
+      <button type="button" class="admin-card" data-admin-module="settings" data-csp-click="openModule" data-csp-value="settings">
         <div class="admin-card-icon">⚙️</div>
-        <div class="admin-card-title" style="color: #f97316;">Settings</div>
-      </div>
+        <div class="admin-card-title" style="color: #806338;">Settings</div>
+      </button>
+
+      <button type="button" class="admin-card" data-admin-module="support" data-csp-click="openModule" data-csp-value="support">
+        <div class="admin-card-icon">💬</div>
+        <div class="admin-card-title" style="color: #0d9488;">Support Inbox <span id="support-unread-badge" hidden aria-live="polite"></span></div>
+      </button>
+      <button type="button" class="admin-card" data-admin-module="team" data-super-admin-only hidden data-csp-click="openModule" data-csp-value="team">
+        <div class="admin-card-icon">🛡️</div>
+        <div class="admin-card-title">Staff &amp; Roles</div>
+      </button>
+      <button type="button" class="admin-card" data-admin-module="audit" data-super-admin-only hidden data-csp-click="openModule" data-csp-value="audit">
+        <div class="admin-card-icon">🧾</div>
+        <div class="admin-card-title">Audit Log</div>
+      </button>
     </div>
 
     <!-- Active Module Display Container -->
@@ -299,12 +560,75 @@
       <div id="mod-dashboard" class="admin-module-screen">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
           <h2 style="font-size: 1.6rem; font-weight: 800; color: #ea580c;">📊 Store Dashboard</h2>
-          <button onclick="closeModule()" class="admin-btn" style="background: #334155; color: #fff;">← Back to Grid</button>
+          <button data-csp-click="closeModule" class="admin-btn" style="background: #514b42; color: #fff;">← Back to Grid</button>
         </div>
+        <p style="margin:0 0 20px;color:#c9c1b6;">Your store at a glance. Choose a workspace below to manage orders, products, customers, and support.</p>
+        <form id="dashboard-range-form" data-csp-submit="loadDashboard" style="display:flex;flex-wrap:wrap;align-items:end;gap:10px;margin-bottom:16px;">
+          <label>From<input id="dashboard-from" class="admin-input" type="date"></label>
+          <label>To<input id="dashboard-to" class="admin-input" type="date"></label>
+          <button type="submit" class="admin-btn">Apply date range</button>
+          <button type="button" class="admin-btn" data-csp-click="resetDashboardRange" style="background:#514b42;">All time</button>
+        </form>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 28px;" id="dash-kpi-cards">
           <!-- KPI cards injected via JS -->
         </div>
-        <h3 style="font-size: 1.15rem; font-weight: 700; color: #cbd5e1; margin-bottom: 12px;">Recent Store Orders</h3>
+        <p id="dash-status" role="status" aria-live="polite" style="color:#d6cec1;"></p>
+        <section class="admin-audit-panel" aria-labelledby="admin-audit-title">
+          <div class="admin-audit-heading">
+            <div>
+              <h3 id="admin-audit-title">Feature coverage &amp; follow-up</h3>
+              <p>Implementation inventory from the current admin UI. “Verify” items need a live-environment check.</p>
+            </div>
+            <span class="admin-audit-legend"><span class="complete">Available</span><span class="partial">Partial</span><span class="verify">Verify</span></span>
+          </div>
+          <ul class="admin-audit-list">
+            <li class="admin-audit-item">
+              <span class="admin-audit-status complete">Available</span>
+              <strong>Catalog &amp; merchandising</strong>
+              <span>Product/category management, product SEO, multiple product images, category imagery, stock and sellability controls.</span>
+              <button type="button" data-admin-permission="products.read" data-csp-click="openModule" data-csp-value="products">Review catalog</button>
+            </li>
+            <li class="admin-audit-item">
+              <span class="admin-audit-status complete">Available</span>
+              <strong>Orders &amp; customers</strong>
+              <span>Order/payment status management, order filters/sorting, customer search, sorting and VIP tagging.</span>
+              <button type="button" data-admin-permission="orders.read" data-csp-click="openModule" data-csp-value="orders">Review orders</button>
+              <button type="button" data-admin-permission="customers.read" data-csp-click="openModule" data-csp-value="customers">Review customers</button>
+            </li>
+            <li class="admin-audit-item">
+              <span class="admin-audit-status complete">Available</span>
+              <strong>Support &amp; consent records</strong>
+              <span>Support inbox, unread replies and FAQ tools; consent choices are logged with available context and can be filtered.</span>
+              <button type="button" data-admin-permission="support.read" data-csp-click="openModule" data-csp-value="support">Review support</button>
+              <button type="button" data-admin-permission="settings.read" data-csp-click="openModule" data-csp-value="settings">Review consent log</button>
+            </li>
+            <li class="admin-audit-item">
+              <span class="admin-audit-status complete">Available</span>
+              <strong>Navigation &amp; hero content</strong>
+              <span>Super Admin controls for the primary navigation and scheduled, reorderable hero slides.</span>
+              <button type="button" data-admin-permission="settings.read" data-csp-click="openModule" data-csp-value="settings">Review settings</button>
+            </li>
+            <li class="admin-audit-item" data-super-admin-only hidden>
+              <span class="admin-audit-status complete">Available</span>
+              <strong>Staff &amp; custom roles</strong>
+              <span>Super Admin staff-account and custom-role controls are available in Settings.</span>
+              <button type="button" data-csp-click="openModule" data-csp-value="team">Review staff</button>
+            </li>
+            <li class="admin-audit-item">
+              <span class="admin-audit-status partial">Partial</span>
+              <strong>Reports &amp; trends</strong>
+              <span>Date-range totals and CSV summary export are available; comparative trends and detailed breakdowns remain limited.</span>
+              <button type="button" data-admin-permission="reports.read" data-csp-click="openModule" data-csp-value="reports">Review reports</button>
+            </li>
+            <li class="admin-audit-item">
+              <span class="admin-audit-status verify">Verify</span>
+              <strong>Live payment &amp; notification providers</strong>
+              <span>Confirm provider credentials, webhook delivery and real customer notifications in the deployed environment; the local admin UI cannot establish live provider health.</span>
+              <button type="button" data-admin-permission="orders.read" data-csp-click="openModule" data-csp-value="orders">Review order logs</button>
+            </li>
+          </ul>
+        </section>
+        <h3 style="font-size: 1.15rem; font-weight: 700; color: #d6cec1; margin-bottom: 12px;">Recent Store Orders</h3>
         <div style="overflow-x: auto;">
           <table class="admin-table" id="dash-orders-table">
             <thead><tr><th>Order #</th><th>Customer</th><th>Area</th><th>Total</th><th>Status</th><th>Action</th></tr></thead>
@@ -318,12 +642,13 @@
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
           <h2 style="font-size: 1.6rem; font-weight: 800; color: #0284c7;">📦 Product Management</h2>
           <div style="display: flex; gap: 10px;">
-            <button type="button" onclick="showAddProductModal()" class="admin-btn">+ Add Product</button>
-            <button onclick="closeModule()" class="admin-btn" style="background: #334155; color: #fff;">← Grid</button>
+            <button type="button" data-admin-permission="products.create" data-csp-click="showAddProductModal" class="admin-btn">+ Add Product</button>
+            <button type="button" data-admin-permission="products.read" data-csp-click="exportProductsCsv" class="admin-btn">Export CSV</button>
+            <button data-csp-click="closeModule" class="admin-btn" style="background: #514b42; color: #fff;">← Grid</button>
           </div>
         </div>
-        <form id="product-create-form" onsubmit="handleAddProduct(event)" style="display: none; background: #0f172a; padding: 20px; border-radius: 12px; border: 1px solid #334155; margin-bottom: 24px;">
-          <h3 id="product-form-title" style="color: #38bdf8; margin-bottom: 16px;">Add a product</h3>
+        <form id="product-create-form" data-csp-submit="handleAddProduct" style="display: none; background: #171613; padding: 20px; border-radius: 12px; border: 1px solid #514b42; margin-bottom: 24px;">
+          <h3 id="product-form-title" style="color: #dec28f; margin-bottom: 16px;">Add a product</h3>
           <input id="new-product-id" type="hidden">
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px;">
             <div>
@@ -345,6 +670,7 @@
             <div>
               <label for="new-product-stock" style="display: block; margin-bottom: 6px;">Stock quantity *</label>
               <input id="new-product-stock" class="admin-input" type="number" min="0" step="1" value="0" required>
+              <input id="new-product-expected-stock" type="hidden" value="">
             </div>
             <div>
               <label for="new-product-sku" style="display: block; margin-bottom: 6px;">SKU</label>
@@ -358,26 +684,38 @@
               <label for="new-product-long-description" style="display: block; margin-bottom: 6px;">Full product description</label>
               <textarea id="new-product-long-description" class="admin-input" rows="4" maxlength="10000"></textarea>
             </div>
+            <fieldset style="grid-column:1/-1;border:1px solid #514b42;border-radius:10px;padding:14px;">
+              <legend style="color:#dec28f;padding:0 6px;">Search engine details</legend>
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;">
+                <label>SEO title <input id="new-product-seo-title" class="admin-input" maxlength="70"></label>
+                <label>Focus keyword <input id="new-product-focus-keyword" class="admin-input" maxlength="100"></label>
+                <label style="grid-column:1/-1;">Meta description <textarea id="new-product-meta-description" class="admin-input" rows="2" maxlength="160"></textarea></label>
+                <label>Search result H1 <input id="new-product-h1" class="admin-input" maxlength="150"></label>
+                <label>Product image alt text <input id="new-product-alt-text" class="admin-input" maxlength="200"></label>
+                <label style="grid-column:1/-1;">Canonical URL (optional) <input id="new-product-canonical-url" class="admin-input" type="url" maxlength="500" placeholder="Leave blank to use the product URL"></label>
+              </div>
+            </fieldset>
             <div style="grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 18px;">
               <label><input id="new-product-featured" type="checkbox"> Featured product</label>
               <label><input id="new-product-trending" type="checkbox"> Trending product</label>
+              <label><input id="new-product-sellable" type="checkbox" checked> Available for sale</label>
             </div>
             <div style="grid-column: 1 / -1;">
-              <label for="new-product-images" style="display: block; margin-bottom: 6px;">Product photos (up to 5 JPEG, PNG, or WebP images, 1.5 MB each)</label>
-              <input id="new-product-images" name="images[]" class="admin-input" type="file" accept="image/jpeg,.jpg,.jpeg,image/png,.png,image/webp,.webp" multiple onchange="handleProductImageSelection(event)">
-              <small id="product-image-help" style="display: block; color: #94a3b8; margin-top: 6px;">Choose multiple photos. On edit, new photos are added to the existing set.</small>
+              <label for="new-product-images" style="display: block; margin-bottom: 6px;">Product photos (up to 10 JPEG, PNG, or WebP images, 1.5 MB each)</label>
+              <input id="new-product-images" name="images[]" data-admin-permission="products.images.upload" class="admin-input" type="file" accept="image/jpeg,.jpg,.jpeg,image/png,.png,image/webp,.webp" multiple data-csp-change="handleProductImageSelection">
+              <small id="product-image-help" style="display: block; color: #b8b0a3; margin-top: 6px;">Choose multiple photos. On edit, new photos are added to the existing set.</small>
               <div id="product-image-preview" style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px;"></div>
             </div>
           </div>
           <p id="product-create-status" role="status" style="display: none; margin-top: 12px;"></p>
           <div style="display: flex; gap: 10px; margin-top: 16px;">
             <button id="product-create-submit" type="submit" class="admin-btn">Save Product</button>
-            <button type="button" onclick="hideProductForm()" class="admin-btn" style="background: #334155; color: #fff;">Cancel</button>
+            <button type="button" data-csp-click="hideProductForm" class="admin-btn" style="background: #514b42; color: #fff;">Cancel</button>
           </div>
         </form>
         <div style="overflow-x: auto;">
           <table class="admin-table" id="products-table">
-            <thead><tr><th>Image</th><th>Name</th><th>Category</th><th>Regular</th><th>Sale</th><th>Stock</th><th>Action</th></tr></thead>
+            <thead><tr><th>Image</th><th>Name</th><th>Category</th><th>Regular</th><th>Sale</th><th>Stock</th><th>Online sale</th><th>Action</th></tr></thead>
             <tbody></tbody>
           </table>
         </div>
@@ -387,18 +725,28 @@
       <div id="mod-categories" class="admin-module-screen">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
           <h2 style="font-size: 1.6rem; font-weight: 800; color: #0d9488;">🗂️ Categories</h2>
-          <button onclick="closeModule()" class="admin-btn" style="background: #334155; color: #fff;">← Grid</button>
+          <button data-csp-click="closeModule" class="admin-btn" style="background: #514b42; color: #fff;">← Grid</button>
         </div>
-        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+        <div id="coupons-layout" style="display: grid; grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr); gap: 24px;">
           <table class="admin-table" id="categories-table">
-            <thead><tr><th>Category</th><th>Slug</th><th>Count</th></tr></thead>
+            <thead><tr><th>Category</th><th>Slug</th><th>Count</th><th>Actions</th></tr></thead>
             <tbody></tbody>
           </table>
-          <div style="background: #0f172a; padding: 20px; border-radius: 12px; border: 1px solid #334155;">
+          <div id="category-admin-form" style="background: #171613; padding: 20px; border-radius: 12px; border: 1px solid #514b42;">
             <h3 style="margin-bottom: 12px; color: #0d9488;">+ Add New Category</h3>
-            <input type="text" id="new-cat-name" placeholder="Category Name" class="admin-input" style="margin-bottom: 10px;">
-            <input type="text" id="new-cat-slug" placeholder="Slug (optional)" class="admin-input" style="margin-bottom: 14px;">
-            <button onclick="handleAddCategory()" class="admin-btn" style="width: 100%;">Create Category</button>
+            <input id="new-cat-id" type="hidden">
+            <label for="new-cat-name" style="display: block; margin-bottom: 6px;">Category name</label>
+            <input type="text" id="new-cat-name" placeholder="Category Name" class="admin-input" maxlength="150" style="margin-bottom: 10px;">
+            <label for="new-cat-slug" style="display: block; margin-bottom: 6px;">Slug (optional)</label>
+            <input type="text" id="new-cat-slug" placeholder="Slug (optional)" class="admin-input" maxlength="150" style="margin-bottom: 14px;">
+            <label for="new-cat-description" style="display: block; margin-bottom: 6px;">Description</label>
+            <textarea id="new-cat-description" class="admin-input" maxlength="2000" rows="3" style="margin-bottom: 14px;"></textarea>
+            <label for="new-cat-image" style="display:block;margin-bottom:6px;">Category image (optional)</label>
+            <input type="file" id="new-cat-image" class="admin-input" accept="image/jpeg,image/png,image/webp">
+            <div id="new-cat-image-preview" style="margin:10px 0;"></div>
+            <p id="category-create-status" role="status" aria-live="polite" style="display: none; margin-bottom: 12px;"></p>
+            <button id="category-create-submit" type="button" data-csp-click="handleAddCategory" class="admin-btn" style="width: 100%;">Create Category</button>
+            <button id="category-edit-cancel" type="button" data-csp-click="resetCategoryForm" class="admin-btn" hidden style="width: 100%;margin-top:8px;background:#514b42;">Cancel edit</button>
           </div>
         </div>
       </div>
@@ -407,45 +755,137 @@
       <div id="mod-orders" class="admin-module-screen">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
           <h2 style="font-size: 1.6rem; font-weight: 800; color: #db2777;">📑 Order Management</h2>
-          <button onclick="closeModule()" class="admin-btn" style="background: #334155; color: #fff;">← Grid</button>
+          <button data-csp-click="closeModule" class="admin-btn" style="background: #514b42; color: #fff;">← Grid</button>
         </div>
+        <p style="color:#fecaca; margin:0 0 16px;">Mobile-wallet orders marked for verification are held from shipping. Verify receipt with the provider before setting payment to Paid.</p>
+        <form id="orders-filter-form" data-csp-submit="filterOrders" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:12px;">
+          <label>Search orders<input id="orders-search" class="admin-input" type="search" maxlength="100" placeholder="Order, customer, phone, tracking"></label>
+          <label>Order status
+            <select id="orders-status-filter" class="admin-input">
+              <option value="">All statuses</option><option value="Pending">Pending</option><option value="Processing">Processing</option><option value="Shipped">Shipped</option><option value="Delivered">Delivered</option><option value="Cancelled">Cancelled</option>
+            </select>
+          </label>
+          <label>Payment status
+            <select id="orders-payment-filter" class="admin-input">
+              <option value="">All payments</option><option value="Pending">Pending</option><option value="Pending Verification">Pending Verification</option><option value="Paid">Paid</option><option value="Failed">Failed</option><option value="Refunded">Refunded</option>
+            </select>
+          </label>
+          <button type="submit" class="admin-btn" style="align-self:end;">Filter orders</button>
+        </form>
+        <label for="orders-sort" style="display:inline-flex;align-items:center;gap:8px;margin:0 0 14px;color:#d6cec1;">Sort orders
+          <select id="orders-sort" class="admin-input" style="width:auto;min-width:190px;">
+            <option value="newest">Newest first</option><option value="oldest">Oldest first</option>
+            <option value="total_high">Highest total</option><option value="total_low">Lowest total</option>
+            <option value="payment">Payment status</option><option value="order_status">Order status</option>
+          </select>
+        </label>
         <div style="overflow-x: auto;">
           <table class="admin-table" id="orders-table">
-            <thead><tr><th>Order #</th><th>Customer / Phone</th><th>Delivery Area</th><th>Total</th><th>Status</th><th>Update Status</th></tr></thead>
+            <thead><tr><th>Order #</th><th>Customer / Phone</th><th>Delivery Area</th><th>Total</th><th>Payment / Review</th><th>Status</th><th>Update Status</th><th>Update Payment</th><th>Details</th></tr></thead>
             <tbody></tbody>
           </table>
         </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:10px;">
+          <p id="orders-pagination-status" role="status" aria-live="polite"></p>
+          <div style="display:flex;gap:8px;">
+            <button type="button" class="admin-btn" data-csp-click="previousOrdersPage">Previous</button>
+            <button type="button" class="admin-btn" data-csp-click="nextOrdersPage">Next</button>
+          </div>
+        </div>
+        <section style="margin-top:32px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+            <h3 style="color:#dec28f;">Customer feedback moderation</h3>
+            <div class="feedback-filter-actions" style="display:flex;gap:8px;align-items:center;">
+              <label for="feedback-filter">Filter</label>
+              <select id="feedback-filter" class="admin-input" style="width:auto;" data-csp-change="feedbackFilter">
+                <option value="pending">Awaiting approval</option>
+                <option value="approved">Approved</option>
+                <option value="hidden">Hidden / private</option>
+                <option value="all">All feedback</option>
+              </select>
+              <button type="button" class="admin-btn" data-csp-click="loadFeedback">Refresh</button>
+            </div>
+          </div>
+          <p id="feedback-admin-status" role="status" aria-live="polite"></p>
+          <div style="overflow-x:auto;">
+            <table class="admin-table" id="feedback-table">
+              <thead><tr><th>Order / Item</th><th>Customer</th><th>Rating / Comment</th><th>Photo</th><th>Public</th><th>Admin reply</th><th>Moderation</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
+        <section style="margin-top:32px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+            <h3 style="color:#dec28f;">Customer message delivery log</h3>
+            <button type="button" class="admin-btn" data-csp-click="loadNotificationLogs">Refresh log</button>
+          </div>
+          <p id="notification-log-status" role="status" aria-live="polite"></p>
+          <div style="overflow-x:auto;">
+            <table class="admin-table" id="notification-log-table">
+              <thead><tr><th>Order</th><th>Channel / Template</th><th>Recipient</th><th>Status</th><th>Attempts</th><th>Last error</th><th>Created / Sent</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
+        <dialog id="order-detail-dialog" style="max-width:min(760px,94vw);max-height:85vh;overflow:auto;background:#201e1a;color:#f7f4ee;border:1px solid #625d54;border-radius:14px;padding:20px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+            <h3 id="order-detail-title" style="margin:0;color:#dec28f;">Order details</h3>
+            <button type="button" class="admin-btn" data-csp-click="closeOrderDetails">Close</button>
+          </div>
+          <div id="order-detail-content" style="margin-top:14px;"></div>
+        </dialog>
       </div>
 
       <!-- 5. CUSTOMERS SCREEN -->
       <div id="mod-customers" class="admin-module-screen">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
           <h2 style="font-size: 1.6rem; font-weight: 800; color: #7c3aed;">👥 Customer Directory</h2>
-          <button onclick="closeModule()" class="admin-btn" style="background: #334155; color: #fff;">← Grid</button>
+          <button data-csp-click="closeModule" class="admin-btn" style="background: #514b42; color: #fff;">← Grid</button>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:16px;">
+          <label>Search customers <input id="customers-search" class="admin-input" type="search" placeholder="Name, email, phone, area"></label>
+          <label>VIP filter <select id="customers-vip-filter" class="admin-input"><option value="">All customers</option><option value="vip">VIP only</option><option value="regular">Not VIP</option></select></label>
+          <label>Sort by <select id="customers-sort" class="admin-input"><option value="spent">Highest spend</option><option value="orders">Most orders</option><option value="newest">Newest joined</option><option value="name">Name A–Z</option></select></label>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;">
+          <p id="customers-status" role="status" aria-live="polite" style="margin:0;"></p>
+          <button id="customers-export" type="button" class="admin-btn" data-csp-click="exportCustomersCsv" disabled>Export filtered CSV</button>
         </div>
         <div style="overflow-x: auto;">
           <table class="admin-table" id="customers-table">
-            <thead><tr><th>Name</th><th>Email / Phone</th><th>Location</th><th>Orders</th><th>Total Spent</th></tr></thead>
+            <thead><tr><th>Name / VIP</th><th>Email / Phone</th><th>Location</th><th>Orders</th><th>Total Spent</th><th>Tag</th></tr></thead>
             <tbody></tbody>
           </table>
         </div>
+        <dialog id="customer-profile-dialog" style="max-width:min(760px,94vw);max-height:85vh;overflow:auto;background:#201e1a;color:#f7f4ee;border:1px solid #625d54;border-radius:14px;padding:20px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+            <h3 id="customer-profile-title" style="margin:0;color:#dec28f;">Customer profile</h3>
+            <button type="button" class="admin-btn" data-csp-click="closeCustomerProfile">Close</button>
+          </div>
+          <div id="customer-profile-content" style="margin-top:14px;"></div>
+        </dialog>
       </div>
 
       <!-- 6. COUPONS SCREEN -->
       <div id="mod-coupons" class="admin-module-screen">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
           <h2 style="font-size: 1.6rem; font-weight: 800; color: #0891b2;">🏷️ Discount Coupons</h2>
-          <button onclick="closeModule()" class="admin-btn" style="background: #334155; color: #fff;">← Grid</button>
+          <button data-csp-click="closeModule" class="admin-btn" style="background: #514b42; color: #fff;">← Grid</button>
         </div>
-        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
-          <table class="admin-table" id="coupons-table">
-            <thead><tr><th>Code</th><th>Discount</th><th>Min Order</th><th>Status</th><th>Action</th></tr></thead>
-            <tbody></tbody>
-          </table>
-          <form id="coupon-form" onsubmit="handleSaveCoupon(event)" style="background: #0f172a; padding: 20px; border-radius: 12px; border: 1px solid #334155;">
+        <p style="margin: 0 0 10px; color: #c9c1b6; font-size: 0.88rem;">Paid sales exclude unpaid and cancelled orders. Share = coupon-attributed paid sales ÷ all paid store sales. The top-selling coupon is tagged automatically.</p>
+        <div id="coupon-sales-performance" aria-label="Coupon paid sales performance" style="display: grid; gap: 12px; margin-bottom: 20px;"></div>
+        <div class="coupon-admin-layout">
+          <div style="overflow-x: auto;">
+            <table class="admin-table" id="coupons-table">
+              <thead><tr><th>Code / Tag</th><th>Discount</th><th>Min Order</th><th>Paid Sales</th><th>Sales Share</th><th>Paid Orders</th><th>Status</th><th>Action</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <form id="coupon-form" data-csp-submit="handleSaveCoupon" style="background: #171613; padding: 20px; border-radius: 12px; border: 1px solid #514b42;">
             <h3 id="coupon-form-title" style="margin-bottom: 12px; color: #0891b2;">+ Create Coupon</h3>
             <input type="hidden" id="new-cp-id">
             <input type="text" id="new-cp-code" placeholder="Enter coupon code" class="admin-input" style="margin-bottom: 10px; text-transform: uppercase;">
+            <input type="text" id="new-cp-tag" placeholder="Campaign tag (optional, max 40 characters)" class="admin-input" maxlength="40" style="margin-bottom: 10px;" aria-label="Optional coupon campaign tag">
             <input type="number" id="new-cp-val" placeholder="Value (e.g. 10 for % or 150 for BDT)" class="admin-input" style="margin-bottom: 10px;">
             <select id="new-cp-type" class="admin-input" style="margin-bottom: 10px;">
               <option value="percentage">Percentage (%)</option>
@@ -458,7 +898,7 @@
             <label style="display: block; margin-bottom: 14px;"><input type="checkbox" id="new-cp-active" checked> Active</label>
             <div style="display: flex; gap: 8px;">
               <button id="coupon-submit" type="submit" class="admin-btn" style="flex: 1;">Create Coupon</button>
-              <button id="coupon-cancel" type="button" onclick="resetCouponForm()" class="admin-btn" style="display: none; background: #334155; color: #fff;">Cancel</button>
+              <button id="coupon-cancel" type="button" data-csp-click="resetCouponForm" class="admin-btn" style="display: none; background: #514b42; color: #fff;">Cancel</button>
             </div>
           </form>
         </div>
@@ -468,12 +908,20 @@
       <div id="mod-inventory" class="admin-module-screen">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
           <h2 style="font-size: 1.6rem; font-weight: 800; color: #d97706;">🗄️ Stock & Inventory Manager</h2>
-          <button onclick="closeModule()" class="admin-btn" style="background: #334155; color: #fff;">← Grid</button>
+          <button data-csp-click="closeModule" class="admin-btn" style="background: #514b42; color: #fff;">← Grid</button>
         </div>
         <div id="inv-summary-banner" style="margin-bottom: 20px; display: flex; gap: 16px;"></div>
+        <button id="inventory-movements-toggle" type="button" class="admin-btn" data-csp-click="toggleStockMovementHistory" aria-expanded="false">Show stock movement history</button>
+        <p id="inventory-movements-status" role="status" aria-live="polite"></p>
+        <div id="inventory-movements-panel" hidden style="overflow-x:auto;margin:12px 0 20px;">
+          <table class="admin-table" id="inventory-movements-table">
+            <thead><tr><th>Date</th><th>Product</th><th>Movement</th><th>Quantity</th><th>Reference</th><th>Reason</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
         <div style="overflow-x: auto;">
           <table class="admin-table" id="inventory-table">
-            <thead><tr><th>Product Name</th><th>SKU</th><th>Stock</th><th>Status</th><th>Quick Adjust</th></tr></thead>
+            <thead><tr><th>Product Name</th><th>Category</th><th>SKU</th><th>Stock</th><th>Status</th><th>Quick Adjust</th></tr></thead>
             <tbody></tbody>
           </table>
         </div>
@@ -483,58 +931,345 @@
       <div id="mod-reports" class="admin-module-screen">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
           <h2 style="font-size: 1.6rem; font-weight: 800; color: #dc2626;">📈 Financial Reports & Sales</h2>
-          <button onclick="closeModule()" class="admin-btn" style="background: #334155; color: #fff;">← Grid</button>
+          <button data-csp-click="closeModule" class="admin-btn" style="background: #514b42; color: #fff;">← Grid</button>
         </div>
+        <form id="reports-range-form" data-csp-submit="loadReports" style="display:flex;flex-wrap:wrap;align-items:end;gap:12px;margin:0 0 12px;padding:16px;background:#171613;border:1px solid #514b42;border-radius:12px;">
+          <label style="display:grid;gap:6px;color:#d6cec1;">From
+            <input id="reports-from" class="admin-input" type="date" required>
+          </label>
+          <label style="display:grid;gap:6px;color:#d6cec1;">To
+            <input id="reports-to" class="admin-input" type="date" required>
+          </label>
+          <button type="submit" class="admin-btn">Apply dates</button>
+          <button id="reports-export" type="button" class="admin-btn" data-csp-click="exportReportsCsv" disabled>Download summary CSV</button>
+        </form>
+        <p id="reports-range-status" role="status" aria-live="polite" style="min-height:1.5em;color:#b8b0a3;"></p>
         <div id="reports-breakdown-box"></div>
       </div>
 
       <!-- 9. SETTINGS SCREEN -->
       <div id="mod-settings" class="admin-module-screen">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-          <h2 style="font-size: 1.6rem; font-weight: 800; color: #f97316;">⚙️ Store Settings</h2>
-          <button onclick="closeModule()" class="admin-btn" style="background: #334155; color: #fff;">← Grid</button>
+          <h2 style="font-size: 1.6rem; font-weight: 800; color: #806338;">⚙️ Store Settings</h2>
+          <button data-csp-click="closeModule" class="admin-btn" style="background: #514b42; color: #fff;">← Grid</button>
         </div>
-        <form onsubmit="handleSaveSettings(event)" style="max-width: 600px;">
+        <form id="store-settings-form" data-csp-submit="handleSaveSettings" style="max-width: 600px;">
           <div style="margin-bottom: 14px;">
-            <label style="display: block; font-size: 0.85rem; color: #94a3b8; margin-bottom: 4px;">Store Name</label>
+            <label style="display: block; font-size: 0.85rem; color: #b8b0a3; margin-bottom: 4px;">Store Name</label>
             <input type="text" id="set_store_name" class="admin-input">
           </div>
           <div style="margin-bottom: 14px;">
-            <label for="set_announcement_text" style="display: block; font-size: 0.85rem; color: #94a3b8; margin-bottom: 4px;">Scrolling announcement message</label>
+            <label for="set_announcement_text" style="display: block; font-size: 0.85rem; color: #b8b0a3; margin-bottom: 4px;">Scrolling announcement message</label>
             <textarea id="set_announcement_text" class="admin-input" rows="2" maxlength="240" required></textarea>
           </div>
+          <fieldset style="margin:18px 0;padding:16px;border:1px solid #514b42;border-radius:12px;">
+            <legend style="color:#dec28f;padding:0 6px;">Footer social links</legend>
+            <div style="display:grid;gap:12px;">
+              <label>Instagram label<input id="set_social_instagram_label" class="admin-input" maxlength="80"></label>
+              <label>Instagram URL<input id="set_social_instagram_url" class="admin-input" type="url" maxlength="500"></label>
+              <label>X label<input id="set_social_x_label" class="admin-input" maxlength="80"></label>
+              <label>X URL<input id="set_social_x_url" class="admin-input" type="url" maxlength="500"></label>
+              <label>Facebook label<input id="set_social_facebook_label" class="admin-input" maxlength="80"></label>
+              <label>Facebook URL<input id="set_social_facebook_url" class="admin-input" type="url" maxlength="500"></label>
+              <label>Social section heading<input id="set_social_heading" class="admin-input" maxlength="40"></label>
+            </div>
+          </fieldset>
+          <fieldset data-super-admin-only hidden style="margin:18px 0;padding:16px;border:1px solid #514b42;border-radius:12px;">
+            <legend style="color:#dec28f;padding:0 6px;">Homepage collection banner</legend>
+            <p style="color:#c9c1b6;margin:0 0 12px;">Use text only, or add an optional image. The banner keeps a readable overlay with either style.</p>
+            <label>Eyebrow<input id="set_promo_eyebrow" class="admin-input" maxlength="80"></label>
+            <label>Title<input id="set_promo_title" class="admin-input" maxlength="120"></label>
+            <label>Description<textarea id="set_promo_description" class="admin-input" rows="2" maxlength="240"></textarea></label>
+            <label>Button label<input id="set_promo_button_text" class="admin-input" maxlength="40"></label>
+            <label>Button destination<input id="set_promo_link" class="admin-input" type="text" inputmode="url" maxlength="500" placeholder="shop.html or https://example.com/collection"></label>
+            <label>Banner image (optional, JPEG/PNG/WebP; cropped and compressed)
+              <input id="set_promo_image" class="admin-input" type="file" accept="image/jpeg,image/png,image/webp">
+            </label>
+            <label><input id="set_promo_remove_image" type="checkbox"> Remove current banner image</label>
+            <small id="set_promo_image_current" style="display:block;color:#b8b0a3;">No banner image selected.</small>
+          </fieldset>
           <div style="margin-bottom: 14px;">
-            <label style="display: block; font-size: 0.85rem; color: #94a3b8; margin-bottom: 4px;">Local Delivery Fee (৳)</label>
-            <input type="number" id="set_fee_Dhaka" class="admin-input">
-          </div>
-          <div style="margin-bottom: 14px;">
-            <label style="display: block; font-size: 0.85rem; color: #94a3b8; margin-bottom: 4px;">Inside Dhaka Regular Delivery Fee (৳)</label>
+            <label style="display: block; font-size: 0.85rem; color: #b8b0a3; margin-bottom: 4px;">Inside Dhaka Regular Delivery Fee (৳)</label>
             <input type="number" id="set_fee_dhaka" class="admin-input">
           </div>
           <div style="margin-bottom: 14px;">
-            <label style="display: block; font-size: 0.85rem; color: #94a3b8; margin-bottom: 4px;">Outside Dhaka Delivery Fee (৳)</label>
+            <label style="display: block; font-size: 0.85rem; color: #b8b0a3; margin-bottom: 4px;">Outside Dhaka Delivery Fee (৳)</label>
             <input type="number" id="set_fee_outside_dhaka" class="admin-input">
           </div>
           <div style="margin-bottom: 14px;">
-            <label style="display: block; font-size: 0.85rem; color: #94a3b8; margin-bottom: 4px;">bKash Account / Number</label>
+            <label style="display: block; font-size: 0.85rem; color: #b8b0a3; margin-bottom: 4px;">bKash Account / Number</label>
             <input type="text" id="set_bkash" class="admin-input">
           </div>
           <div style="margin-bottom: 14px;">
-            <label style="display: block; font-size: 0.85rem; color: #94a3b8; margin-bottom: 4px;">Nagad Account / Number</label>
+            <label style="display: block; font-size: 0.85rem; color: #b8b0a3; margin-bottom: 4px;">Nagad Account / Number</label>
             <input type="text" id="set_nagad" class="admin-input">
           </div>
           <div style="margin-bottom: 20px;">
-            <label style="display: block; font-size: 0.85rem; color: #94a3b8; margin-bottom: 4px;">Rocket Account / Number</label>
+            <label style="display: block; font-size: 0.85rem; color: #b8b0a3; margin-bottom: 4px;">Rocket Account / Number</label>
             <input type="text" id="set_rocket" class="admin-input">
           </div>
-          <button type="submit" class="admin-btn">Save Settings Changes</button>
+          <button type="submit" data-admin-permission="settings.update" class="admin-btn">Save Settings Changes</button>
+          <p id="store-settings-status" role="status" aria-live="polite"></p>
         </form>
+
+        <section id="tracking-manager" data-super-admin-only hidden style="margin-top:32px;padding:22px;background:#171613;border:1px solid #514b42;border-radius:14px;">
+          <h3 style="margin:0 0 8px;color:#dec28f;">Tracking &amp; Analytics</h3>
+          <p style="margin:0 0 16px;color:#d6cec1;">These trusted-admin snippets run on every public storefront page, including checkout, account, order confirmation, and 404 pages. Change them only if you trust the code and its provider.</p>
+          <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px;">
+            <button type="button" class="admin-btn" data-csp-click="verifyTrackingInstallation">Verify installation</button>
+            <button type="button" class="admin-btn" data-csp-click="previewTrackingInstallation">Preview unsaved changes</button>
+            <button type="button" class="admin-btn" data-csp-click="purgeTrackingCache">Purge storefront cache</button>
+          </div>
+          <p id="tracking-manager-status" role="status" aria-live="polite"></p>
+          <div id="tracking-slots-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:16px;"></div>
+          <section id="tracking-audit-panel" hidden style="margin-top:20px;padding:16px;border:1px solid #514b42;border-radius:10px;">
+            <h4 id="tracking-audit-title" style="margin-top:0;color:#dec28f;">Tracking audit history</h4>
+            <div id="tracking-audit-rows" aria-live="polite"></div>
+          </section>
+          <section id="tracking-preview-panel" hidden style="margin-top:20px;padding:16px;border:1px solid #514b42;border-radius:10px;">
+            <h4 style="margin-top:0;color:#dec28f;">Sandboxed storefront preview</h4>
+            <p>Preview uses unsaved snippets in an isolated frame; scripts are not executed in this preview.</p>
+            <iframe id="tracking-preview-frame" title="Sandboxed storefront home page preview" sandbox="" referrerpolicy="no-referrer" style="width:100%;min-height:520px;border:1px solid #514b42;background:#fff;"></iframe>
+          </section>
+          <section style="margin-top:20px;padding-top:16px;border-top:1px solid #514b42;color:#d6cec1;">
+            <h4 style="margin:0 0 8px;color:#dec28f;">After setup</h4>
+            <ul style="padding-left:22px;">
+              <li>Google Search Console verification takes effect after you click Verify in Search Console.</li>
+              <li>GA4 data can take 24-48 hours to appear. Google Tag Assistant can confirm GA and GTM tags.</li>
+              <li>Check Meta Pixel events in Meta Events Manager.</li>
+              <li>Storefront HTML is served without a server-side snippet cache. If an external CDN caches HTML, purge it in that provider's dashboard.</li>
+            </ul>
+          </section>
+        </section>
+
+        <section data-super-admin-only hidden style="margin-top: 32px; padding: 22px; background: #171613; border: 1px solid #514b42; border-radius: 14px;">
+          <h3 style="margin: 0 0 8px; color: #dec28f;">Primary navigation</h3>
+          <p style="margin: 0 0 18px; color: #d6cec1;">Choose up to five links and set their order. All store pages and categories remain available in the More menu.</p>
+          <div style="display: flex; flex-wrap: wrap; align-items: end; gap: 10px;">
+            <label style="flex: 1 1 260px;">Add a main navigation link
+              <select id="primary-nav-add" class="admin-input"></select>
+            </label>
+            <button type="button" class="admin-btn" data-csp-click="addPrimaryNavLink">Add link</button>
+          </div>
+          <ol id="primary-nav-items" style="padding-left: 26px;"></ol>
+          <button type="button" class="admin-btn" data-csp-click="savePrimaryNavLinks">Save navigation</button>
+          <p id="primary-nav-status" role="status" aria-live="polite" style="margin: 12px 0 0;"></p>
+        </section>
+
+        <section data-super-admin-only hidden style="margin-top: 24px; padding: 22px; background: #171613; border: 1px solid #514b42; border-radius: 14px;">
+          <h3 style="margin: 0 0 8px; color: #dec28f;">Hero Slides</h3>
+          <p style="margin: 0 0 18px; color: #d6cec1;">Upload a desktop image and optionally a mobile crop. Images are validated, resized, and compressed before storage. Slides can be scheduled, enabled, and reordered.</p>
+          <div id="hero-slides-editor"></div>
+          <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px;">
+            <button type="button" class="admin-btn" data-csp-click="addHeroSlide">+ Add slide</button>
+            <button type="button" class="admin-btn" data-csp-click="saveHeroSlides">Save slides</button>
+          </div>
+          <p id="hero-slides-status" role="status" aria-live="polite" style="margin: 12px 0 0;"></p>
+        </section>
+
+        <section data-super-admin-only hidden style="margin-top: 24px; padding: 22px; background: #171613; border: 1px solid #514b42; border-radius: 14px;">
+          <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px;">
+            <div>
+              <h3 style="margin: 0 0 6px; color: #dec28f;">Privacy consent log</h3>
+              <p style="margin: 0; color: #d6cec1;">Consent choices include the page, locale, timezone, and coarse device/browser details. No precise location or raw IP address is stored.</p>
+            </div>
+            <button type="button" class="admin-btn" data-csp-click="loadConsentLogs">Refresh log</button>
+          </div>
+          <p id="consent-log-status" role="status" aria-live="polite" style="margin: 12px 0;"></p>
+          <div style="overflow-x: auto;">
+            <table class="admin-table" id="consent-log-table">
+              <thead><tr><th>Date</th><th>Choice</th><th>Page / locale</th><th>Timezone</th><th>Device / browser</th><th>Analytics</th><th>Marketing</th><th>Session replay</th><th>Policy</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
+        <section data-super-admin-only hidden style="margin-top: 24px; padding: 22px; background: #171613; border: 1px solid #514b42; border-radius: 14px;">
+          <h3 style="margin:0 0 6px;color:#dec28f;">Consent activity filters</h3>
+          <p style="margin:0 0 14px;color:#d6cec1;">Filter the recent consent receipts by choice and policy version.</p>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;">
+            <label>Choice
+              <select id="consent-log-choice" class="admin-input">
+                <option value="">All choices</option><option value="accept_all">Accept all</option><option value="reject_all">Reject all</option><option value="custom">Custom</option>
+              </select>
+            </label>
+            <label>Search policy version
+              <input id="consent-log-search" class="admin-input" type="search" maxlength="32" placeholder="Policy version">
+            </label>
+          </div>
+        </section>
+        <section data-super-admin-only hidden style="margin-top:24px;padding:22px;background:#171613;border:1px solid #514b42;border-radius:14px;">
+          <h3 style="margin:0 0 6px;color:#dec28f;">Staff accounts</h3>
+          <p style="margin:0 0 16px;color:#d6cec1;">New accounts must change their temporary password at first sign-in. Deactivation revokes active sessions.</p>
+          <form id="staff-create-form" data-csp-submit="createStaffAccount" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;align-items:end;">
+            <label>Username<input id="staff-new-username" class="admin-input" minlength="3" maxlength="48" autocomplete="off" required></label>
+            <label>Full name<input id="staff-new-name" class="admin-input" maxlength="120" required></label>
+            <label>Temporary password<input id="staff-new-password" class="admin-input" type="password" minlength="14" maxlength="72" autocomplete="new-password" required></label>
+            <label>Role<select id="staff-new-role" class="admin-input" required></select></label>
+            <button type="submit" class="admin-btn">Create staff account</button>
+          </form>
+          <h4 style="margin:22px 0 6px;color:#dec28f;">Reset a staff password</h4>
+          <p style="margin:0 0 12px;color:#d6cec1;">Requires your current Super Admin password. The selected administrator will be signed out and must change the temporary password at next sign-in.</p>
+          <form id="staff-password-reset-form" data-csp-submit="resetStaffPassword" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;align-items:end;">
+            <label>Administrator<select id="staff-reset-admin" class="admin-input" required></select></label>
+            <label>Your current password<input id="staff-reset-current-password" class="admin-input" type="password" autocomplete="current-password" required></label>
+            <label>Temporary password<input id="staff-reset-temporary-password" class="admin-input" type="password" minlength="14" maxlength="72" autocomplete="new-password" required></label>
+            <label>Confirm temporary password<input id="staff-reset-confirm-password" class="admin-input" type="password" minlength="14" maxlength="72" autocomplete="new-password" required></label>
+            <button type="submit" class="admin-btn">Reset staff password</button>
+          </form>
+          <p id="staff-password-reset-status" role="status" aria-live="polite"></p>
+          <p id="staff-management-status" role="status" aria-live="polite"></p>
+          <div style="overflow-x:auto;"><table class="admin-table" id="staff-table"><thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Status</th><th>Action</th></tr></thead><tbody></tbody></table></div>
+        </section>
+        <section data-super-admin-only hidden style="margin-top:24px;padding:22px;background:#171613;border:1px solid #514b42;border-radius:14px;">
+          <h3 style="margin:0 0 6px;color:#dec28f;">Custom roles &amp; permissions</h3>
+          <p style="margin:0 0 16px;color:#d6cec1;">Grant only the permissions each staff member needs. Built-in roles cannot be overwritten.</p>
+          <form id="admin-role-form" data-csp-submit="saveAdminRole">
+            <label>Role name<input id="admin-role-name" class="admin-input" maxlength="40" required style="max-width:360px;"></label>
+            <div id="admin-role-permissions" class="admin-role-permissions" style="margin:14px 0;"></div>
+            <button type="submit" class="admin-btn">Save custom role</button>
+          </form>
+          <div style="overflow-x:auto;margin-top:16px;"><table class="admin-table" id="admin-roles-table"><thead><tr><th>Role</th><th>Permissions</th><th>Action</th></tr></thead><tbody></tbody></table></div>
+        </section>
+      </div>
+
+      <div id="mod-support" class="admin-module-screen">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:24px;flex-wrap:wrap;">
+          <h2 style="font-size:1.6rem;font-weight:800;color:#0d9488;">💬 Customer Support</h2>
+          <button data-csp-click="closeModule" class="admin-btn" style="background:#514b42;color:#fff;">← Grid</button>
+        </div>
+
+        <section style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:18px;padding:16px;background:#171613;border:1px solid #514b42;border-radius:12px;">
+          <label data-admin-permission="support.update"><input id="support-admin-online" type="checkbox" data-csp-change="supportOnline"> I am available for live replies</label>
+          <form id="support-chat-settings-form" data-admin-permission="support.update" data-csp-submit="saveSupportSettings" style="display:flex;align-items:end;gap:10px;flex-wrap:wrap;">
+            <label for="support-bot-wait">Bot fallback wait (seconds)
+              <input id="support-bot-wait" class="admin-input" type="number" min="10" max="3600" step="1" required style="width:160px;">
+            </label>
+            <button type="submit" class="admin-btn">Save support settings</button>
+          </form>
+        </section>
+        <p style="margin: 0 0 10px; color: #c9c1b6; font-size: 0.88rem;">The inbox refreshes for new messages every 5 seconds.</p>
+        <form id="support-ticket-filter-form" data-csp-submit="filterSupportTickets" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:12px;">
+          <label>Search tickets<input id="support-ticket-search" class="admin-input" type="search" maxlength="100" placeholder="Name, contact, or ticket ID"></label>
+          <label>Status
+            <select id="support-ticket-status-filter" class="admin-input" data-csp-change="filterSupportTickets">
+              <option value="open">Open</option><option value="pending">Pending</option><option value="resolved">Resolved</option><option value="closed">Closed</option><option value="all">All statuses</option>
+            </select>
+          </label>
+          <label>Priority
+            <select id="support-ticket-priority-filter" class="admin-input" data-csp-change="filterSupportTickets">
+              <option value="all">All priorities</option><option value="urgent">Urgent</option><option value="high">High</option><option value="normal">Normal</option><option value="low">Low</option>
+            </select>
+          </label>
+          <button type="submit" class="admin-btn" style="align-self:end;">Search tickets</button>
+        </form>
+        <p id="support-chat-status" role="status" aria-live="polite"></p>
+        <div class="support-dashboard-grid">
+          <section class="support-sidebar-panel">
+            <div class="support-panel-header">
+              <h3>Open conversations</h3>
+              <span class="support-panel-chip">Live</span>
+            </div>
+            <div id="support-conversation-list" aria-live="polite"></div>
+          </section>
+          <section class="support-thread-panel">
+            <div class="support-panel-header">
+              <h3 id="support-conversation-title">Select a conversation</h3>
+            </div>
+            <div id="support-admin-messages" aria-live="polite"></div>
+            <section id="support-ticket-controls" data-admin-permission="support.update" hidden style="padding:12px;border-top:1px solid #514b42;">
+              <form id="support-ticket-form" data-csp-submit="saveSupportTicket" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;align-items:end;">
+                <label>Status
+                  <select id="support-ticket-status" class="admin-input">
+                    <option value="open">Open</option><option value="pending">Pending</option><option value="resolved">Resolved</option><option value="closed">Closed</option>
+                  </select>
+                </label>
+                <label>Priority
+                  <select id="support-ticket-priority" class="admin-input">
+                    <option value="low">Low</option><option value="normal">Normal</option><option value="high">High</option><option value="urgent">Urgent</option>
+                  </select>
+                </label>
+                <label>Assigned staff
+                  <select id="support-ticket-assignee" class="admin-input"></select>
+                </label>
+                <button type="submit" class="admin-btn">Save ticket</button>
+              </form>
+              <form id="support-internal-note-form" data-csp-submit="sendSupportInternalNote" style="display:flex;gap:8px;align-items:end;margin-top:10px;flex-wrap:wrap;">
+                <label style="flex:1;min-width:200px;">Internal note (not visible to customer)
+                  <textarea id="support-internal-note" class="admin-input" maxlength="2000" rows="2" required disabled></textarea>
+                </label>
+                <button type="submit" class="admin-btn" data-support-note-button disabled>Save internal note</button>
+              </form>
+            </section>
+            <form id="support-admin-reply-form" class="support-reply-form" data-admin-permission="support.update" data-csp-submit="sendSupportReply">
+              <label class="sr-only" for="support-admin-reply">Reply to customer</label>
+              <textarea id="support-admin-reply" class="admin-input" maxlength="2000" rows="2" required aria-label="Reply to customer" placeholder="Write a reply… (Enter to send, Shift+Enter for a new line)" disabled></textarea>
+              <button type="submit" class="admin-btn" data-support-reply-button disabled>Reply</button>
+            </form>
+            <button type="button" class="admin-btn secondary" data-admin-permission="support.update" data-csp-click="closeSupportConversation" disabled data-support-close-button>Close conversation</button>
+            <button type="button" class="admin-btn" data-super-admin-only hidden data-csp-click="deleteSupportConversation" disabled data-support-delete-button style="margin:0 14px 14px;background:#b4232f;color:#fff;">Delete conversation</button>
+          </section>
+        </div>
+        <section style="margin-top:26px;padding:16px;background:#171613;border:1px solid #514b42;border-radius:12px;">
+          <h3 style="color:#dec28f;margin-bottom:12px;">FAQ answers used by the assistant</h3>
+          <form id="support-faq-form" data-admin-permission="support.update" data-csp-submit="saveSupportFaq" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;">
+            <input id="support-faq-id" type="hidden">
+            <label>Question<input id="support-faq-question" class="admin-input" maxlength="300" required></label>
+            <label>Answer<textarea id="support-faq-answer" class="admin-input" maxlength="4000" rows="3" required></textarea></label>
+            <label>Matching keywords (comma-separated)<input id="support-faq-keywords" class="admin-input" maxlength="500"></label>
+            <label><input id="support-faq-active" type="checkbox" checked> Active</label>
+            <button type="submit" class="admin-btn" style="align-self:end;">Save FAQ</button>
+            <button type="button" class="admin-btn" data-csp-click="resetSupportFaq" style="align-self:end;background:#514b42;">New FAQ</button>
+          </form>
+          <p id="support-faq-status" role="status" aria-live="polite"></p>
+          <div style="overflow-x:auto;margin-top:12px;">
+            <table class="admin-table" id="support-faq-table">
+              <thead><tr><th>Question</th><th>Keywords</th><th>Active</th><th>Actions</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+
+      <div id="mod-team" class="admin-module-screen" data-super-admin-only hidden>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:24px;flex-wrap:wrap;">
+          <h2 style="font-size:1.6rem;font-weight:800;color:#dec28f;">🛡️ Staff &amp; Roles</h2>
+          <button data-csp-click="closeModule" class="admin-btn" style="background:#514b42;color:#fff;">← Grid</button>
+        </div>
+        <div id="team-insights"></div>
+        <div style="overflow-x:auto;"><table class="admin-table" id="team-screen-table"><thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Status</th></tr></thead><tbody></tbody></table></div>
+        <p style="color:#c9c1b6;">Use Settings to create accounts and manage custom permissions. Access is restricted to Super Admins.</p>
+      </div>
+
+      <div id="mod-audit" class="admin-module-screen" data-super-admin-only hidden>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:24px;flex-wrap:wrap;">
+          <h2 style="font-size:1.6rem;font-weight:800;color:#dec28f;">🧾 Admin Audit Log</h2>
+          <button data-csp-click="closeModule" class="admin-btn" style="background:#514b42;color:#fff;">← Grid</button>
+        </div>
+        <form id="audit-log-filter-form" data-csp-submit="loadAuditLog" style="display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin-bottom:12px;">
+          <label>Search admin, entity, or ID<input id="audit-log-search" class="admin-input" type="search" maxlength="100"></label>
+          <label>Action<input id="audit-log-action" class="admin-input" maxlength="100" placeholder="Exact action name"></label>
+          <button type="submit" class="admin-btn">Search</button>
+        </form>
+        <p id="audit-log-status" role="status" aria-live="polite"></p>
+        <div style="overflow-x:auto;">
+          <table class="admin-table" id="audit-log-table">
+            <thead><tr><th>Date</th><th>Admin</th><th>Action</th><th>Entity</th><th>Changes</th><th>IP address</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px;">
+          <p id="audit-log-page-status" role="status" aria-live="polite"></p>
+          <div style="display:flex;gap:8px;">
+            <button id="audit-log-previous" type="button" class="admin-btn" data-csp-click="previousAuditLogPage" disabled>Previous</button>
+            <button id="audit-log-next" type="button" class="admin-btn" data-csp-click="nextAuditLogPage" disabled>Next</button>
+          </div>
+        </div>
       </div>
 
     </div>
     </div>
   </main>
 
-  <script src="js/admin.js"></script>
+  <script src="/js/admin.js?v=20261126-coupon-performance-v2"></script>
 </body>
 </html>

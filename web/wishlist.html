@@ -3,10 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>My Wishlist | Wonderful Collection Dhaka</title>
+  <title>My Wishlist | Shopademia</title>
+  <meta name="description" content="View products saved to your Shopademia wishlist.">
   <meta name="robots" content="noindex, nofollow">
-  <link rel="stylesheet" href="css/style.css">
-  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/style.css?v=20261113-chat-dock-v3">
+  <link rel="stylesheet" href="css/consent.css?v=20261112-consent">
+  <link rel="icon" href="assets/favicon.ico" sizes="any">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
 </head>
 <body>
   <div class="top-bar">
@@ -26,7 +30,7 @@
 
   <header class="site-header">
     <div class="header-container">
-      <a href="index.html" class="brand-logo-wrap"><img width="741" height="265" src="assets/logo.jpg" alt="Wonderful Collection" class="brand-logo-img"></a>
+      <a href="index.html" class="brand-logo-wrap"><img width="741" height="265" src="assets/logo-shopademia.jpg" alt="Shopademia" class="brand-logo-img"></a>
       <div class="header-search">
         <form action="search.html" method="GET" class="search-input-wrap">
           <input type="text" name="q" class="search-input" placeholder="Search..." required>
@@ -41,9 +45,10 @@
     </div>
   </header>
 
-  <nav class="site-nav">
+  <nav class="site-nav" aria-label="Primary navigation">
     <div class="nav-container">
-      <ul class="nav-links">
+      <button class="nav-menu-toggle" type="button" aria-expanded="false" aria-controls="nav-menu-panel">Menu / More</button>
+      <ul class="nav-links" id="nav-links">
         <li><a href="index.html">Home</a></li>
         <li><a href="shop.html">All Products</a></li>
         <li><a href="category.html?cat=mens-fashion">Men's Fashion</a></li>
@@ -53,12 +58,16 @@
         <li><a href="category.html?cat=leather-accessories">Leather</a></li>
         <li><a href="category.html?cat=home-decor">Home Decor</a></li>
       </ul>
-      <div class="nav-location-pill">📍 Dhaka, Bangladesh</div>
+      <div class="nav-menu-panel" id="nav-menu-panel" hidden>
+        <div class="nav-menu-heading"><strong>Explore Shopademia</strong><button class="nav-menu-close" type="button" aria-label="Close navigation menu">Close</button></div>
+        <div class="nav-menu-links" id="nav-menu-links"></div>
+        <div class="nav-location-pill"><button id="nav-location-button" type="button" aria-label="Detect your location for delivery">📍 Use my location</button></div>
+      </div>
     </div>
   </nav>
 
   <main class="page-container">
-    <h1 style="font-size: 2.2rem; font-weight: 800; color: #0e2a47; margin-bottom: 24px;">My Saved Wishlist ❤️</h1>
+    <h1 style="font-size: 2.2rem; font-weight: 800; color: #26231f; margin-bottom: 24px;">My Saved Wishlist ❤️</h1>
     <div id="wishlist-container" class="products-grid"></div>
   </main>
 
@@ -70,19 +79,19 @@
   </div>
 
   <footer class="site-footer">
-    <div class="footer-bottom"><div class="footer-bottom-container"><div>© 2026 Wonderful Collection - Dhaka, Bangladesh 🇧🇩</div></div></div>
+    <div class="footer-bottom"><div class="footer-bottom-container"><div>© 2026 Shopademia - Dhaka, Bangladesh 🇧🇩</div><nav class="footer-social-links" aria-label="Shopademia social media"><a href="https://www.instagram.com/ShopademiaBD" target="_blank" rel="noopener noreferrer">Instagram · ShopademiaBD</a><a href="https://x.com/SHOPADEMIA" target="_blank" rel="noopener noreferrer">X · SHOPADEMIA</a><a href="https://www.facebook.com/SHOPADEMIA" target="_blank" rel="noopener noreferrer">Facebook · SHOPADEMIA</a></nav></div></div>
   </footer>
 
-  <script src="js/store.js?v=20261109"></script>
+  <script src="js/store.js?v=20261113-storefront-final-v3"></script>
   <script>
     function renderWishlistPage() {
       const container = document.getElementById('wishlist-container');
       if (!Store.state.wishlist.length) {
         container.innerHTML = `
-          <div style="grid-column: 1/-1; background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 60px 20px; text-align: center;">
+          <div style="grid-column: 1/-1; background: #fff; border-radius: 16px; border: 1px solid #e8e2d8; padding: 60px 20px; text-align: center;">
             <div style="font-size: 3.5rem; margin-bottom: 14px;">💔</div>
-            <h2 style="color: #0e2a47; margin-bottom: 8px;">Your wishlist is currently empty</h2>
-            <p style="color: #64748b; margin-bottom: 24px;">Save items you love and move them directly to cart anytime.</p>
+            <h2 style="color: #26231f; margin-bottom: 8px;">Your wishlist is currently empty</h2>
+            <p style="color: #69645b; margin-bottom: 24px;">Save items you love and move them directly to cart anytime.</p>
             <a href="shop.html" class="btn-primary">Explore Products</a>
           </div>
         `;
@@ -92,7 +101,7 @@
       container.innerHTML = Store.state.wishlist.map(p => `
         <div class="product-card">
           <div class="product-thumb-wrap">
-            <a href="product.html?id=${Number(p.id)}"><img src="${Store.escapeHtml(Store.productImage(p))}" alt="${Store.escapeHtml(p.name)}" onerror="this.onerror=null;this.src='assets/product-placeholder.svg'"></a>
+            <a href="product.html?id=${Number(p.id)}"><img src="${Store.escapeHtml(Store.productImage(p))}" alt="${Store.escapeHtml(p.name)}" data-image-fallback="assets/product-placeholder.svg"></a>
             <button class="product-wishlist-btn active" data-toggle-wishlist data-product="${Store.escapeHtml(JSON.stringify(p))}" title="Remove">✕</button>
           </div>
           <div class="product-body">
@@ -108,5 +117,6 @@
 
     document.addEventListener('DOMContentLoaded', renderWishlistPage);
   </script>
+  <script defer src="js/consent.js?v=20261112-consent"></script>
 </body>
 </html>

@@ -11,3 +11,16 @@ admin-android/.idea/
 admin-android/.artifacts/
 admin-android/local.properties
 admin-android/**/build/
+/Android/admin-android/.gradle/
+/Android/admin-android/.kotlin/
+/Android/admin-android/.idea/
+/Android/admin-android/.artifacts/
+/Android/admin-android/local.properties
+/Android/admin-android/**/build/
+desktop-erp/node_modules/
+desktop-erp/dist/
+desktop-erp/dist-electron/
+desktop-erp/release/
+tests/playwright/node_modules/
+tests/playwright/test-results/
+tests/playwright/playwright-report/

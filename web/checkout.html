@@ -3,11 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Secure Checkout | Wonderful Collection</title>
-  <meta name="description" content="Review your Wonderful Collection items, delivery area, fees, and payment details before placing an order.">
+  <title>Secure Checkout | Shopademia</title>
+  <meta name="description" content="Review your Shopademia items, delivery area, fees, and payment details before placing an order.">
   <meta name="robots" content="noindex, nofollow">
-  <link rel="stylesheet" href="css/style.css">
-  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/style.css?v=20261113-chat-dock-v3">
+  <link rel="stylesheet" href="css/consent.css?v=20261112-consent">
+  <link rel="icon" href="assets/favicon.ico" sizes="any">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
 </head>
 <body>
   <div class="top-bar">
@@ -23,130 +26,83 @@
   <header class="site-header">
     <div class="header-container" style="justify-content: center;">
       <a href="index.html" class="brand-logo-wrap">
-        <img width="741" height="265" src="assets/logo.jpg" alt="Wonderful Collection" class="brand-logo-img">
+        <img width="741" height="265" src="assets/logo-shopademia.jpg" alt="Shopademia" class="brand-logo-img">
       </a>
     </div>
   </header>
 
   <main class="page-container" style="max-width: 1040px;">
-    <h1 style="font-size: 2rem; font-weight: 800; color: #0e2a47; margin-bottom: 28px; text-align: center;">
+    <h1 style="font-size: 2rem; font-weight: 800; color: #26231f; margin-bottom: 28px; text-align: center;">
       Complete Your Order
     </h1>
 
     <div id="checkout-view">
-      <form id="checkout-form" class="checkout-layout" onsubmit="handlePlaceOrder(event)" style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 32px;">
+      <form id="checkout-form" class="checkout-layout" data-csp-submit="handlePlaceOrder" style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 32px;">
         <!-- Left: Customer & Delivery Details -->
         <div>
           <!-- Step 1: Customer Details -->
-          <div class="checkout-card" style="background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 24px; box-shadow: var(--shadow-sm); margin-bottom: 24px;">
-            <h2 style="font-size: 1.2rem; font-weight: 800; color: #0e2a47; margin-bottom: 18px; display: flex; align-items: center; gap: 8px;">
-              <span style="background: #0e2a47; color: #fff; width: 26px; height: 26px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.82rem;">1</span>
+          <div class="checkout-card" style="background: #fff; border-radius: 16px; border: 1px solid #e8e2d8; padding: 24px; box-shadow: var(--shadow-sm); margin-bottom: 24px;">
+            <h2 style="font-size: 1.2rem; font-weight: 800; color: #26231f; margin-bottom: 18px; display: flex; align-items: center; gap: 8px;">
+              <span style="background: #26231f; color: #fff; width: 26px; height: 26px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.82rem;">1</span>
               Delivery Address & Contact
             </h2>
 
             <div style="margin-bottom: 14px;">
               <label for="cust_name" style="display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 6px;">Full Name *</label>
-              <input type="text" id="cust_name" required placeholder="e.g. Tanvir Ahmed" style="width: 100%; border: 1px solid #cbd5e1; padding: 10px 14px; border-radius: 8px; font-size: 0.95rem;">
-            </div>
-
-            <div class="checkout-contact-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
-              <div>
-                <label for="cust_phone" style="display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 6px;">Mobile Phone (WhatsApp) *</label>
-                <input type="tel" id="cust_phone" required pattern="01[3-9][0-9]{8}" inputmode="numeric" title="Enter an 11-digit Bangladesh mobile number starting with 013 to 019." placeholder="017XXXXXXXX" style="width: 100%; border: 1px solid #cbd5e1; padding: 10px 14px; border-radius: 8px; font-size: 0.95rem;">
-              </div>
-              <div>
-                <label for="cust_email" style="display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 6px;">Email (Optional)</label>
-                <input type="email" id="cust_email" placeholder="name@example.com" style="width: 100%; border: 1px solid #cbd5e1; padding: 10px 14px; border-radius: 8px; font-size: 0.95rem;">
-              </div>
+              <input type="text" id="cust_name" required placeholder="e.g. Tanvir Ahmed" style="width: 100%; border: 1px solid #d6cec1; padding: 10px 14px; border-radius: 8px; font-size: 0.95rem;">
+              <div id="cust_name-error" role="alert" style="display:none; color:#dc2626; font-size:0.78rem; margin-top:6px;"></div>
             </div>
 
             <div style="margin-bottom: 14px;">
-              <label for="delivery_area" style="display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 6px;">Delivery Area *</label>
-              <select id="delivery_area" onchange="handleDeliveryAreaChange()" style="width: 100%; border: 1px solid #cbd5e1; padding: 10px 14px; border-radius: 8px; font-size: 0.95rem; background: #fff;">
-                <option value="dhanmondi">Dhanmondi — ৳60</option>
-                <option value="dhaka" selected>Inside Dhaka — ৳80</option>
-                <option value="outside_dhaka">Outside Dhaka — ৳130</option>
-              </select>
-              <button type="button" id="detect-checkout-location" class="btn-primary" style="margin-top: 10px; padding: 8px 12px;" onclick="detectCheckoutLocation()">📍 Use my location</button>
-              <p id="checkout-location-status" role="status" aria-live="polite" style="font-size: 0.8rem; color: #64748b; margin: 8px 0 0;"></p>
-              <small style="display: block; color: #64748b; margin-top: 6px;">If you allow location access, your coordinates are sent to OpenStreetMap to identify the delivery area. You can choose an area manually instead. <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap attribution</a>.</small>
+              <label for="cust_phone" style="display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 6px;">Mobile Phone (WhatsApp) *</label>
+              <input type="tel" id="cust_phone" required pattern="(?:01[3-9][0-9]{8}|\+8801[3-9][0-9]{8})" inputmode="tel" title="Enter a Bangladesh mobile number starting with 013 to 019, with or without +880." placeholder="017XXXXXXXX" style="width: 100%; border: 1px solid #d6cec1; padding: 10px 14px; border-radius: 8px; font-size: 0.95rem;">
+              <div id="cust_phone-error" role="alert" style="display:none; color:#dc2626; font-size:0.78rem; margin-top:6px;"></div>
             </div>
 
             <div style="margin-bottom: 14px;">
               <label for="cust_address" style="display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 6px;">Full Delivery Address *</label>
-              <textarea id="cust_address" required rows="2" placeholder="House/Flat #, Road #, Sector/Area, Dhaka" style="width: 100%; border: 1px solid #cbd5e1; padding: 10px 14px; border-radius: 8px; font-size: 0.95rem;"></textarea>
+              <textarea id="cust_address" required rows="2" placeholder="House/Flat #, Road #, Sector/Area, Dhaka" style="width: 100%; border: 1px solid #d6cec1; padding: 10px 14px; border-radius: 8px; font-size: 0.95rem;"></textarea>
+              <div id="cust_address-error" role="alert" style="display:none; color:#dc2626; font-size:0.78rem; margin-top:6px;"></div>
             </div>
 
-            <div>
-              <label for="order_notes" style="display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 6px;">Order Note (Optional)</label>
-              <input type="text" id="order_notes" placeholder="Special delivery instructions, preferred delivery time..." style="width: 100%; border: 1px solid #cbd5e1; padding: 10px 14px; border-radius: 8px; font-size: 0.95rem;">
-            </div>
           </div>
 
-          <!-- Step 2: Payment Method -->
-          <div class="checkout-card" style="background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 24px; box-shadow: var(--shadow-sm);">
-            <h3 style="font-size: 1.2rem; font-weight: 800; color: #0e2a47; margin-bottom: 18px; display: flex; align-items: center; gap: 8px;">
-              <span style="background: #0e2a47; color: #fff; width: 26px; height: 26px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.82rem;">2</span>
-              Payment Method
-            </h3>
-
-            <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 18px;">
-              <label class="checkout-payment-option" style="display: flex; align-items: center; gap: 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 12px 16px; cursor: pointer;">
-                <input type="radio" name="payment_method" value="Cash on Delivery" checked onchange="togglePaymentFields()">
-                <div>
-                  <div style="font-weight: 700; color: #0e2a47;">Cash on Delivery (COD)</div>
-                  <div style="font-size: 0.8rem; color: #64748b;">Pay with cash upon receiving your package at your doorstep in Dhaka.</div>
-                </div>
-              </label>
-
-              <label class="checkout-payment-option" style="display: flex; align-items: center; gap: 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 12px 16px; cursor: pointer;">
-                <input type="radio" name="payment_method" value="bKash" onchange="togglePaymentFields()">
-                <div>
-                  <div style="font-weight: 700; color: #e2136e;">bKash Mobile Payment</div>
-                  <div style="font-size: 0.8rem; color: #64748b;">Send Money to our bKash Personal number: <strong>01560024777</strong></div>
-                </div>
-              </label>
-
-              <label class="checkout-payment-option" style="display: flex; align-items: center; gap: 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 12px 16px; cursor: pointer;">
-                <input type="radio" name="payment_method" value="Nagad" onchange="togglePaymentFields()">
-                <div>
-                  <div style="font-weight: 700; color: #a85e00;">Nagad Mobile Payment</div>
-                  <div style="font-size: 0.8rem; color: #64748b;">Send Money to our Nagad Personal number: <strong>01560024777</strong></div>
-                </div>
-              </label>
-
-              <label class="checkout-payment-option" style="display: flex; align-items: center; gap: 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 12px 16px; cursor: pointer;">
-                <input type="radio" name="payment_method" value="Rocket" onchange="togglePaymentFields()">
-                <div>
-                  <div style="font-weight: 700; color: #8c1d81;">Rocket Mobile Payment</div>
-                  <div style="font-size: 0.8rem; color: #64748b;">Send Money to our Rocket Personal number: <strong>015600247777</strong></div>
-                </div>
-              </label>
+          <div class="checkout-card" style="background: #fff; border-radius: 16px; border: 1px solid #e8e2d8; padding: 24px; box-shadow: var(--shadow-sm);">
+            <h3 style="font-size: 1.2rem; font-weight: 800; color: #26231f; margin-bottom: 12px;">Payment and Delivery</h3>
+            <p style="font-size: 0.9rem; color: #625d54; margin-bottom: 8px;">Choose Cash on Delivery or a configured mobile wallet. The server calculates the final delivery charge from your address and confirms the total before placing your order.</p>
+            <div style="margin: 14px 0;">
+              <label for="payment_method" style="display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 6px;">Payment method *</label>
+              <select id="payment_method" required style="width: 100%; border: 1px solid #d6cec1; padding: 10px 14px; border-radius: 8px; background: #fff;">
+                <option value="Cash on Delivery">Cash on Delivery</option>
+                <option value="bKash" data-wallet-option="bkash" hidden>bKash</option>
+                <option value="Nagad" data-wallet-option="nagad" hidden>Nagad</option>
+                <option value="Rocket" data-wallet-option="rocket" hidden>Rocket</option>
+              </select>
             </div>
-
-            <!-- Trx ID field for mobile payments -->
-            <div id="trx-box" style="display: none; background: #fff8f5; border: 1px dashed #f05423; border-radius: 8px; padding: 14px; margin-top: 10px;">
-              <label for="trx_id" style="display: block; font-size: 0.85rem; font-weight: 700; color: #0e2a47; margin-bottom: 4px;">Transaction ID (TrxID) *</label>
-              <input type="text" id="trx_id" placeholder="e.g. BKASH9823471" style="width: 100%; border: 1px solid #cbd5e1; padding: 8px 12px; border-radius: 6px; font-weight: 700; text-transform: uppercase;">
-              <div style="font-size: 0.78rem; color: #64748b; margin-top: 4px;">Please complete payment to our number and paste your SMS Transaction ID here.</div>
+            <p id="payment-instructions" role="status" aria-live="polite" style="font-size: 0.85rem; color: #625d54; margin: 0 0 12px;">Pay when your order is delivered.</p>
+            <div id="payment-trx-group" style="display: none; margin-bottom: 14px;">
+              <label for="payment_trx_id" style="display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 6px;">Mobile payment transaction ID *</label>
+              <input type="text" id="payment_trx_id" maxlength="100" autocomplete="off" style="width: 100%; border: 1px solid #d6cec1; padding: 10px 14px; border-radius: 8px;">
+              <div id="payment_trx_id-error" role="alert" style="display:none; color:#dc2626; font-size:0.78rem; margin-top:6px;"></div>
             </div>
+            <p id="checkout-delivery-status" role="status" aria-live="polite" style="font-size: 0.8rem; color: #69645b; margin: 0;">The server confirms the final order total before placement.</p>
           </div>
         </div>
 
         <!-- Right: Order Summary Sidebar -->
-        <div class="checkout-card checkout-summary" style="background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 24px; box-shadow: var(--shadow-sm); position: sticky; top: 90px;">
-          <h3 style="font-size: 1.25rem; font-weight: 800; color: #0e2a47; margin-bottom: 18px;">Items In Order</h3>
+        <div class="checkout-card checkout-summary" style="background: #fff; border-radius: 16px; border: 1px solid #e8e2d8; padding: 24px; box-shadow: var(--shadow-sm); position: sticky; top: 90px;">
+          <h3 style="font-size: 1.25rem; font-weight: 800; color: #26231f; margin-bottom: 18px;">Items In Order</h3>
 
-          <div id="checkout-items-list" style="max-height: 240px; overflow-y: auto; margin-bottom: 16px; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px;"></div>
+          <div id="checkout-items-list" style="max-height: 240px; overflow-y: auto; margin-bottom: 16px; border-bottom: 1px solid #f3efe8; padding-bottom: 12px;"></div>
 
-          <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #475569; font-size: 0.92rem;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #625d54; font-size: 0.92rem;">
             <span>Subtotal:</span>
-            <span id="chk-subtotal" style="font-weight: 700; color: #0e2a47;">৳0</span>
+            <span id="chk-subtotal" style="font-weight: 700; color: #26231f;">৳0</span>
           </div>
 
-          <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #475569; font-size: 0.92rem;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #625d54; font-size: 0.92rem;">
             <span>Delivery Fee:</span>
-            <span id="chk-delivery" style="font-weight: 700; color: #0e2a47;">৳80</span>
+            <span id="chk-delivery" style="font-weight: 700; color: #26231f;">৳80</span>
           </div>
 
           <div id="chk-discount-row" style="display: none; justify-content: space-between; margin-bottom: 8px; color: #10b981; font-size: 0.92rem; font-weight: 700;">
@@ -154,17 +110,17 @@
             <span id="chk-discount">-৳0</span>
           </div>
 
-          <div style="border-top: 2px solid #e2e8f0; padding-top: 14px; margin-top: 14px; display: flex; justify-content: space-between; align-items: baseline; font-size: 1.3rem; font-weight: 800; color: #0e2a47;">
+          <div style="border-top: 2px solid #e8e2d8; padding-top: 14px; margin-top: 14px; display: flex; justify-content: space-between; align-items: baseline; font-size: 1.3rem; font-weight: 800; color: #26231f;">
             <span>Total Payable:</span>
-            <span id="chk-total" style="color: #f05423;">৳0</span>
+            <span id="chk-total" style="color: #302d28;">৳0</span>
           </div>
 
           <button type="submit" id="submit-order-btn" class="btn-primary" style="display: block; width: 100%; text-align: center; justify-content: center; margin-top: 24px; padding: 16px; font-size: 1.05rem;">
             Confirm Order Now 🛍️
           </button>
 
-          <div style="margin-top: 16px; font-size: 0.78rem; color: #64748b; text-align: center;">
-            🔒 By placing your order, you agree to Wonderful Collection's Terms and 7-day return policy.
+          <div style="margin-top: 16px; font-size: 0.78rem; color: #69645b; text-align: center;">
+            By placing your order, you agree to Shopademia's terms.
           </div>
         </div>
       </form>
@@ -172,19 +128,86 @@
   </main>
 
   <footer class="site-footer">
-    <div class="footer-bottom"><div class="footer-bottom-container"><div>© 2026 Wonderful Collection - Dhaka, Bangladesh 🇧🇩</div></div></div>
+    <div class="footer-bottom"><div class="footer-bottom-container"><div>© 2026 Shopademia - Dhaka, Bangladesh 🇧🇩</div><nav class="footer-social-links" aria-label="Shopademia social media"><a href="https://www.instagram.com/ShopademiaBD" target="_blank" rel="noopener noreferrer">Instagram · ShopademiaBD</a><a href="https://x.com/SHOPADEMIA" target="_blank" rel="noopener noreferrer">X · SHOPADEMIA</a><a href="https://www.facebook.com/SHOPADEMIA" target="_blank" rel="noopener noreferrer">Facebook · SHOPADEMIA</a></nav></div></div>
   </footer>
 
-  <script src="js/store.js?v=20261109"></script>
+  <script src="js/store.js?v=20261113-storefront-final-v3"></script>
   <script>
-    let deliveryFees = {
-      dhanmondi: 60,
-      dhaka: 80,
-      outside_dhaka: 130
-    };
+    let deliveryFee = 80;
     let freeDeliveryMinimum = 2000;
+    let confirmedDeliveryFee = null;
+
+    function showFieldError(id, message) {
+      const field = document.getElementById(id);
+      if (!field) return;
+      field.setAttribute('aria-invalid', 'true');
+      field.style.borderColor = '#dc2626';
+      field.style.boxShadow = '0 0 0 3px rgba(220,38,38,0.08)';
+      const messageNode = document.getElementById(`${id}-error`);
+      if (messageNode) {
+        messageNode.textContent = message;
+        messageNode.style.display = 'block';
+      }
+    }
+
+    function clearFieldError(id) {
+      const field = document.getElementById(id);
+      if (!field) return;
+      field.setAttribute('aria-invalid', 'false');
+      field.style.borderColor = '#d6cec1';
+      field.style.boxShadow = 'none';
+      const messageNode = document.getElementById(`${id}-error`);
+      if (messageNode) {
+        messageNode.textContent = '';
+        messageNode.style.display = 'none';
+      }
+    }
+
+    function validateCheckoutForm() {
+      const name = document.getElementById('cust_name').value.trim();
+      const phone = document.getElementById('cust_phone').value.trim();
+      const address = document.getElementById('cust_address').value.trim();
+      const paymentMethod = document.getElementById('payment_method').value;
+      const transactionId = document.getElementById('payment_trx_id').value.trim();
+
+      let valid = true;
+
+      if (name.length < 2) {
+        showFieldError('cust_name', 'Please enter your full name.');
+        valid = false;
+      } else {
+        clearFieldError('cust_name');
+      }
+
+      const phoneDigits = phone.replace(/\D/g, '');
+      if (!/^(?:01[3-9]\d{8}|8801[3-9]\d{8})$/.test(phoneDigits)) {
+        showFieldError('cust_phone', 'Use a valid Bangladesh mobile number (e.g. 017XXXXXXXX).');
+        valid = false;
+      } else {
+        clearFieldError('cust_phone');
+      }
+
+      if (address.length < 12) {
+        showFieldError('cust_address', 'Please add a full delivery address with area and road details.');
+        valid = false;
+      } else {
+        clearFieldError('cust_address');
+      }
+      if (paymentMethod !== 'Cash on Delivery' && transactionId === '') {
+        showFieldError('payment_trx_id', 'Enter the transaction ID for your mobile payment.');
+        valid = false;
+      } else {
+        clearFieldError('payment_trx_id');
+      }
+
+      return valid;
+    }
 
     async function initCheckout() {
+      if (!await Store.cartSync) {
+        document.getElementById('checkout-view').textContent = 'Your account cart could not be synchronized with current stock. Please retry after reconnecting.';
+        return;
+      }
       if (!Store.state.cart.length) {
         window.location.href = 'cart.html';
         return;
@@ -194,30 +217,41 @@
       if (Store.state.user) {
         document.getElementById('cust_name').value = Store.state.user.name || '';
         document.getElementById('cust_phone').value = Store.state.user.phone || '';
-        document.getElementById('cust_email').value = Store.state.user.email || '';
         document.getElementById('cust_address').value = Store.state.user.address || '';
       }
 
-      await loadPublicCheckoutSettings();
-      const savedLocation = sessionStorage.getItem('wc_delivery_location');
-      if (savedLocation) {
-        try {
-          const location = JSON.parse(savedLocation);
-          if (['dhanmondi', 'dhaka', 'outside_dhaka'].includes(location.zone)) {
-            document.getElementById('delivery_area').value = location.zone;
-            document.getElementById('checkout-location-status').textContent = `Detected location: ${location.label}. Confirm your delivery address below.`;
+      ['cust_name', 'cust_phone', 'cust_address'].forEach(id => {
+        const field = document.getElementById(id);
+        if (!field) return;
+        field.addEventListener('input', () => {
+          if (id === 'cust_address') {
+            confirmedDeliveryFee = null;
+            updateDeliveryFee();
           }
-        } catch (error) {
-          sessionStorage.removeItem('wc_delivery_location');
-        }
-      }
+          if (field.value.trim() === '') {
+            clearFieldError(id);
+            return;
+          }
+          if (id === 'cust_phone') {
+            validateCheckoutForm();
+          } else if (id === 'cust_address') {
+            if (field.value.trim().length >= 12) clearFieldError(id);
+          } else if (field.value.trim().length >= 2) {
+            clearFieldError(id);
+          }
+        });
+      });
+
+      await loadPublicCheckoutSettings();
+      document.getElementById('payment_method').addEventListener('change', updatePaymentInstructions);
+      updatePaymentInstructions();
 
       // Render items
       const itemsList = document.getElementById('checkout-items-list');
       itemsList.innerHTML = Store.state.cart.map(i => `
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 0.88rem;">
           <div style="display: flex; align-items: center; gap: 8px;">
-            <img src="${Store.escapeHtml(Store.productImage({ image: i.image }))}" alt="" onerror="this.onerror=null;this.src='assets/product-placeholder.svg'" style="width: 38px; height: 38px; border-radius: 4px; object-fit: cover;">
+            <img src="${Store.escapeHtml(Store.productImage({ image: i.image }))}" alt="" data-image-fallback="assets/product-placeholder.svg" style="width: 38px; height: 38px; border-radius: 4px; object-fit: cover;">
             <span>${Store.escapeHtml(i.name)} &times; ${Number(i.quantity)}</span>
           </div>
           <span style="font-weight: 700;">${Store.formatBDT(i.price * i.quantity)}</span>
@@ -234,65 +268,64 @@
         if (!response.ok || result.status !== 'success') {
           throw new Error(result.error || 'Could not load delivery charges.');
         }
-        deliveryFees = {
-          dhanmondi: Number(result.data.delivery_fee_dhanmondi),
-          dhaka: Number(result.data.delivery_fee_dhaka),
-          outside_dhaka: Number(result.data.delivery_fee_outside_dhaka)
+        const feeOrDefault = (value, fallback) => {
+          if (value === null || value === undefined || (typeof value === 'string' && value.trim() === '')) {
+            return fallback;
+          }
+          const fee = Number(value);
+          return Number.isFinite(fee) && fee >= 0 ? fee : fallback;
         };
+        deliveryFee = feeOrDefault(result.data.delivery_fee_dhaka, deliveryFee);
         const threshold = Number(result.data.free_delivery_min_amount);
         if (Number.isFinite(threshold) && threshold > 0) {
           freeDeliveryMinimum = threshold;
         }
-        const area = document.getElementById('delivery_area');
-        area.options[0].text = `Dhanmondi — ${Store.formatBDT(deliveryFees.dhanmondi)}`;
-        area.options[1].text = `Inside Dhaka — ${Store.formatBDT(deliveryFees.dhaka)}`;
-        area.options[2].text = `Outside Dhaka — ${Store.formatBDT(deliveryFees.outside_dhaka)}`;
+        const walletDetails = {
+          bKash: result.data.bkash_number,
+          Nagad: result.data.nagad_number,
+          Rocket: result.data.rocket_number
+        };
+        Object.entries(walletDetails).forEach(([method, account]) => {
+          const option = document.querySelector(`[data-wallet-option="${method.toLowerCase()}"]`);
+          if (option && typeof account === 'string' && account.trim()) {
+            option.hidden = false;
+            option.dataset.account = account.trim();
+          }
+        });
       } catch (error) {
         console.error('Could not load public delivery settings:', error);
-        document.getElementById('checkout-location-status').textContent = 'Showing standard delivery charges. The final charge is confirmed by the server.';
+        document.getElementById('checkout-delivery-status').textContent = 'Showing the standard estimated delivery charge. The server confirms the final total.';
       }
     }
 
-    function handleDeliveryAreaChange() {
-      const area = document.getElementById('delivery_area').value;
-      const labels = { dhanmondi: 'Dhanmondi', dhaka: 'Inside Dhaka', outside_dhaka: 'Outside Dhaka' };
-      document.getElementById('checkout-location-status').textContent = `Selected delivery area: ${labels[area]}.`;
-      sessionStorage.setItem('wc_delivery_location', JSON.stringify({ zone: area, label: labels[area] }));
-      updateDeliveryFee();
-    }
-
-    async function detectCheckoutLocation() {
-      const button = document.getElementById('detect-checkout-location');
-      const status = document.getElementById('checkout-location-status');
-      button.disabled = true;
-      status.textContent = 'Requesting location permission…';
-      try {
-        const location = await Store.detectDeliveryLocation();
-        sessionStorage.setItem('wc_delivery_location', JSON.stringify(location));
-        document.getElementById('delivery_area').value = location.zone;
-        status.textContent = `Detected location: ${location.label}. Confirm your delivery address below.`;
-        updateDeliveryFee();
-      } catch (error) {
-        status.textContent = error.message || 'Could not detect location. Choose your delivery area manually.';
-      } finally {
-        button.disabled = false;
+    function updatePaymentInstructions() {
+      const method = document.getElementById('payment_method').value;
+      const option = document.getElementById('payment_method').selectedOptions[0];
+      const trxField = document.getElementById('payment_trx_id');
+      const trxGroup = document.getElementById('payment-trx-group');
+      const instructions = document.getElementById('payment-instructions');
+      const mobileWallet = method !== 'Cash on Delivery';
+      trxField.required = mobileWallet;
+      trxGroup.style.display = mobileWallet ? 'block' : 'none';
+      if (mobileWallet) {
+        instructions.textContent = `Send the confirmed order total to this ${method} account: ${option.dataset.account}. Enter the transaction ID. Payment remains pending until verified.`;
+      } else {
+        instructions.textContent = 'Pay when your order is delivered.';
+        trxField.value = '';
+        clearFieldError('payment_trx_id');
       }
     }
 
     function getCheckoutPreviewTotal() {
-      const area = document.getElementById('delivery_area').value;
       const subtotal = Store.getCartSubtotal();
-      const baseFee = deliveryFees[area] ?? deliveryFees.dhaka;
-      const fee = area !== 'outside_dhaka' && subtotal >= freeDeliveryMinimum ? 0 : baseFee;
+      const fee = confirmedDeliveryFee ?? (subtotal >= freeDeliveryMinimum ? 0 : deliveryFee);
       const discount = Store.state.appliedCoupon ? Store.state.appliedCoupon.discount : 0;
       return Math.round(Math.max(0, subtotal - discount + fee) * 100) / 100;
     }
 
     function updateDeliveryFee() {
-      const area = document.getElementById('delivery_area').value;
       const subtotal = Store.getCartSubtotal();
-      const baseFee = deliveryFees[area] ?? deliveryFees.dhaka;
-      const fee = area !== 'outside_dhaka' && subtotal >= freeDeliveryMinimum ? 0 : baseFee;
+      const fee = confirmedDeliveryFee ?? (subtotal >= freeDeliveryMinimum ? 0 : deliveryFee);
       const discount = Store.state.appliedCoupon ? Store.state.appliedCoupon.discount : 0;
       const total = getCheckoutPreviewTotal();
 
@@ -309,77 +342,84 @@
       document.getElementById('chk-total').textContent = Store.formatBDT(total);
     }
 
-    function togglePaymentFields() {
-      const method = document.querySelector('input[name="payment_method"]:checked').value;
-      const trxBox = document.getElementById('trx-box');
-      if (['bKash', 'Nagad', 'Rocket'].includes(method)) {
-        trxBox.style.display = 'block';
-        document.getElementById('trx_id').required = true;
-      } else {
-        trxBox.style.display = 'none';
-        document.getElementById('trx_id').required = false;
-      }
-    }
-
-    function getCheckoutIdempotencyKey() {
+    async function getCheckoutIdempotencyKey(requestPayload) {
       const keyName = 'wc_checkout_idempotency_key';
+      const fingerprintName = 'wc_checkout_idempotency_fingerprint';
+      const payloadBytes = new TextEncoder().encode(JSON.stringify(requestPayload));
+      const payloadHash = await crypto.subtle.digest('SHA-256', payloadBytes);
+      const fingerprint = Array.from(new Uint8Array(payloadHash), byte => byte.toString(16).padStart(2, '0')).join('');
       let key = sessionStorage.getItem(keyName);
-      if (!/^[a-f0-9]{64}$/.test(key || '')) {
+      const savedFingerprint = sessionStorage.getItem(fingerprintName);
+      if (!/^[a-f0-9]{64}$/.test(key || '')
+          || (savedFingerprint && savedFingerprint !== fingerprint)) {
         const bytes = new Uint8Array(32);
         crypto.getRandomValues(bytes);
         key = Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('');
         sessionStorage.setItem(keyName, key);
       }
+      sessionStorage.setItem(fingerprintName, fingerprint);
       return key;
     }
 
     async function handlePlaceOrder(e) {
       e.preventDefault();
+      if (!validateCheckoutForm()) {
+        return;
+      }
+
       const btn = document.getElementById('submit-order-btn');
       btn.disabled = true;
       btn.textContent = 'Processing Your Order...';
 
-      const areaKey = document.getElementById('delivery_area').value;
-      const areaLabels = {
-        dhanmondi: 'Dhanmondi',
-        dhaka: 'Inside Dhaka',
-        outside_dhaka: 'Outside Dhaka'
-      };
-
       const payload = {
-        idempotency_key: getCheckoutIdempotencyKey(),
         customer_name: document.getElementById('cust_name').value.trim(),
         customer_phone: document.getElementById('cust_phone').value.trim(),
-        customer_email: document.getElementById('cust_email').value.trim(),
         delivery_address: document.getElementById('cust_address').value.trim(),
-        delivery_area: areaLabels[areaKey] || 'Inside Dhaka',
-        delivery_zone: areaKey,
-        delivery_fee: deliveryFees[areaKey] ?? deliveryFees.dhaka,
-        subtotal: Store.getCartSubtotal(),
-        discount: Store.state.appliedCoupon ? Store.state.appliedCoupon.discount : 0,
         coupon_code: Store.state.appliedCoupon ? Store.state.appliedCoupon.code : '',
-        payment_method: document.querySelector('input[name="payment_method"]:checked').value,
-        trx_id: document.getElementById('trx_id').value.trim() || null,
-        notes: document.getElementById('order_notes').value.trim(),
         preview_total: getCheckoutPreviewTotal(),
-        items: Store.state.cart.map(i => ({
-          product_id: i.id,
-          name: i.name,
-          price: i.price,
-          quantity: i.quantity
-        }))
+        payment_method: document.getElementById('payment_method').value,
+        trx_id: document.getElementById('payment_trx_id').value.trim(),
+        items: Store.state.cart.map(i => ({ product_id: i.id, quantity: i.quantity }))
       };
+      try {
+        payload.idempotency_key = await getCheckoutIdempotencyKey(payload);
+      } catch (error) {
+        console.error('Unable to prepare checkout request key:', error);
+        alert('Unable to securely prepare your order. Please try again.');
+        btn.disabled = false;
+        btn.textContent = 'Confirm Order Now 🛍️';
+        return;
+      }
 
       let res = await Store.placeOrder(payload);
       let confirmationCount = 0;
       while (res.requires_confirmation && confirmationCount < 2) {
         const serverTotal = Number(res.server_total);
-        if (!Number.isFinite(serverTotal)) break;
+        const serverSubtotal = Number(res.server_subtotal);
+        const serverDiscount = Number(res.server_discount);
+        const serverDeliveryFee = Number(res.server_delivery_fee);
+        if (![serverTotal, serverSubtotal, serverDiscount, serverDeliveryFee].every(Number.isFinite)
+            || serverTotal < 0 || serverSubtotal < 0 || serverDiscount < 0 || serverDeliveryFee < 0) break;
+        confirmedDeliveryFee = serverDeliveryFee;
+        payload.preview_total = serverTotal;
+        document.getElementById('chk-subtotal').textContent = Store.formatBDT(serverSubtotal);
+        document.getElementById('chk-delivery').textContent = Store.formatBDT(serverDeliveryFee);
+        if (serverDiscount > 0) {
+          document.getElementById('chk-discount-row').style.display = 'flex';
+          document.getElementById('chk-discount').textContent = '-' + Store.formatBDT(serverDiscount);
+        } else {
+          document.getElementById('chk-discount-row').style.display = 'none';
+        }
+        document.getElementById('chk-total').textContent = Store.formatBDT(serverTotal);
+        const paymentNote = payload.payment_method === 'Cash on Delivery'
+          ? ''
+          : '\n\nFor mobile wallet payment, continue only if your transfer and transaction ID match this exact total.';
         const accepted = window.confirm(
-          `${res.error || 'The order total changed.'}\n\nNew total: ${Store.formatBDT(serverTotal)}\n\nPlace the order at this total?`
+          `${res.error || 'The order total changed.'}\n\nConfirmed total: ${Store.formatBDT(serverTotal)}${paymentNote}\n\nPlace the order at this total?`
         );
         if (!accepted) {
           sessionStorage.removeItem('wc_checkout_idempotency_key');
+          sessionStorage.removeItem('wc_checkout_idempotency_fingerprint');
           res = { error: 'Order not placed. Review your cart and try again.' };
           break;
         }
@@ -391,6 +431,7 @@
       if (res.status === 'success') {
         const orderData = res.data;
         sessionStorage.removeItem('wc_checkout_idempotency_key');
+        sessionStorage.removeItem('wc_checkout_idempotency_fingerprint');
         Store.clearCart();
         const orderParams = new URLSearchParams({
           order: String(orderData.order_number),
@@ -407,5 +448,6 @@
 
     document.addEventListener('DOMContentLoaded', initCheckout);
   </script>
+  <script defer src="js/consent.js?v=20261112-consent"></script>
 </body>
 </html>

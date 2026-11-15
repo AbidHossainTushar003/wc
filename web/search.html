@@ -3,20 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Search Results | Wonderful Collection Dhaka</title>
-  <meta name="description" content="Search the Wonderful Collection catalog for products available in Bangladesh.">
-  <link id="search-canonical" rel="canonical" href="https://wonderfulcollection.store/search.html">
+  <title>Search Results | Shopademia</title>
+  <meta name="description" content="Search the Shopademia catalog for products available in Bangladesh.">
+  <link id="search-canonical" rel="canonical" href="https://shopademia.store/search.html">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="Search Products | Wonderful Collection">
-  <meta property="og:description" content="Search the Wonderful Collection catalog for products available in Bangladesh.">
-  <meta property="og:url" content="https://wonderfulcollection.store/search.html">
-  <meta property="og:image" content="https://wonderfulcollection.store/assets/logo.svg">
+  <meta property="og:title" content="Search Products | Shopademia">
+  <meta property="og:description" content="Search the Shopademia catalog for products available in Bangladesh.">
+  <meta property="og:url" content="https://shopademia.store/search.html">
+  <meta property="og:image" content="https://shopademia.store/assets/og-image.png">
   <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="Search Products | Wonderful Collection">
-  <meta name="twitter:description" content="Search the Wonderful Collection catalog for products available in Bangladesh.">
-  <meta name="twitter:image" content="https://wonderfulcollection.store/assets/logo.svg">
-  <link rel="stylesheet" href="css/style.css">
-  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+  <meta name="twitter:title" content="Search Products | Shopademia">
+  <meta name="twitter:description" content="Search the Shopademia catalog for products available in Bangladesh.">
+  <meta name="twitter:image" content="https://shopademia.store/assets/og-image.png">
+  <link rel="stylesheet" href="css/style.css?v=20261113-chat-dock-v3">
+  <link rel="stylesheet" href="css/consent.css?v=20261112-consent">
+  <link rel="icon" href="assets/favicon.ico" sizes="any">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
 </head>
 <body>
   <div class="top-bar">
@@ -36,7 +39,7 @@
 
   <header class="site-header">
     <div class="header-container">
-      <a href="index.html" class="brand-logo-wrap"><img width="741" height="265" src="assets/logo.jpg" alt="Wonderful Collection" class="brand-logo-img"></a>
+      <a href="index.html" class="brand-logo-wrap"><img width="741" height="265" src="assets/logo-shopademia.jpg" alt="Shopademia" class="brand-logo-img"></a>
       <div class="header-search">
         <form action="search.html" method="GET" class="search-input-wrap">
           <input type="text" name="q" id="search-box-input" class="search-input" placeholder="Search..." required>
@@ -51,9 +54,10 @@
     </div>
   </header>
 
-  <nav class="site-nav">
+  <nav class="site-nav" aria-label="Primary navigation">
     <div class="nav-container">
-      <ul class="nav-links">
+      <button class="nav-menu-toggle" type="button" aria-expanded="false" aria-controls="nav-menu-panel">Menu / More</button>
+      <ul class="nav-links" id="nav-links">
         <li><a href="index.html">Home</a></li>
         <li><a href="shop.html">All Products</a></li>
         <li><a href="category.html?cat=mens-fashion">Men's Fashion</a></li>
@@ -63,16 +67,20 @@
         <li><a href="category.html?cat=leather-accessories">Leather</a></li>
         <li><a href="category.html?cat=home-decor">Home Decor</a></li>
       </ul>
-      <div class="nav-location-pill">📍 Dhaka, Bangladesh</div>
+      <div class="nav-menu-panel" id="nav-menu-panel" hidden>
+        <div class="nav-menu-heading"><strong>Explore Shopademia</strong><button class="nav-menu-close" type="button" aria-label="Close navigation menu">Close</button></div>
+        <div class="nav-menu-links" id="nav-menu-links"></div>
+        <div class="nav-location-pill"><button id="nav-location-button" type="button" aria-label="Detect your location for delivery">📍 Use my location</button></div>
+      </div>
     </div>
   </nav>
 
   <main class="page-container">
     <div style="margin-bottom: 24px;">
-      <h1 style="font-size: 1.8rem; font-weight: 800; color: #0e2a47;">
+      <h1 style="font-size: 1.8rem; font-weight: 800; color: #26231f;">
         Search Results for "<span id="search-term-display" style="color: var(--accent-orange);">...</span>"
       </h1>
-      <p id="search-count-display" style="color: #64748b;">Searching catalog...</p>
+      <p id="search-count-display" style="color: #69645b;">Searching catalog...</p>
     </div>
 
     <div class="products-grid" id="search-results-grid"></div>
@@ -86,24 +94,24 @@
   </div>
 
   <footer class="site-footer">
-    <div class="footer-bottom"><div class="footer-bottom-container"><div>© 2026 Wonderful Collection - Dhaka, Bangladesh 🇧🇩</div></div></div>
+    <div class="footer-bottom"><div class="footer-bottom-container"><div>© 2026 Shopademia - Dhaka, Bangladesh 🇧🇩</div><nav class="footer-social-links" aria-label="Shopademia social media"><a href="https://www.instagram.com/ShopademiaBD" target="_blank" rel="noopener noreferrer">Instagram · ShopademiaBD</a><a href="https://x.com/SHOPADEMIA" target="_blank" rel="noopener noreferrer">X · SHOPADEMIA</a><a href="https://www.facebook.com/SHOPADEMIA" target="_blank" rel="noopener noreferrer">Facebook · SHOPADEMIA</a></nav></div></div>
   </footer>
 
-  <script src="js/store.js?v=20261109"></script>
+  <script src="js/store.js?v=20261113-storefront-final-v3"></script>
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
       const urlParams = new URLSearchParams(window.location.search);
       const query = urlParams.get('q') || '';
       const cleanQuery = query.trim().slice(0, 80);
-      const searchTitle = cleanQuery ? `Search: ${cleanQuery} | Wonderful Collection` : 'Search Products | Wonderful Collection';
+      const searchTitle = cleanQuery ? `Search: ${cleanQuery} | Shopademia` : 'Search Products | Shopademia';
       const searchDescription = cleanQuery
-        ? `Search results for ${cleanQuery} in the Wonderful Collection catalog.`
-        : 'Search the Wonderful Collection catalog for products available in Bangladesh.';
+        ? `Search results for ${cleanQuery} in the Shopademia catalog.`
+        : 'Search the Shopademia catalog for products available in Bangladesh.';
       document.title = searchTitle;
       document.querySelector('meta[name="description"]').content = searchDescription;
       document.getElementById('search-canonical').href = cleanQuery
-        ? `https://wonderfulcollection.store/search.html?q=${encodeURIComponent(cleanQuery)}`
-        : 'https://wonderfulcollection.store/search.html';
+        ? `https://shopademia.store/search.html?q=${encodeURIComponent(cleanQuery)}`
+        : 'https://shopademia.store/search.html';
       document.querySelector('meta[property="og:title"]').content = searchTitle;
       document.querySelector('meta[property="og:description"]').content = searchDescription;
       document.querySelector('meta[property="og:url"]').content = document.getElementById('search-canonical').href;
@@ -120,7 +128,7 @@
         grid.innerHTML = results.map(p => `
           <div class="product-card">
             <div class="product-thumb-wrap">
-              <a href="product.html?id=${Number(p.id)}"><img src="${Store.escapeHtml(Store.productImage(p))}" alt="${Store.escapeHtml(p.name)}" onerror="this.onerror=null;this.src='assets/product-placeholder.svg'"></a>
+              <a href="product.html?id=${Number(p.id)}"><img src="${Store.escapeHtml(Store.productImage(p))}" alt="${Store.escapeHtml(p.name)}" data-image-fallback="assets/product-placeholder.svg"></a>
             </div>
             <div class="product-body">
               <div class="product-category-tag">${Store.escapeHtml(p.category_name)}</div>
@@ -137,12 +145,13 @@
         grid.innerHTML = `
           <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px;">
             <h2>No products found for "${Store.escapeHtml(query)}"</h2>
-            <p style="color: #64748b; margin: 12px 0 20px;">Try searching for "Panjabi", "Oud", "Wallet", "Earbuds", or "Candle".</p>
+            <p style="color: #69645b; margin: 12px 0 20px;">Try searching for "Panjabi", "Oud", "Wallet", "Earbuds", or "Candle".</p>
             <a href="shop.html" class="btn-primary">Browse All Products</a>
           </div>
         `;
       }
     });
   </script>
+  <script defer src="js/consent.js?v=20261112-consent"></script>
 </body>
 </html>

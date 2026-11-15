@@ -1,10 +1,11 @@
 <?php
 /**
- * Wonderful Collection - Database Connection Provider
- * MySQL connection provider with an explicit development-only SQLite fallback.
+ * Shopademia - Database Connection Provider
+ * MySQL connection provider. Connection failures never fall back to another database.
  */
 
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/rbac.php';
 
 class Database {
     private static ?PDO $instance = null;
@@ -15,7 +16,7 @@ class Database {
         }
 
         try {
-            $dsn = "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4";
+            $dsn = "mysql:host=" . DB_HOST . ";port=" . DB_PORT . ";dbname=" . DB_NAME . ";charset=utf8mb4";
             $options = [
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
@@ -23,77 +24,25 @@ class Database {
                 PDO::ATTR_TIMEOUT => 2
             ];
             self::$instance = new PDO($dsn, DB_USER, DB_PASS, $options);
+
+            if (WC_ISOLATED_TEST_MODE) {
+                $identity = self::$instance->query(
+                    'SELECT DATABASE() AS db_name, @@port AS db_port, @@datadir AS data_dir, @@bind_address AS bind_address'
+                )->fetch();
+                if (!is_array($identity)
+                    || $identity['db_name'] !== DB_NAME
+                    || (int)$identity['db_port'] !== (int)DB_PORT
+                    || $identity['bind_address'] !== '127.0.0.1'
+                    || stripos((string)$identity['data_dir'], WC_TEST_DATADIR_MARKER) === false) {
+                    error_log('Shopademia API isolated test database identity did not match');
+                    jsonResponse(['error' => 'Database connection failed'], 500);
+                }
+            }
+
             return self::$instance;
         } catch (PDOException $e) {
-            if (!DEV_MODE) {
-                error_log('Wonderful Collection MySQL connection failed: ' . $e->getMessage());
-                jsonResponse(['error' => 'Database connection failed'], 500);
-            }
-
-            try {
-                $sqlitePath = __DIR__ . '/../data.sqlite';
-                $isNew = !file_exists($sqlitePath);
-                self::$instance = new PDO("sqlite:" . $sqlitePath);
-                self::$instance->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-                self::$instance->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
-
-                if ($isNew) {
-                    self::initSQLiteDatabase(self::$instance);
-                }
-                self::ensureSQLiteColumn(self::$instance, 'categories', 'is_archived', 'INTEGER NOT NULL DEFAULT 0');
-                self::ensureSQLiteColumn(self::$instance, 'products', 'is_archived', 'INTEGER NOT NULL DEFAULT 0');
-                self::ensureSQLiteColumn(self::$instance, 'admins', 'password_change_required', 'INTEGER NOT NULL DEFAULT 1');
-                self::ensureSQLiteColumn(self::$instance, 'admins', 'last_totp_counter', 'INTEGER DEFAULT NULL');
-                self::ensureSQLiteColumn(self::$instance, 'orders', 'delivery_zone', 'TEXT DEFAULT NULL');
-                self::$instance->exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_orders_payment_trx_id ON orders (payment_method, trx_id)');
-                self::$instance->exec("
-                    CREATE TABLE IF NOT EXISTS admin_tokens (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        token_hash TEXT UNIQUE NOT NULL,
-                        admin_id INTEGER NOT NULL,
-                        expires_at DATETIME NOT NULL,
-                        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-                    );
-                    CREATE INDEX IF NOT EXISTS idx_admin_tokens_admin_id ON admin_tokens (admin_id);
-                    CREATE TABLE IF NOT EXISTS customer_tokens (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        token_hash TEXT UNIQUE NOT NULL,
-                        customer_id INTEGER NOT NULL,
-                        expires_at DATETIME NOT NULL,
-                        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-                    );
-                    CREATE INDEX IF NOT EXISTS idx_customer_tokens_customer_id ON customer_tokens (customer_id);
-                    CREATE TABLE IF NOT EXISTS login_attempts (
-                        username_hash TEXT NOT NULL,
-                        ip_hash TEXT NOT NULL,
-                        attempt_count INTEGER NOT NULL,
-                        window_started_at DATETIME NOT NULL,
-                        locked_until DATETIME,
-                        PRIMARY KEY (username_hash, ip_hash)
-                    );
-                    CREATE TABLE IF NOT EXISTS password_reset_tokens (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        customer_id INTEGER NOT NULL,
-                        token_hash TEXT UNIQUE NOT NULL,
-                        expires_at DATETIME NOT NULL,
-                        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-                    );
-                    CREATE INDEX IF NOT EXISTS idx_password_reset_customer_id ON password_reset_tokens (customer_id);
-                    CREATE TABLE IF NOT EXISTS customer_email_verifications (
-                        customer_id INTEGER PRIMARY KEY,
-                        token_hash TEXT UNIQUE,
-                        expires_at DATETIME,
-                        verified_at DATETIME,
-                        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-                    );
-                    INSERT OR IGNORE INTO customer_email_verifications (customer_id, verified_at)
-                    SELECT id, CURRENT_TIMESTAMP FROM customers;
-                ");
-            } catch (PDOException $sqliteError) {
-                error_log('Wonderful Collection development SQLite connection failed: ' . $sqliteError->getMessage());
-                jsonResponse(['error' => 'Database connection failed'], 500);
-            }
-            return self::$instance;
+            error_log('Shopademia MySQL connection failed: ' . $e->getMessage());
+            jsonResponse(['error' => 'Database connection failed'], 500);
         }
     }
 
@@ -127,6 +76,12 @@ class Database {
                 short_desc TEXT,
                 description TEXT,
                 images TEXT NOT NULL,
+                seo_title TEXT,
+                meta_description TEXT,
+                focus_keyword TEXT,
+                h1 TEXT,
+                alt_text TEXT,
+                canonical_url TEXT,
                 is_featured INTEGER DEFAULT 0,
                 is_trending INTEGER DEFAULT 0,
                 is_archived INTEGER NOT NULL DEFAULT 0,
@@ -141,6 +96,7 @@ class Database {
                 address TEXT,
                 area TEXT DEFAULT 'Dhaka',
                 city TEXT DEFAULT 'Dhaka',
+                is_vip INTEGER NOT NULL DEFAULT 0,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP
             );
             CREATE TABLE IF NOT EXISTS customer_tokens (
@@ -178,6 +134,7 @@ class Database {
                 order_status TEXT DEFAULT 'Pending',
                 tracking_code TEXT UNIQUE NOT NULL,
                 idempotency_key TEXT UNIQUE,
+                idempotency_fingerprint TEXT DEFAULT NULL,
                 notes TEXT,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP
             );
@@ -193,6 +150,7 @@ class Database {
             CREATE TABLE IF NOT EXISTS coupons (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 code TEXT UNIQUE NOT NULL,
+                tag TEXT DEFAULT NULL,
                 type TEXT NOT NULL DEFAULT 'percentage',
                 value REAL NOT NULL,
                 min_order REAL DEFAULT 0.00,
@@ -217,9 +175,17 @@ class Database {
                 password_hash TEXT NOT NULL,
                 full_name TEXT NOT NULL,
                 role TEXT DEFAULT 'Super Admin',
+                is_active INTEGER NOT NULL DEFAULT 1,
                 password_change_required INTEGER NOT NULL DEFAULT 1,
                 last_totp_counter INTEGER DEFAULT NULL,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            );
+            CREATE TABLE IF NOT EXISTS admin_role_definitions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                role_name TEXT UNIQUE NOT NULL,
+                permissions_json TEXT NOT NULL,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
             );
             CREATE TABLE IF NOT EXISTS admin_tokens (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -245,26 +211,68 @@ class Database {
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP
             );
             CREATE INDEX IF NOT EXISTS idx_password_reset_customer_id ON password_reset_tokens (customer_id);
+            CREATE TABLE IF NOT EXISTS consent_log (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                choice TEXT NOT NULL,
+                categories_json TEXT NOT NULL,
+                banner_version TEXT NOT NULL,
+                policy_version TEXT NOT NULL,
+                page_path TEXT NOT NULL DEFAULT '',
+                locale TEXT NOT NULL DEFAULT '',
+                timezone TEXT NOT NULL DEFAULT '',
+                device_type TEXT NOT NULL DEFAULT 'Unknown',
+                browser_name TEXT NOT NULL DEFAULT 'Unknown',
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            );
+            CREATE INDEX IF NOT EXISTS idx_consent_log_created_at ON consent_log (created_at);
         ");
+
+        self::ensureSQLiteColumn($pdo, 'orders', 'idempotency_fingerprint', 'TEXT DEFAULT NULL');
+        self::ensureSQLiteColumn($pdo, 'coupons', 'tag', 'TEXT DEFAULT NULL');
+        self::ensureSQLiteColumn($pdo, 'admins', 'is_active', 'INTEGER NOT NULL DEFAULT 1');
+        self::ensureSQLiteColumn($pdo, 'products', 'seo_title', 'TEXT');
+        self::ensureSQLiteColumn($pdo, 'products', 'meta_description', 'TEXT');
+        self::ensureSQLiteColumn($pdo, 'products', 'focus_keyword', 'TEXT');
+        self::ensureSQLiteColumn($pdo, 'products', 'h1', 'TEXT');
+        self::ensureSQLiteColumn($pdo, 'products', 'alt_text', 'TEXT');
+        self::ensureSQLiteColumn($pdo, 'products', 'canonical_url', 'TEXT');
+        self::ensureSQLiteColumn($pdo, 'customers', 'is_vip', 'INTEGER NOT NULL DEFAULT 0');
+        self::ensureSQLiteColumn($pdo, 'consent_log', 'page_path', "TEXT NOT NULL DEFAULT ''");
+        self::ensureSQLiteColumn($pdo, 'consent_log', 'locale', "TEXT NOT NULL DEFAULT ''");
+        self::ensureSQLiteColumn($pdo, 'consent_log', 'timezone', "TEXT NOT NULL DEFAULT ''");
+        self::ensureSQLiteColumn($pdo, 'consent_log', 'device_type', "TEXT NOT NULL DEFAULT 'Unknown'");
+        self::ensureSQLiteColumn($pdo, 'consent_log', 'browser_name', "TEXT NOT NULL DEFAULT 'Unknown'");
 
         // Seed data
         $pdo->exec("
             INSERT OR IGNORE INTO settings (key_name, value_data) VALUES
-            ('store_name', 'Wonderful Collection'),
-            ('store_moto', '🛍️ Wonderful Collection: Quality products, delivered across Bangladesh. 🇧🇩'),
-            ('announcement_text', '🚚 Delivery availability and estimates are shown at checkout. Cash on delivery & bKash available.'),
-            ('store_email', 'contact@wonderfulcollection.store'),
+            ('store_name', 'Shopademia'),
+            ('store_moto', '🛍️ Shopademia: Quality products, delivered across Bangladesh. 🇧🇩'),
+            ('announcement_text', '🚚 Delivery availability and payment options are shown at checkout.'),
+            ('store_email', 'contact@shopademia.store'),
             ('store_phone', '+880 1560-024777'),
             ('store_address', 'DHAKA, BANGLADESH'),
             ('currency_symbol', '৳'),
             ('currency_code', 'BDT'),
-            ('delivery_fee_dhanmondi', '60'),
             ('delivery_fee_dhaka', '80'),
             ('delivery_fee_outside_dhaka', '130'),
             ('free_delivery_min_amount', '2000'),
             ('bkash_number', '01560024777 (Personal)'),
             ('nagad_number', '01560024777 (Personal)'),
-            ('rocket_number', '01560024777 (Personal)');
+            ('rocket_number', '01560024777 (Personal)'),
+            ('social_heading', 'Follow us'),
+            ('social_instagram_label', 'Instagram · ShopademiaBD'),
+            ('social_instagram_url', 'https://www.instagram.com/ShopademiaBD'),
+            ('social_x_label', 'X · SHOPADEMIA'),
+            ('social_x_url', 'https://x.com/SHOPADEMIA'),
+            ('social_facebook_label', 'Facebook · SHOPADEMIA'),
+            ('social_facebook_url', 'https://www.facebook.com/SHOPADEMIA'),
+            ('homepage_promo_eyebrow', 'Explore the collection'),
+            ('homepage_promo_title', 'Discover Our Latest Collection'),
+            ('homepage_promo_description', 'Explore quality products selected for everyday living.'),
+            ('homepage_promo_button_text', 'Shop Collection →'),
+            ('homepage_promo_link', 'shop.html'),
+            ('homepage_promo_image', '');
 
             INSERT OR IGNORE INTO categories (id, name, slug, description, image) VALUES
             (1, 'Men\'s Fashion', 'mens-fashion', 'Premium Panjabis, shirts, and traditional attire.', 'assets/category-placeholder.svg'),
@@ -301,7 +309,7 @@ class Database {
             (3, 5, 'Pro ANC Wireless Earbuds - Matte Obsidian', 2450.00, 1, 2450.00);
 
             INSERT OR IGNORE INTO coupons (code, type, value, min_order, max_discount, expiry_date, usage_limit, times_used, is_active) VALUES
-            ('DHANMONDI10', 'percentage', 10.00, 1000.00, 500.00, '2028-12-31', 500, 42, 0),
+            ('LOCAL10', 'percentage', 10.00, 1000.00, 500.00, '2028-12-31', 500, 42, 0),
             ('WONDERFUL100', 'fixed', 100.00, 1500.00, 100.00, '2028-12-31', 200, 19, 1),
             ('EIDSPECIAL', 'percentage', 15.00, 2500.00, 750.00, '2028-12-31', 300, 8, 1);
 
@@ -312,7 +320,7 @@ class Database {
             (4, 'Sadia Rahman', 5, 'Wore this to a family dawat and got so many compliments. Beautiful embroidery work.');
 
             INSERT OR IGNORE INTO admins (username, password_hash, full_name, role) VALUES
-            ('admin', '$2y$12$l0nUHojhz2R6lYhkYzvOwejLKmJc.tCQbXMm7NmbWqewMxLUmZuiy', 'Wonderful Store Manager', 'Super Admin');
+            ('admin', '$2y$12$l0nUHojhz2R6lYhkYzvOwejLKmJc.tCQbXMm7NmbWqewMxLUmZuiy', 'Shopademia Store Manager', 'Super Admin');
         ");
     }
 
@@ -340,6 +348,20 @@ function getBearerTokenFromRequest(): ?string {
     return $matches[1];
 }
 
+function normalizeBangladeshMobile(string $value): ?string {
+    if (strlen($value) > 30 || !preg_match('/\A[+0-9\s()-]+\z/', trim($value))) {
+        return null;
+    }
+    $digits = preg_replace('/\D+/', '', $value);
+    if (preg_match('/\A01[3-9][0-9]{8}\z/', $digits)) {
+        return '+88' . $digits;
+    }
+    if (preg_match('/\A8801[3-9][0-9]{8}\z/', $digits)) {
+        return '+' . $digits;
+    }
+    return null;
+}
+
 function requireCustomerToken(PDO $pdo): array {
     $token = getBearerTokenFromRequest();
     if ($token === null) {
@@ -348,9 +370,10 @@ function requireCustomerToken(PDO $pdo): array {
     }
 
     $stmt = $pdo->prepare("
-        SELECT c.id, c.name, c.email
+        SELECT c.id, c.name, c.email, (v.verified_at IS NOT NULL) AS email_verified
         FROM customer_tokens t
         INNER JOIN customers c ON c.id = t.customer_id
+        LEFT JOIN customer_email_verifications v ON v.customer_id = c.id
         WHERE t.token_hash = ? AND t.expires_at > ?
     ");
     $stmt->execute([hash('sha256', $token), gmdate('Y-m-d H:i:s')]);
@@ -363,10 +386,76 @@ function requireCustomerToken(PDO $pdo): array {
 }
 
 function getAdminTokenFromRequest(): ?string {
+    if (($_SERVER['HTTP_X_WC_ADMIN_CLIENT'] ?? '') === 'web') {
+        return is_string($_COOKIE['__Host-wc_admin'] ?? null) && $_COOKIE['__Host-wc_admin'] !== ''
+            ? $_COOKIE['__Host-wc_admin']
+            : null;
+    }
     return getBearerTokenFromRequest();
 }
 
+function isAdminWebClient(): bool {
+    return ($_SERVER['HTTP_X_WC_ADMIN_CLIENT'] ?? '') === 'web';
+}
+
+function isTrustedAdminWebOrigin(): bool {
+    $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+    if ($origin === '') {
+        return false;
+    }
+
+    global $allowedOrigin;
+    if (isset($allowedOrigin) && hash_equals($allowedOrigin, $origin)) {
+        return true;
+    }
+
+    if (!isLocalDevelopmentRequest()) {
+        return false;
+    }
+    $parts = parse_url($origin);
+    return is_array($parts)
+        && in_array($parts['scheme'] ?? '', ['http', 'https'], true)
+        && in_array(strtolower((string)($parts['host'] ?? '')), ['localhost', '127.0.0.1'], true);
+}
+
+function setAdminWebCookie(string $token, string $expiresAt): void {
+    setcookie('__Host-wc_admin', $token, [
+        'expires' => strtotime($expiresAt . ' UTC'),
+        'path' => '/',
+        'secure' => true,
+        'httponly' => true,
+        'samesite' => 'Strict'
+    ]);
+}
+
+function clearAdminWebCookie(): void {
+    setcookie('__Host-wc_admin', '', [
+        'expires' => time() - 3600,
+        'path' => '/',
+        'secure' => true,
+        'httponly' => true,
+        'samesite' => 'Strict'
+    ]);
+}
+
 function requireAdminToken(PDO $pdo, bool $allowPasswordChange = false): array {
+    if (isAdminWebClient()) {
+        $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+        $isSafeMethod = in_array($method, ['GET', 'HEAD', 'OPTIONS'], true);
+        $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+        $fetchSite = $_SERVER['HTTP_SEC_FETCH_SITE'] ?? '';
+        $fetchSiteIsSameOrigin = hash_equals('same-origin', (string)$fetchSite);
+        $fetchSiteIsAllowed = $fetchSiteIsSameOrigin || ($isSafeMethod && $fetchSite === '');
+        $originIsAllowed = $origin !== ''
+            ? isTrustedAdminWebOrigin()
+            : $isSafeMethod;
+
+        if (!$originIsAllowed || !$fetchSiteIsAllowed || (!$isSafeMethod && !$fetchSiteIsSameOrigin)) {
+            logSecurityEvent('admin_web_origin_denied');
+            jsonResponse(['error' => 'Admin authorization required'], 401);
+        }
+    }
+
     $token = getAdminTokenFromRequest();
     if ($token === null) {
         logSecurityEvent('admin_auth_denied');
@@ -374,7 +463,7 @@ function requireAdminToken(PDO $pdo, bool $allowPasswordChange = false): array {
     }
 
     $stmt = $pdo->prepare("
-        SELECT a.id, a.username, a.full_name, a.role, a.password_change_required
+        SELECT a.id, a.username, a.full_name, a.role, a.password_change_required, t.expires_at
         FROM admin_tokens t
         INNER JOIN admins a ON a.id = t.admin_id
         WHERE t.token_hash = ? AND t.expires_at > ?
@@ -472,12 +561,25 @@ function enforceApiRateLimit(PDO $pdo, string $scope, int $limit, int $windowSec
         if ($pdo->inTransaction()) {
             $pdo->rollBack();
         }
-        error_log('Wonderful Collection API rate-limit storage failed.');
+        error_log('Shopademia API rate-limit storage failed.');
         jsonResponse(['error' => 'Request could not be processed. Please try again.'], 500);
     }
 }
 
+function isLocalDevelopmentRequest(): bool {
+    $remoteAddress = $_SERVER['REMOTE_ADDR'] ?? '';
+    return defined('DEV_MODE')
+        && DEV_MODE === true
+        && in_array($remoteAddress, ['127.0.0.1', '::1'], true);
+}
+
 function isLoginRateLimited(PDO $pdo, string $username): bool {
+    // Local development must not be blocked by a stale failed-login timer.
+    // Remote production requests retain the normal account/IP protection.
+    if (isLocalDevelopmentRequest()) {
+        return false;
+    }
+
     $keys = loginAttemptKeys($username);
     $now = time();
     $nowText = gmdate('Y-m-d H:i:s', $now);
@@ -505,12 +607,16 @@ function isLoginRateLimited(PDO $pdo, string $username): bool {
         }
         return false;
     } catch (PDOException $e) {
-        error_log('Wonderful Collection login rate-limit lookup failed.');
+        error_log('Shopademia login rate-limit lookup failed.');
         jsonResponse(['error' => 'Login could not be processed. Please try again.'], 500);
     }
 }
 
 function recordLoginFailure(PDO $pdo, string $username): bool {
+    if (isLocalDevelopmentRequest()) {
+        return false;
+    }
+
     $keys = loginAttemptKeys($username);
     $now = time();
     $nowText = gmdate('Y-m-d H:i:s', $now);
@@ -528,7 +634,7 @@ function recordLoginFailure(PDO $pdo, string $username): bool {
                 VALUES (?, ?, 1, ?, NULL)
                 ON DUPLICATE KEY UPDATE
                     attempt_count = IF(window_started_at < ?, 1, attempt_count + 1),
-                    locked_until = IF(window_started_at < ?, NULL, IF(? = 1 AND attempt_count >= 5, ?, locked_until)),
+                    locked_until = IF(window_started_at < ?, NULL, IF(? = \'1\' AND attempt_count >= 5, ?, locked_until)),
                     window_started_at = IF(window_started_at < ?, ?, window_started_at)
                 ';
             } elseif ($driver === 'sqlite') {
@@ -537,7 +643,7 @@ function recordLoginFailure(PDO $pdo, string $username): bool {
                 VALUES (?, ?, 1, ?, NULL)
                 ON CONFLICT(username_hash, ip_hash) DO UPDATE SET
                     attempt_count = CASE WHEN window_started_at < ? THEN 1 ELSE attempt_count + 1 END,
-                    locked_until = CASE WHEN window_started_at < ? THEN NULL WHEN ? = 1 AND attempt_count >= 5 THEN ? ELSE locked_until END,
+                    locked_until = CASE WHEN window_started_at < ? THEN NULL WHEN ? = \'1\' AND attempt_count >= 5 THEN ? ELSE locked_until END,
                     window_started_at = CASE WHEN window_started_at < ? THEN ? ELSE window_started_at END
                 ';
             } else {
@@ -563,7 +669,7 @@ function recordLoginFailure(PDO $pdo, string $username): bool {
         $ipLockedUntil = $ipStmt->fetchColumn();
         return $ipLockedUntil !== false && $ipLockedUntil !== null && strtotime($ipLockedUntil . ' UTC') > $now;
     } catch (PDOException $e) {
-        error_log('Wonderful Collection login rate-limit storage failed.');
+        error_log('Shopademia login rate-limit storage failed.');
         jsonResponse(['error' => 'Login could not be processed. Please try again.'], 500);
     }
 }
@@ -579,7 +685,7 @@ function clearLoginAttempts(PDO $pdo, string $username): void {
             $keys['ip']['ip_hash']
         ]);
     } catch (PDOException $e) {
-        error_log('Wonderful Collection login attempt cleanup failed.');
+        error_log('Shopademia login attempt cleanup failed.');
         jsonResponse(['error' => 'Login could not be completed. Please try again.'], 500);
     }
 }

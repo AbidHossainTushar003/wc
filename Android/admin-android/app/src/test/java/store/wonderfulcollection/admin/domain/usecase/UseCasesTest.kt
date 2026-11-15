@@ -8,6 +8,7 @@ import store.wonderfulcollection.admin.domain.model.Order
 import store.wonderfulcollection.admin.domain.model.Product
 import store.wonderfulcollection.admin.domain.model.ProductImageFile
 import store.wonderfulcollection.admin.domain.repository.OrderRepository
+import store.wonderfulcollection.admin.domain.repository.PaginatedOrders
 import store.wonderfulcollection.admin.domain.repository.ProductRepository
 
 class UseCasesTest {
@@ -20,31 +21,47 @@ class UseCasesTest {
             override suspend fun createProduct(
                 name: String, shortDescription: String, description: String,
                 regularPrice: Double, salePrice: Double?, categoryId: Long, stock: Int,
-                sku: String?, isFeatured: Boolean, isTrending: Boolean, imageFiles: List<ProductImageFile>
+                sku: String?, isFeatured: Boolean, isTrending: Boolean, isSellable: Boolean,
+                seoTitle: String, metaDescription: String, focusKeyword: String, h1: String,
+                altText: String, canonicalUrl: String, imageFiles: List<ProductImageFile>,
             ) = Result.success(101L)
-            override suspend fun updateProduct(id: Long, name: String, shortDescription: String, regularPrice: Double, salePrice: Double?, stock: Int, expectedStock: Int) = Result.success(Unit)
+            override suspend fun updateProduct(
+                id: Long, name: String, categoryId: Long, shortDescription: String, description: String,
+                regularPrice: Double, salePrice: Double?, stock: Int, expectedStock: Int, sku: String?,
+                isFeatured: Boolean, isTrending: Boolean, isSellable: Boolean, seoTitle: String,
+                metaDescription: String, focusKeyword: String, h1: String, altText: String,
+                canonicalUrl: String, images: List<String>, imageFiles: List<ProductImageFile>,
+            ) = Result.success(Unit)
             override suspend fun deleteProduct(id: Long) = Result.success(Unit)
         }
 
         val useCase = CreateProductUseCase(mockRepo)
 
         // Blank name
-        var result = useCase("", "desc", "full desc", 100.0, null, 1L, 10, null, false, false, emptyList())
+        var result = useCase(
+            "", "desc", "full desc", 100.0, null, 1L, 10, null, false, false, true, "", "", "", "", "", "", emptyList(),
+        )
         assertTrue(result.isFailure)
         assertEquals("Product name cannot be empty", result.exceptionOrNull()?.message)
 
         // Non-positive regular price
-        result = useCase("Panjabi", "desc", "full desc", 0.0, null, 1L, 10, null, false, false, emptyList())
+        result = useCase(
+            "Panjabi", "desc", "full desc", 0.0, null, 1L, 10, null, false, false, true, "", "", "", "", "", "", emptyList(),
+        )
         assertTrue(result.isFailure)
         assertEquals("Regular price must be greater than zero", result.exceptionOrNull()?.message)
 
         // Invalid sale price >= regular price
-        result = useCase("Panjabi", "desc", "full desc", 100.0, 150.0, 1L, 10, null, false, false, emptyList())
+        result = useCase(
+            "Panjabi", "desc", "full desc", 100.0, 150.0, 1L, 10, null, false, false, true, "", "", "", "", "", "", emptyList(),
+        )
         assertTrue(result.isFailure)
         assertEquals("Sale price must be greater than zero and less than regular price", result.exceptionOrNull()?.message)
 
         // Negative stock
-        result = useCase("Panjabi", "desc", "full desc", 100.0, null, 1L, -5, null, false, false, emptyList())
+        result = useCase(
+            "Panjabi", "desc", "full desc", 100.0, null, 1L, -5, null, false, false, true, "", "", "", "", "", "", emptyList(),
+        )
         assertTrue(result.isFailure)
         assertEquals("Stock cannot be negative", result.exceptionOrNull()?.message)
     }
@@ -53,7 +70,9 @@ class UseCasesTest {
     fun updateOrderStatusUseCaseRejectsInvalidStatus() = runBlocking {
         var updatedStatus: String? = null
         val mockRepo = object : OrderRepository {
-            override suspend fun getOrders(status: String?, query: String?) = Result.success(emptyList<Order>())
+            override suspend fun getOrders(status: String?, query: String?, page: Int, perPage: Int) = Result.success(
+                PaginatedOrders(emptyList(), page, perPage, 0),
+            )
             override suspend fun getOrderById(id: Long) = Result.failure<Order>(NotImplementedError())
             override suspend fun updateOrderStatus(id: Long, status: String): Result<Unit> {
                 updatedStatus = status

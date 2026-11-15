@@ -1,5 +1,6 @@
 package store.wonderfulcollection.customer.data
 
+import org.json.JSONArray
 import org.json.JSONObject
 
 data class CustomerProduct(
@@ -17,7 +18,7 @@ data class CustomerProduct(
         get() = salePrice?.takeIf { it > 0 } ?: regularPrice
 
     val isOnSale: Boolean
-        get() = salePrice != null && salePrice > 0 && salePrice < regularPrice
+        get() = (salePrice != null && salePrice > 0 && salePrice < regularPrice)
 
     val discountPercentage: Int
         get() = if (isOnSale && regularPrice > 0) {
@@ -25,72 +26,181 @@ data class CustomerProduct(
         } else 0
 
     companion object {
+        private fun unwrapPayload(json: JSONObject): JSONObject {
+            if (json.has("data") && !json.isNull("data") && json.opt("data") is JSONObject) {
+                return json.getJSONObject("data")
+            }
+            if (json.has("product") && !json.isNull("product") && json.opt("product") is JSONObject) {
+                return json.getJSONObject("product")
+            }
+            return json
+        }
+
+        private fun normalizeNumericString(value: String): Double? {
+            val cleaned = value.trim()
+                .replace(Regex("[\\s_]+"), "")
+                .replace(Regex("[^0-9.,-]+"), "")
+                .replace(",", "")
+                .trim()
+            if (cleaned.isEmpty() || cleaned == "-" || cleaned == ".") return null
+            return cleaned.toDoubleOrNull()
+        }
+
         private fun JSONObject.optStringAny(vararg keys: String): String {
-            for (key in keys) {
-                if (has(key) && !isNull(key)) {
-                    val value = optString(key)
-                    if (value.isNotBlank()) return value
+            val searchKeys = keys.toList() + listOf("value", "name", "title", "label", "url", "image", "image_url")
+            for (key in searchKeys) {
+                if (!has(key) || isNull(key)) continue
+                val value = opt(key)
+                when (value) {
+                    is String -> if (value.isNotBlank()) return value
+                    is Number -> if (value.toString().isNotBlank()) return value.toString()
+                    is Boolean -> return value.toString()
+                    is JSONObject -> {
+                        val nested = value.optStringAny(*searchKeys.toTypedArray())
+                        if (nested.isNotBlank()) return nested
+                    }
+                    is JSONArray -> {
+                        for (index in 0 until value.length()) {
+                            when (val nested = value.opt(index)) {
+                                is JSONObject -> {
+                                    val match = nested.optStringAny(*searchKeys.toTypedArray())
+                                    if (match.isNotBlank()) return match
+                                }
+                                is String -> if (nested.isNotBlank()) return nested
+                            }
+                        }
+                    }
                 }
             }
             return ""
         }
 
         private fun JSONObject.optDoubleAny(vararg keys: String): Double {
-            for (key in keys) {
-                if (has(key) && !isNull(key)) {
-                    val value = optDouble(key, Double.NaN)
-                    if (value.isFinite() && value >= 0.0) return value
+            val searchKeys = keys.toList() + listOf("value", "amount", "price", "base_price", "regular_price", "regularPrice")
+            for (key in searchKeys) {
+                if (!has(key) || isNull(key)) continue
+                val value = opt(key)
+                val numeric = when (value) {
+                    is Number -> value.toDouble()
+                    is String -> normalizeNumericString(value)
+                    is JSONObject -> value.optDoubleAny(*searchKeys.toTypedArray())
+                    is JSONArray -> value.toDoubleList().firstOrNull()
+                    else -> null
                 }
+                if (numeric != null && numeric.isFinite() && numeric >= 0.0) return numeric
             }
             return 0.0
         }
 
+        private fun JSONArray.toDoubleList(): List<Double> = buildList {
+            for (index in 0 until length()) {
+                val item = opt(index)
+                val numeric = when (item) {
+                    is Number -> item.toDouble()
+                    is String -> normalizeNumericString(item)
+                    is JSONObject -> item.optDoubleAny("value", "amount", "price")
+                    else -> null
+                }
+                if (numeric != null && numeric.isFinite()) add(numeric)
+            }
+        }
+
         private fun JSONObject.optImageArray(): List<String> {
-            val images = optJSONArray("images")
-            if (images != null) {
-                return (0 until images.length()).mapNotNull { index ->
-                    val item = images.optString(index)
-                    item.takeIf { it.isNotBlank() }
+            for (name in listOf("images", "gallery", "media", "product_images")) {
+                val candidate = optJSONArray(name) ?: continue
+                val extracted = buildList {
+                    for (index in 0 until candidate.length()) {
+                        val item = candidate.opt(index)
+                        val value = when (item) {
+                            is String -> item
+                            is JSONObject -> item.optStringAny("url", "src", "image", "image_url", "path", "thumbnail", "thumb")
+                            is JSONArray -> item.toImageStrings().firstOrNull() ?: ""
+                            else -> item?.toString() ?: ""
+                        }
+                        if (value.isNotBlank()) add(value)
+                    }
+                }
+                if (extracted.isNotEmpty()) return extracted
+            }
+
+            val fallbackCandidates = listOf("image", "image_url", "thumbnail", "thumb", "featured_image", "featuredImage")
+            for (candidate in fallbackCandidates) {
+                if (!has(candidate) || isNull(candidate)) continue
+                val value = opt(candidate)
+                val extracted = when (value) {
+                    is String -> if (value.isNotBlank()) listOf(value) else emptyList()
+                    is JSONObject -> listOf(value.optStringAny("url", "src", "image", "image_url", "path", "thumbnail", "thumb"))
+                    is JSONArray -> value.toImageStrings()
+                    else -> emptyList()
+                }
+                if (extracted.isNotEmpty()) return extracted.filter { it.isNotBlank() }
+            }
+            return emptyList()
+        }
+
+        private fun JSONArray.toImageStrings(): List<String> {
+            return buildList {
+                for (index in 0 until length()) {
+                    val item = opt(index)
+                    val value = when (item) {
+                        is String -> item
+                        is JSONObject -> item.optStringAny("url", "src", "image", "image_url", "path", "thumbnail", "thumb")
+                        is JSONArray -> item.toImageStrings().firstOrNull() ?: ""
+                        else -> item?.toString() ?: ""
+                    }
+                    if (value.isNotBlank()) add(value)
                 }
             }
-            val rawValue = optStringAny("image", "image_url", "thumbnail", "thumb", "featured_image")
-            return if (rawValue.isBlank()) emptyList() else listOf(rawValue)
         }
 
         fun fromJson(json: JSONObject): CustomerProduct {
-            val name = json.optStringAny("name", "product_name", "title")
-            val regularPrice = json.optDoubleAny("regular_price", "price")
-            val salePrice = listOf("sale_price", "discount_price", "special_price", "salePrice")
-                .firstOrNull { json.has(it) && !json.isNull(it) }
-                ?.let { json.optDouble(it, Double.NaN) }
+            val payload = unwrapPayload(json)
+            val name = payload.optStringAny("name", "product_name", "title", "productTitle")
+            val regularPrice = payload.optDoubleAny("regular_price", "regularPrice", "price")
+            val salePrice = listOf("sale_price", "salePrice", "discount_price", "special_price")
+                .firstOrNull { payload.has(it) && !payload.isNull(it) }
+                ?.let { payload.opt(it) }
+                ?.let { value ->
+                    when (value) {
+                        is Number -> value.toDouble()
+                        is String -> value.toDoubleOrNull()
+                        is JSONObject -> value.optDoubleAny("value", "amount", "price")
+                        else -> null
+                    }
+                }
                 ?.takeIf { it.isFinite() && it > 0 }
-            val stockQuantity = json.optInt("stock_quantity", json.optInt("stock", 0))
-            val images = json.optImageArray()
+            val stockQuantity = payload.optInt("stock_quantity", payload.optInt("stock", payload.optInt("stockQuantity", 0)))
+            val images = payload.optImageArray()
             val firstImage = images.firstOrNull { item ->
                 item.isNotBlank() && !item.startsWith("content://") && !item.endsWith(".svg")
             }
 
             val rawImage = firstImage
-                ?: json.optStringAny("image", "image_url", "thumb", "thumbnail", "featured_image")
+                ?: payload.optStringAny("image", "image_url", "thumb", "thumbnail", "featured_image", "featuredImage")
                 .takeIf { it.isNotBlank() }
 
             val imageUrl = when {
-                rawImage.isNullOrBlank() || rawImage.startsWith("content://") || rawImage.endsWith(".svg") -> null
-                rawImage.startsWith("http://") || rawImage.startsWith("https://") -> rawImage
+                (rawImage.isNullOrBlank() || rawImage.startsWith("content://") || rawImage.endsWith(".svg")) -> null
+                (rawImage.startsWith("http://") || rawImage.startsWith("https://")) -> rawImage
                 else -> "https://shopademia.store/" + rawImage.removePrefix("/")
             }
 
-            val categoryName = json.optStringAny("category_name", "category", "categoryTitle").ifBlank { "General" }
-            val sku = json.optStringAny("sku", "product_sku")
+            val categoryValue = payload.opt("category")
+            val categoryName = when (categoryValue) {
+                is JSONObject -> categoryValue.optStringAny("name", "title", "category_name")
+                is String -> categoryValue
+                else -> payload.optStringAny("category_name", "categoryName", "category", "categoryTitle", "category_title")
+            }.ifBlank { "General" }
+            val sku = payload.optStringAny("sku", "product_sku")
 
             return CustomerProduct(
-                id = json.optInt("id", 0).takeIf { it > 0 } ?: 0,
+                id = payload.optInt("id", payload.optInt("product_id", 0)).takeIf { it > 0 } ?: 0,
                 name = name,
                 regularPrice = regularPrice,
                 salePrice = salePrice,
                 stockQuantity = stockQuantity,
-                description = json.optStringAny("short_desc", "short_description", "description", "excerpt").ifBlank {
-                    json.optStringAny("summary")
+                description = payload.optStringAny("short_desc", "short_description", "shortDesc", "description", "excerpt").ifBlank {
+                    payload.optStringAny("summary")
                 },
                 imageUrl = imageUrl,
                 categoryName = categoryName,

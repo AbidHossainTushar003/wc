@@ -3,22 +3,64 @@
  * Health Check Endpoint (PRD-17)
  */
 
-require_once __DIR__ . '/db.php';
+$localConfig = __DIR__ . '/config.local.php';
+$databaseEnvironmentKeys = ['DB_HOST', 'DB_PORT', 'DB_NAME', 'DB_USER', 'DB_PASS'];
+$hasCompleteDatabaseEnvironment = true;
+foreach ($databaseEnvironmentKeys as $key) {
+    $value = getenv($key);
+    if (!is_string($value) || trim($value) === '') {
+        $hasCompleteDatabaseEnvironment = false;
+        break;
+    }
+}
+
+$respond = static function (array $body, int $statusCode): void {
+    header('Content-Type: application/json; charset=UTF-8');
+    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+    header('X-Content-Type-Options: nosniff');
+    http_response_code($statusCode);
+    echo json_encode($body, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+};
+
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'OPTIONS') {
+    require_once __DIR__ . '/config.php';
+    exit;
+}
+
+if (!is_file($localConfig) && !$hasCompleteDatabaseEnvironment) {
+    $respond([
+        'status' => 'degraded',
+        'database' => 'unconfigured',
+        'configuration' => 'missing'
+    ], 503);
+    exit;
+}
+
+require_once __DIR__ . '/config.php';
 
 try {
-    $pdo = Database::getConnection();
-    $stmt = $pdo->query("SELECT 1");
-    $dbOk = $stmt && $stmt->fetchColumn() == 1;
-} catch (Exception $e) {
+    if (WC_ISOLATED_TEST_MODE) {
+        require_once __DIR__ . '/db.php';
+        $pdo = Database::getConnection();
+    } else {
+        $dsn = 'mysql:host=' . DB_HOST . ';port=' . DB_PORT . ';dbname=' . DB_NAME . ';charset=utf8mb4';
+        $pdo = new PDO($dsn, DB_USER, DB_PASS, [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::ATTR_EMULATE_PREPARES => false,
+            PDO::ATTR_TIMEOUT => 2
+        ]);
+    }
+    $dbOk = (int)$pdo->query('SELECT 1')->fetchColumn() === 1;
+} catch (PDOException $e) {
+    error_log('Shopademia health database check failed');
     $dbOk = false;
 }
 
 $status = $dbOk ? 'healthy' : 'degraded';
 $code = $dbOk ? 200 : 503;
 
-jsonResponse([
+$respond([
     'status' => $status,
-    'database' => $dbOk ? 'connected' : 'error',
-    'php_version' => PHP_VERSION,
-    'time_utc' => gmdate('Y-m-d H:i:s')
+    'database' => $dbOk ? 'connected' : 'error'
 ], $code);

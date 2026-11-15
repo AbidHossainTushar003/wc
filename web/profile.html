@@ -3,10 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>My Profile | Wonderful Collection Dhaka</title>
+  <title>My Profile | Shopademia</title>
+  <meta name="description" content="Manage your Shopademia profile and delivery details.">
   <meta name="robots" content="noindex, nofollow">
-  <link rel="stylesheet" href="css/style.css">
-  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/style.css?v=20261113-chat-dock-v3">
+  <link rel="stylesheet" href="css/consent.css?v=20261112-consent">
+  <link rel="icon" href="assets/favicon.ico" sizes="any">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
 </head>
 <body>
   <div class="top-bar">
@@ -22,49 +26,77 @@
 
   <header class="site-header">
     <div class="header-container">
-      <a href="index.html" class="brand-logo-wrap"><img width="741" height="265" src="assets/logo.jpg" alt="Wonderful Collection" class="brand-logo-img"></a>
+      <a href="index.html" class="brand-logo-wrap"><img width="741" height="265" src="assets/logo-shopademia.jpg" alt="Shopademia" class="brand-logo-img"></a>
       <div class="header-actions">
         <a href="orders.html" class="header-action-btn"><span class="icon">📦</span><span>My Orders</span></a>
         <a href="cart.html" class="header-action-btn open-cart-btn"><span class="icon">🛍️</span><span>Cart</span></a>
-        <button onclick="logoutCustomer()" style="background: none; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 6px; font-weight: 700; color: #ef4444; cursor: pointer;">Logout</button>
+        <button data-csp-click="logoutCustomer" style="background: none; border: 1px solid #d6cec1; padding: 6px 12px; border-radius: 6px; font-weight: 700; color: #ef4444; cursor: pointer;">Logout</button>
       </div>
     </div>
   </header>
 
   <main class="page-container" style="max-width: 800px;">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-      <h1 style="font-size: 2rem; font-weight: 800; color: #0e2a47;">My Customer Profile</h1>
-      <a href="orders.html" class="btn-secondary" style="color: #0e2a47; border-color: #cbd5e1;">View Order History →</a>
+      <h1 style="font-size: 2rem; font-weight: 800; color: #26231f;">My Customer Profile</h1>
+      <a href="orders.html" class="btn-secondary" style="color: #26231f; border-color: #d6cec1;">View Order History →</a>
     </div>
+    <p id="profile-load-status" role="status" aria-live="polite"></p>
 
-    <div style="background: #fff; border-radius: 20px; border: 1px solid #e2e8f0; padding: 32px; box-shadow: var(--shadow-sm);">
-      <form onsubmit="handleSaveProfile(event)">
+    <div style="background: #fff; border-radius: 20px; border: 1px solid #e8e2d8; padding: 32px; box-shadow: var(--shadow-sm);">
+      <form data-csp-submit="handleSaveProfile">
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
           <div>
             <label for="prof_name" style="display: block; font-size: 0.88rem; font-weight: 700; margin-bottom: 6px;">Full Name</label>
-            <input type="text" id="prof_name" required style="width: 100%; border: 1px solid #cbd5e1; padding: 12px 14px; border-radius: 8px;">
+            <input type="text" id="prof_name" required style="width: 100%; border: 1px solid #d6cec1; padding: 12px 14px; border-radius: 8px;">
           </div>
           <div>
             <label for="prof_email" style="display: block; font-size: 0.88rem; font-weight: 700; margin-bottom: 6px;">Email Address</label>
-            <input type="email" id="prof_email" readonly style="width: 100%; border: 1px solid #e2e8f0; background: #f8fafc; padding: 12px 14px; border-radius: 8px; color: #64748b;">
+            <input type="email" id="prof_email" readonly style="width: 100%; border: 1px solid #e8e2d8; background: #f7f4ee; padding: 12px 14px; border-radius: 8px; color: #69645b;">
           </div>
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
           <div>
-            <label for="prof_phone" style="display: block; font-size: 0.88rem; font-weight: 700; margin-bottom: 6px;">Phone Number (WhatsApp)</label>
-            <input type="tel" id="prof_phone" required pattern="01[3-9][0-9]{8}" inputmode="numeric" title="Enter an 11-digit Bangladesh mobile number starting with 013 to 019." style="width: 100%; border: 1px solid #cbd5e1; padding: 12px 14px; border-radius: 8px;">
+            <label for="prof_phone" style="display: block; font-size: 0.88rem; font-weight: 700; margin-bottom: 6px;">Phone Number</label>
+            <input type="tel" id="prof_phone" required pattern="(?:01[3-9][0-9]{8}|\+8801[3-9][0-9]{8})" inputmode="tel" title="Enter a Bangladesh mobile number starting with 013 to 019, with or without +880." style="width: 100%; border: 1px solid #d6cec1; padding: 12px 14px; border-radius: 8px;">
           </div>
           <div>
-            <label for="prof_area" style="display: block; font-size: 0.88rem; font-weight: 700; margin-bottom: 6px;">Primary Area in Dhaka</label>
-            <input type="text" id="prof_area" value="Dhaka" style="width: 100%; border: 1px solid #cbd5e1; padding: 12px 14px; border-radius: 8px;">
+            <label for="prof_area" style="display: block; font-size: 0.88rem; font-weight: 700; margin-bottom: 6px;">Default Delivery Area</label>
+            <input type="text" id="prof_area" maxlength="100" placeholder="Area, upazila, or district" style="width: 100%; border: 1px solid #d6cec1; padding: 12px 14px; border-radius: 8px;">
           </div>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+          <label><input id="prof_whatsapp_same" type="checkbox"> Use my phone number for WhatsApp</label>
+          <label for="prof_whatsapp_phone" style="display: block; font-size: 0.88rem; font-weight: 700; margin: 8px 0 6px;">Separate WhatsApp number (optional)</label>
+          <input type="tel" id="prof_whatsapp_phone" pattern="(?:01[3-9][0-9]{8}|\+8801[3-9][0-9]{8})" inputmode="tel" title="Enter a Bangladesh mobile number starting with 013 to 019, with or without +880." style="width: 100%; border: 1px solid #d6cec1; padding: 12px 14px; border-radius: 8px;">
         </div>
 
         <div style="margin-bottom: 24px;">
           <label for="prof_address" style="display: block; font-size: 0.88rem; font-weight: 700; margin-bottom: 6px;">Default Delivery Address</label>
-          <textarea id="prof_address" rows="3" style="width: 100%; border: 1px solid #cbd5e1; padding: 12px 14px; border-radius: 8px;"></textarea>
+          <textarea id="prof_address" rows="3" style="width: 100%; border: 1px solid #d6cec1; padding: 12px 14px; border-radius: 8px;"></textarea>
         </div>
+
+        <fieldset style="border: 1px solid #e8e2d8; border-radius: 8px; padding: 14px; margin: 0 0 20px;">
+          <legend style="font-weight: 700;">Home address (separate from delivery address)</legend>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+            <label>House / flat<input id="prof_home_house_flat" maxlength="150" style="width: 100%;"></label>
+            <label>Road<input id="prof_home_road" maxlength="150" style="width: 100%;"></label>
+            <label>Village / area<input id="prof_home_village_area" maxlength="150" style="width: 100%;"></label>
+            <label>Union / ward<input id="prof_home_union_ward" maxlength="150" style="width: 100%;"></label>
+            <label>Upazila / thana<input id="prof_home_upazila_thana" maxlength="100" style="width: 100%;"></label>
+            <label>District<input id="prof_home_district" maxlength="100" style="width: 100%;"></label>
+            <label>Division<input id="prof_home_division" maxlength="100" style="width: 100%;"></label>
+            <label>Postcode<input id="prof_home_postcode" maxlength="20" inputmode="numeric" style="width: 100%;"></label>
+          </div>
+        </fieldset>
+
+        <fieldset style="border: 1px solid #e8e2d8; border-radius: 8px; padding: 14px; margin: 0 0 20px;">
+          <legend style="font-weight: 700;">Notification preferences</legend>
+          <label><input id="prof_notify_email" type="checkbox"> Email notifications</label><br>
+          <label><input id="prof_notify_whatsapp" type="checkbox"> WhatsApp notifications</label><br>
+          <label><input id="prof_notify_website" type="checkbox"> Website notifications</label>
+        </fieldset>
 
         <button type="submit" class="btn-primary" style="padding: 14px 28px;">
           Save Profile Changes
@@ -72,104 +104,25 @@
       </form>
     </div>
 
+    <section aria-labelledby="email-verification-heading" style="background: #fff; border: 1px solid #e8e2d8; border-radius: 16px; padding: 24px; margin-top: 24px;">
+      <h2 id="email-verification-heading" style="font-size: 1.15rem; margin: 0 0 8px;">Email verification</h2>
+      <p id="email-verification-status" role="status" aria-live="polite"></p>
+      <button id="resend-verification-button" type="button" class="btn-secondary" data-csp-click="resendVerification" hidden>Resend verification email</button>
+    </section>
+
     <section style="background: #fff; border: 1px solid #fecaca; border-radius: 16px; padding: 24px; margin-top: 24px;">
       <h2 style="font-size: 1.15rem; color: #991b1b; margin: 0 0 8px;">Delete account</h2>
-      <p style="color: #64748b; margin-bottom: 16px;">This permanently removes your account and anonymizes personal details attached to past orders. Order totals and items are retained for store records.</p>
-      <button type="button" class="btn-secondary" onclick="deleteCustomerAccount()" style="color: #b91c1c; border-color: #fecaca;">Delete My Account</button>
+      <p style="color: #69645b; margin-bottom: 16px;">This permanently removes your account and anonymizes personal details attached to past orders. Order totals and items are retained for store records.</p>
+      <button type="button" class="btn-secondary" data-csp-click="deleteCustomerAccount" style="color: #b91c1c; border-color: #fecaca;">Delete My Account</button>
     </section>
   </main>
 
   <footer class="site-footer">
-    <div class="footer-bottom"><div class="footer-bottom-container"><div>© 2026 Wonderful Collection - Dhaka, Bangladesh 🇧🇩</div></div></div>
+    <div class="footer-bottom"><div class="footer-bottom-container"><div>© 2026 Shopademia - Dhaka, Bangladesh 🇧🇩</div><nav class="footer-social-links" aria-label="Shopademia social media"><a href="https://www.instagram.com/ShopademiaBD" target="_blank" rel="noopener noreferrer">Instagram · ShopademiaBD</a><a href="https://x.com/SHOPADEMIA" target="_blank" rel="noopener noreferrer">X · SHOPADEMIA</a><a href="https://www.facebook.com/SHOPADEMIA" target="_blank" rel="noopener noreferrer">Facebook · SHOPADEMIA</a></nav></div></div>
   </footer>
 
-  <script src="js/store.js?v=20261109"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const user = Store.state.user;
-      if (!user) {
-        window.location.href = 'login.html';
-        return;
-      }
-      document.getElementById('prof_name').value = user.name || '';
-      document.getElementById('prof_email').value = user.email || '';
-      document.getElementById('prof_phone').value = user.phone || '';
-      document.getElementById('prof_area').value = user.area || 'Dhaka';
-      document.getElementById('prof_address').value = user.address || '';
-    });
-
-    async function handleSaveProfile(e) {
-      e.preventDefault();
-      const payload = {
-        action: 'customer_update_profile',
-        name: document.getElementById('prof_name').value.trim(),
-        phone: document.getElementById('prof_phone').value.trim(),
-        area: document.getElementById('prof_area').value.trim(),
-        address: document.getElementById('prof_address').value.trim()
-      };
-      try {
-        const response = await fetch('/api/auth?action=customer_update_profile', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${Store.state.user.token}`
-          },
-          body: JSON.stringify(payload)
-        });
-        const result = await response.json();
-        if (!response.ok) throw new Error(result.error || 'Could not update your profile.');
-        Object.assign(Store.state.user, payload);
-        Store.saveState();
-        Store.showToast('Profile updated successfully! ✨');
-      } catch (error) {
-        Store.showToast(error.message || 'Could not connect to the account service.');
-      }
-    }
-
-    async function logoutCustomer() {
-      const user = Store.state.user;
-      try {
-        if (user && user.token) {
-          const response = await fetch('/api/auth?action=customer_logout', {
-            method: 'POST',
-            headers: { Authorization: `Bearer ${user.token}` }
-          });
-          if (!response.ok && response.status !== 401) {
-            alert('Your browser session is cleared, but the server could not revoke the token. Contact store support if this device is shared.');
-          }
-        }
-      } catch (error) {
-        alert('Your browser session is cleared, but the server could not revoke the token. Sign out again when online, especially on a shared device.');
-      } finally {
-        Store.state.user = null;
-        Store.saveState();
-        window.location.href = 'index.html';
-      }
-    }
-
-    async function deleteCustomerAccount() {
-      if (!confirm('Delete your account and anonymize its order contact details? This cannot be undone.')) return;
-      const password = prompt('Enter your current password to confirm account deletion:');
-      if (!password) return;
-      try {
-        const response = await fetch('/api/auth?action=customer_delete_account', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${Store.state.user.token}`
-          },
-          body: JSON.stringify({ password })
-        });
-        const result = await response.json();
-        if (!response.ok) throw new Error(result.error || 'Could not delete the account.');
-        Store.state.user = null;
-        Store.saveState();
-        alert('Your account was deleted and its order contact details were anonymized.');
-        window.location.href = 'index.html';
-      } catch (error) {
-        Store.showToast(error.message || 'Could not connect to the account service.');
-      }
-    }
-  </script>
+  <script src="js/store.js?v=20261113-storefront-final-v3"></script>
+  <script src="js/profile.js?v=20261126-customer-account-fix"></script>
+  <script defer src="js/consent.js?v=20261112-consent"></script>
 </body>
 </html>

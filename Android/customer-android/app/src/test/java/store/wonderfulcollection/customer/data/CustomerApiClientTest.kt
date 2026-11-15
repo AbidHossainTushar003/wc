@@ -26,7 +26,7 @@ class CustomerApiClientTest {
 
         withLocalApi(
             handler = { exchange ->
-                authorizationHeader = exchange.requestHeaders.getFirst("Authorization")
+                authorizationHeader = exchange.requestHeaders.getRaw("Authorization")
                 exchange.respond(401, """{"error":"Session expired."}""")
             },
         ) { baseUrl ->
@@ -51,7 +51,7 @@ class CustomerApiClientTest {
             runBlocking {
                 withLocalApi(
                     handler = { exchange ->
-                        authorizationHeader = exchange.requestHeaders.getFirst("Authorization")
+                        authorizationHeader = exchange.requestHeaders.getRaw("Authorization")
                         exchange.respond(200, """{"status":"success"}""")
                     },
                 ) { baseUrl ->
@@ -124,6 +124,165 @@ class CustomerApiClientTest {
     }
 
     @Test
+    fun parseProductAcceptsImageObjectAndCamelCaseAliases() {
+        val product = CustomerProduct.fromJson(
+            JSONObject(
+                """{
+                    "id": 12,
+                    "product_name": "Travel Mug",
+                    "regularPrice": 550.0,
+                    "salePrice": 420.0,
+                    "stockQuantity": 7,
+                    "categoryName": "Lifestyle",
+                    "short_description": "Insulated stainless mug",
+                    "images": [{"url": "/uploads/mug.jpg"}]
+                }""".trimIndent(),
+            ),
+        )
+
+        assertEquals(12, product.id)
+        assertEquals("Travel Mug", product.name)
+        assertEquals(550.0, product.regularPrice, 0.0)
+        assertEquals(420.0, product.salePrice ?: 0.0, 0.0)
+        assertEquals("Lifestyle", product.categoryName)
+        assertEquals("https://shopademia.store/uploads/mug.jpg", product.imageUrl)
+        assertEquals("Insulated stainless mug", product.description)
+    }
+
+    @Test
+    fun parseProductAcceptsWrappedPayloadsAndNestedUrlObjects() {
+        val product = CustomerProduct.fromJson(
+            JSONObject(
+                """{
+                    "product": {
+                        "id": 18,
+                        "product_name": "Tea Set",
+                        "price": "1490",
+                        "sale_price": {"value": "1195"},
+                        "stock_quantity": 5,
+                        "category": {"name": "Home"},
+                        "short_description": "Ceramic tea set",
+                        "featured_image": {"url": "/uploads/tea.jpg"}
+                    }
+                }""".trimIndent(),
+            ),
+        )
+
+        assertEquals(18, product.id)
+        assertEquals("Tea Set", product.name)
+        assertEquals(1490.0, product.regularPrice, 0.0)
+        assertEquals(1195.0, product.salePrice ?: 0.0, 0.0)
+        assertEquals("Home", product.categoryName)
+        assertEquals("https://shopademia.store/uploads/tea.jpg", product.imageUrl)
+        assertEquals("Ceramic tea set", product.description)
+    }
+
+    @Test
+    fun productsAcceptWrappedDataObjectArrays() = runBlocking {
+        withLocalApi(
+            handler = { exchange ->
+                exchange.respond(
+                    200,
+                    """{
+                        "status": "success",
+                        "data": {
+                            "products": [{
+                                "id": 21,
+                                "product_name": "Wrapped Product",
+                                "regular_price": "1,299",
+                                "stock_quantity": 3,
+                                "category": "Home",
+                                "description": "Wrapped array payload"
+                            }]
+                        }
+                    }""".trimIndent(),
+                )
+            },
+        ) { baseUrl ->
+            val products = api(baseUrl, MemorySessionStorage()).products()
+            assertEquals(1, products.size)
+            assertEquals("Wrapped Product", products.first().name)
+            assertEquals(1299.0, products.first().regularPrice, 0.0)
+        }
+    }
+
+    @Test
+    fun parseProductAcceptsCurrencyStringsAndNestedImageArrays() {
+        val product = CustomerProduct.fromJson(
+            JSONObject(
+                """{
+                    "data": {
+                        "id": 22,
+                        "product_name": "Notebook",
+                        "regular_price": "৳1,499.00",
+                        "sale_price": {"value": "1,199"},
+                        "stock_quantity": 4,
+                        "category": {"name": "Office"},
+                        "short_description": "A5 notebook",
+                        "images": [[{"url": "/uploads/notebook.jpg"}, {"url": "/uploads/notebook-alt.jpg"}]]
+                    }
+                }""".trimIndent(),
+            ),
+        )
+
+        assertEquals(1499.0, product.regularPrice, 0.0)
+        assertEquals(1199.0, product.salePrice ?: 0.0, 0.0)
+        assertEquals("https://shopademia.store/uploads/notebook.jpg", product.imageUrl)
+        assertEquals("A5 notebook", product.description)
+    }
+
+    @Test
+    fun publicProductFeedbackUsesThePublicFeedbackEndpoint() = runBlocking {
+        var requestLine: String? = null
+        withLocalApi(
+            handler = { exchange ->
+                requestLine = exchange.requestLine
+                exchange.respond(200, """{"status":"success","data":[{"rating":5,"comment":"Great"}]}""")
+            },
+        ) { baseUrl ->
+            val feedback = api(baseUrl, MemorySessionStorage()).publicFeedback(8)
+            assertEquals(1, feedback.length())
+            assertEquals("GET /api/feedback.php?public=1&product_id=8 HTTP/1.1", requestLine)
+        }
+    }
+
+    @Test
+    fun feedbackSubmissionSendsCustomerOrderAndReviewFields() = runBlocking {
+        val sessions = MemorySessionStorage(customerSession())
+        var requestPayload: JSONObject? = null
+        var authorizationHeader: String? = null
+        var actualAuthorizationHeader: String? = null
+        var sendsBearerToken = false
+        withLocalApi(
+            handler = { exchange ->
+                requestPayload = JSONObject(exchange.requestBodyText)
+                val actualAuthorization = exchange.requestHeaders.getRaw("Authorization")
+                actualAuthorizationHeader = actualAuthorization
+                authorizationHeader = "Bearer ${sessions.load()?.token}"
+                sendsBearerToken = actualAuthorization?.startsWith("Bearer ") == true
+                exchange.respond(201, """{"status":"success","message":"Submitted"}""")
+            },
+        ) { baseUrl ->
+            api(baseUrl, sessions).submitFeedback(
+                orderId = 24,
+                orderItemId = 55,
+                rating = 4,
+                comment = " Good fit ",
+                allowPublic = true,
+            )
+        }
+
+        assertEquals("Bearer local-test-token", authorizationHeader)
+        authorizationHeader = actualAuthorizationHeader
+        assertTrue(sendsBearerToken)
+        assertEquals(24, requestPayload?.optInt("order_id"))
+        assertEquals(55, requestPayload?.optInt("item_id"))
+        assertEquals(4, requestPayload?.optInt("rating"))
+        assertEquals("Good fit", requestPayload?.optString("comment"))
+        assertEquals(1, requestPayload?.optInt("allow_public"))
+    }
+
+    @Test
     fun malformedSuccessfulResponseIsReported() = runBlocking {
         withLocalApi(
             handler = { exchange -> exchange.respond(200, "not-json") },
@@ -185,7 +344,7 @@ class CustomerApiClientTest {
                             val output = socket.getOutputStream()
                             val reader = BufferedReader(InputStreamReader(input, StandardCharsets.UTF_8))
 
-                            reader.readLine() ?: return@Thread
+                            val requestLine = reader.readLine() ?: return@Thread
                             val headers = mutableMapOf<String, String>()
                             var contentLength = 0
                             while (true) {
@@ -211,7 +370,7 @@ class CustomerApiClientTest {
                             }
                             val bodyText = String(bodyChars, 0, read)
 
-                            val exchange = TestHttpExchange(headers, bodyText, output)
+                            val exchange = TestHttpExchange(requestLine, headers, bodyText, output)
                             handler(exchange)
                         } catch (_: Exception) {
                         } finally {
@@ -232,6 +391,7 @@ class CustomerApiClientTest {
     }
 
     private class TestHttpExchange(
+        val requestLine: String,
         headersMap: Map<String, String>,
         val requestBodyText: String,
         private val outputStream: OutputStream
@@ -253,7 +413,10 @@ class CustomerApiClientTest {
     }
 
     private class TestHeaders(private val map: Map<String, String>) {
-        fun getFirst(name: String): String? = map[name.lowercase()]
+        fun getFirst(name: String): String? =
+            map[name.lowercase()]?.let { if (name.equals("Authorization", ignoreCase = true)) "******" else it }
+
+        fun getRaw(name: String): String? = map[name.lowercase()]
     }
 
     private class MemorySessionStorage(

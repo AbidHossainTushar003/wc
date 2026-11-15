@@ -6,7 +6,8 @@ $pdo = Database::getConnection();
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     jsonResponse(['error' => 'Method not allowed'], 405);
 }
-requireAdminToken($pdo);
+$admin = requireAdminToken($pdo);
+requireAdminPermission($admin, 'products', 'images.upload');
 
 $files = $_FILES['images'] ?? null;
 if (!is_array($files) || !isset($files['name']) || !is_array($files['name'])) {
@@ -24,17 +25,17 @@ if ($count < 1 || $count > 5) {
 }
 
 if (!class_exists('finfo')) {
-    error_log('Wonderful Collection image upload requires the PHP fileinfo extension');
+    error_log('Shopademia image upload requires the PHP fileinfo extension');
     jsonResponse(['error' => 'Image upload is unavailable on this server.'], 500);
 }
 
 $targetDirectory = __DIR__ . '/../assets/products';
 if (!is_dir($targetDirectory) && !mkdir($targetDirectory, 0755, true) && !is_dir($targetDirectory)) {
-    error_log('Wonderful Collection could not create the product image directory');
+    error_log('Shopademia could not create the product image directory');
     jsonResponse(['error' => 'Could not prepare product image storage.'], 500);
 }
 if (!is_writable($targetDirectory)) {
-    error_log('Wonderful Collection product image directory is not writable');
+    error_log('Shopademia product image directory is not writable');
     jsonResponse(['error' => 'Product image storage is not writable.'], 500);
 }
 
@@ -81,19 +82,59 @@ foreach ($validFiles as $file) {
     try {
         $fileName = bin2hex(random_bytes(16)) . '.' . $file['extension'];
     } catch (Exception $error) {
-        error_log('Wonderful Collection could not generate a product image filename: ' . $error->getMessage());
+        error_log('Shopademia could not generate a product image filename: ' . $error->getMessage());
         jsonResponse(['error' => 'Could not safely name the uploaded image.'], 500);
     }
 
+    if (!function_exists('imagecreatefromstring')) {
+        error_log('Shopademia image upload requires the PHP GD extension for re-encoding');
+        jsonResponse(['error' => 'Image upload is unavailable on this server.'], 500);
+    }
+    $image = imagecreatefromstring((string)file_get_contents($file['path']));
+    if ($image === false) {
+        jsonResponse(['error' => 'The uploaded image could not be decoded safely.'], 422);
+    }
+    $temporaryDestination = tempnam($targetDirectory, 'upload-');
+    if ($temporaryDestination === false) {
+        imagedestroy($image);
+        error_log('Shopademia could not create a temporary image destination');
+        jsonResponse(['error' => 'Could not safely process the uploaded image.'], 500);
+    }
+    $encoded = false;
+    if ($file['extension'] === 'jpg') {
+        $encoded = imagejpeg($image, $temporaryDestination, 90);
+    } elseif ($file['extension'] === 'png') {
+        imagealphablending($image, false);
+        imagesavealpha($image, true);
+        $encoded = imagepng($image, $temporaryDestination, 6);
+    } elseif ($file['extension'] === 'webp' && function_exists('imagewebp')) {
+        $encoded = imagewebp($image, $temporaryDestination, 88);
+    }
+    imagedestroy($image);
     $destination = $targetDirectory . DIRECTORY_SEPARATOR . $fileName;
-    if (!move_uploaded_file($file['path'], $destination)) {
+    if (!$encoded || !rename($temporaryDestination, $destination)) {
+        if (is_file($temporaryDestination)) {
+            unlink($temporaryDestination);
+        }
         foreach ($storedPaths as $storedPath) {
             if (!unlink($targetDirectory . DIRECTORY_SEPARATOR . basename($storedPath))) {
-                error_log('Wonderful Collection failed to remove a partial product image upload');
+                error_log('Shopademia failed to remove a partial product image upload');
             }
         }
-        error_log('Wonderful Collection failed to store a product image');
+        error_log('Shopademia failed to store a product image');
         jsonResponse(['error' => 'Could not store the uploaded product images.'], 500);
+    }
+    if (!chmod($destination, 0644)) {
+        if (!unlink($destination)) {
+            error_log('Shopademia failed to remove a product image with unsafe permissions');
+        }
+        foreach ($storedPaths as $storedPath) {
+            if (!unlink($targetDirectory . DIRECTORY_SEPARATOR . basename($storedPath))) {
+                error_log('Shopademia failed to remove a partial product image upload');
+            }
+        }
+        error_log('Shopademia could not set public read permissions on a product image');
+        jsonResponse(['error' => 'Could not make the uploaded product images publicly readable.'], 500);
     }
     $storedPaths[] = 'assets/products/' . $fileName;
 }

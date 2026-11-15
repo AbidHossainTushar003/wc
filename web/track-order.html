@@ -3,16 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Track Your Order | Wonderful Collection Dhaka</title>
+  <title>Track Your Order | Shopademia</title>
+  <meta name="description" content="Track a Shopademia delivery using your order details.">
   <meta name="robots" content="noindex, nofollow">
-  <link rel="stylesheet" href="css/style.css">
-  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+  <meta name="referrer" content="no-referrer">
+  <link rel="stylesheet" href="css/style.css?v=20261113-chat-dock-v3">
+  <link rel="stylesheet" href="css/consent.css?v=20261112-consent">
+  <link rel="icon" href="assets/favicon.ico" sizes="any">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
 </head>
 <body>
   <div class="top-bar">
     <div class="top-bar-notice">
       <span class="top-bar-badge">LIVE TRACKING</span>
-      <span>⚡ Real-time order status updates from Wonderful Collection</span>
+      <span>⚡ Real-time order status updates from Shopademia</span>
     </div>
     <div class="top-bar-links">
       <a href="contact.html">📞 WhatsApp Support: +880 1560-024777</a>
@@ -21,7 +26,7 @@
 
   <header class="site-header">
     <div class="header-container">
-      <a href="index.html" class="brand-logo-wrap"><img width="741" height="265" src="assets/logo.jpg" alt="Wonderful Collection" class="brand-logo-img"></a>
+      <a href="index.html" class="brand-logo-wrap"><img width="741" height="265" src="assets/logo-shopademia.jpg" alt="Shopademia" class="brand-logo-img"></a>
       <div class="header-actions">
         <a href="login.html" class="header-action-btn"><span class="icon">👤</span><span>Account</span></a>
         <a href="cart.html" class="header-action-btn open-cart-btn"><span class="icon">🛍️</span><span>Cart</span></a>
@@ -31,20 +36,26 @@
 
   <main class="page-container" style="max-width: 760px;">
     <div style="text-align: center; margin-bottom: 32px;">
-      <h1 style="font-size: 2.2rem; font-weight: 800; color: #0e2a47; margin-bottom: 8px;">
+      <h1 style="font-size: 2.2rem; font-weight: 800; color: #26231f; margin-bottom: 8px;">
         Track Your Order
       </h1>
-      <p style="color: #64748b; font-size: 1rem;">
+      <p style="color: #69645b; font-size: 1rem;">
         Enter your Order Number (e.g. <code>WC-10021</code>) or Tracking Code to view real-time delivery status.
       </p>
     </div>
 
     <!-- Search Form -->
-    <div style="background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 24px; box-shadow: var(--shadow-sm); margin-bottom: 32px;">
-      <form onsubmit="handleTrack(event)" style="display: flex; gap: 12px; flex-wrap: wrap;">
-        <input type="text" id="track-input" aria-label="Order number or tracking code" required placeholder="Order Number (e.g. WC-10021) or Tracking Code" style="flex: 2; border: 1px solid #cbd5e1; padding: 12px 16px; border-radius: 8px; font-size: 0.95rem; text-transform: uppercase;">
-        <input type="tel" id="track-phone" required aria-label="Phone number used when placing the order" placeholder="Phone used when placing the order" style="flex: 1; border: 1px solid #cbd5e1; padding: 12px 16px; border-radius: 8px; font-size: 0.95rem;">
-        <button type="submit" class="btn-primary" style="padding: 12px 24px;">
+    <div style="background: #fff; border-radius: 16px; border: 1px solid #e8e2d8; padding: 24px; box-shadow: var(--shadow-sm); margin-bottom: 32px;">
+      <form class="tracking-form" data-csp-submit="handleTrack">
+        <div class="tracking-field">
+          <label for="track-input">Order number or tracking code</label>
+          <input type="text" id="track-input" required placeholder="e.g. WC-10021" style="text-transform: uppercase;">
+        </div>
+        <div class="tracking-field">
+          <label for="track-phone">Phone number used when placing the order</label>
+          <input type="tel" id="track-phone" inputmode="numeric" autocomplete="tel" required placeholder="01XXXXXXXXX">
+        </div>
+        <button type="submit" class="btn-primary" style="padding: 12px 24px; min-height: 44px;">
           Track Now 🔍
         </button>
       </form>
@@ -55,21 +66,26 @@
   </main>
 
   <footer class="site-footer">
-    <div class="footer-bottom"><div class="footer-bottom-container"><div>© 2026 Wonderful Collection - Dhaka, Bangladesh 🇧🇩</div></div></div>
+    <div class="footer-bottom"><div class="footer-bottom-container"><div>© 2026 Shopademia - Dhaka, Bangladesh 🇧🇩</div><nav class="footer-social-links" aria-label="Shopademia social media"><a href="https://www.instagram.com/ShopademiaBD" target="_blank" rel="noopener noreferrer">Instagram · ShopademiaBD</a><a href="https://x.com/SHOPADEMIA" target="_blank" rel="noopener noreferrer">X · SHOPADEMIA</a><a href="https://www.facebook.com/SHOPADEMIA" target="_blank" rel="noopener noreferrer">Facebook · SHOPADEMIA</a></nav></div></div>
   </footer>
 
-  <script src="js/store.js?v=20261109"></script>
+  <script src="js/store.js?v=20261113-storefront-final-v3"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const urlParams = new URLSearchParams(window.location.search);
       const order = urlParams.get('order');
+      const qrTrackingCode = urlParams.get('track') || '';
       const user = Store.state.user;
       if (user && user.phone) {
         document.getElementById('track-phone').value = user.phone;
       }
       if (order) {
         document.getElementById('track-input').value = order;
-        lookupTracking(order, document.getElementById('track-phone').value.trim());
+        if (qrTrackingCode) {
+          lookupTracking(order, '', qrTrackingCode);
+        } else if (document.getElementById('track-phone').value.trim()) {
+          lookupTracking(order, document.getElementById('track-phone').value.trim());
+        }
       }
     });
 
@@ -80,17 +96,17 @@
       lookupTracking(code, phone);
     }
 
-    async function lookupTracking(code, phone) {
+    async function lookupTracking(code, phone, qrTrackingCode = '') {
       const resultBox = document.getElementById('tracking-result-box');
       resultBox.style.display = 'block';
       phone = (phone || '').trim();
-      if (!phone) {
+      if (!phone && !qrTrackingCode) {
         resultBox.innerHTML = '<div style="background: #fff; border-radius: 16px; border: 1px solid #fee2e2; padding: 24px; color: #b91c1c;">Enter the phone number used when placing this order to view tracking information.</div>';
         return;
       }
-      resultBox.innerHTML = `<div style="text-align: center; padding: 32px; color: #64748b;">Fetching real-time tracking information...</div>`;
+      resultBox.innerHTML = `<div style="text-align: center; padding: 32px; color: #69645b;">Fetching real-time tracking information...</div>`;
 
-      const res = await Store.trackOrder(code, phone);
+      const res = await Store.trackOrder(code, phone, qrTrackingCode);
       if (res.status === 'success') {
         const d = res.data;
         const safe = value => String(value ?? '').replace(/[&<>"']/g, char => ({
@@ -101,33 +117,33 @@
           "'": '&#39;'
         })[char]);
         resultBox.innerHTML = `
-          <div style="background: #fff; border-radius: 20px; border: 1px solid #e2e8f0; padding: 32px; box-shadow: var(--shadow-md);">
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 16px; margin-bottom: 24px; flex-wrap: wrap; gap: 12px;">
+          <div style="background: #fff; border-radius: 20px; border: 1px solid #e8e2d8; padding: 32px; box-shadow: var(--shadow-md);">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f3efe8; padding-bottom: 16px; margin-bottom: 24px; flex-wrap: wrap; gap: 12px;">
               <div>
-                <span style="font-size: 0.8rem; font-weight: 700; color: var(--accent-orange); text-transform: uppercase;">Wonderful Delivery Tracker</span>
-                <h2 style="font-size: 1.4rem; font-weight: 800; color: #0e2a47;">${safe(d.order_number)}</h2>
-                <div style="font-size: 0.85rem; color: #64748b;">Tracking ID: <strong>${safe(d.tracking_code)}</strong></div>
+                <span style="font-size: 0.8rem; font-weight: 700; color: var(--accent-orange); text-transform: uppercase;">Shopademia Delivery Tracker</span>
+                <h2 style="font-size: 1.4rem; font-weight: 800; color: #26231f;">${safe(d.order_number)}</h2>
+                <div style="font-size: 0.85rem; color: #69645b;">Tracking ID: <strong>${safe(d.tracking_code)}</strong></div>
               </div>
               <div style="text-align: right;">
-                <div style="font-size: 0.82rem; color: #64748b;">Current Status:</div>
+                <div style="font-size: 0.82rem; color: #69645b;">Current Status:</div>
                 <div style="font-size: 1.15rem; font-weight: 800; color: #047857;">● ${safe(d.order_status)}</div>
               </div>
             </div>
 
             <!-- Visual Stage Timeline -->
-            <div style="position: relative; padding-left: 28px; margin-bottom: 32px; border-left: 3px solid #e2e8f0;">
+            <div style="position: relative; padding-left: 28px; margin-bottom: 32px; border-left: 3px solid #e8e2d8;">
               ${d.timeline.map((step, idx) => `
                 <div style="position: relative; margin-bottom: 28px;">
-                  <div style="position: absolute; left: -36px; top: 0; width: 18px; height: 18px; border-radius: 50%; background: ${step.completed ? '#10b981' : '#cbd5e1'}; border: 3px solid #fff; box-shadow: 0 0 0 2px ${step.completed ? '#10b981' : '#cbd5e1'};"></div>
-                  <div style="font-weight: 700; font-size: 1rem; color: ${step.completed ? '#0e2a47' : '#64748b'};">${safe(step.title)}</div>
-                  <div style="font-size: 0.85rem; color: #64748b; margin-top: 2px;">${safe(step.desc)}</div>
-                  <div style="font-size: 0.78rem; color: ${step.completed ? '#047857' : '#64748b'}; font-weight: 600; margin-top: 4px;">⏱ ${safe(step.time)}</div>
+                  <div style="position: absolute; left: -36px; top: 0; width: 18px; height: 18px; border-radius: 50%; background: ${step.completed ? '#10b981' : '#d6cec1'}; border: 3px solid #fff; box-shadow: 0 0 0 2px ${step.completed ? '#10b981' : '#d6cec1'};"></div>
+                  <div style="font-weight: 700; font-size: 1rem; color: ${step.completed ? '#26231f' : '#69645b'};">${safe(step.title)}</div>
+                  <div style="font-size: 0.85rem; color: #69645b; margin-top: 2px;">${safe(step.desc)}</div>
+                  <div style="font-size: 0.78rem; color: ${step.completed ? '#047857' : '#69645b'}; font-weight: 600; margin-top: 4px;">⏱ ${safe(step.time)}</div>
                 </div>
               `).join('')}
             </div>
 
             <!-- Delivery Details Box -->
-            <div style="background: #f8fafc; border-radius: 12px; padding: 18px; font-size: 0.9rem; color: #475569;">
+            <div style="background: #f7f4ee; border-radius: 12px; padding: 18px; font-size: 0.9rem; color: #625d54;">
               <div style="margin-bottom: 6px;"><strong>Delivery Area:</strong> ${safe(d.delivery_area)}</div>
               <div><strong>Payment:</strong> ${Store.formatBDT(d.total)} (${safe(d.payment_method)} - ${safe(d.payment_status)})</div>
             </div>
@@ -138,11 +154,12 @@
           <div style="background: #fff; border-radius: 16px; border: 1px solid #fee2e2; padding: 32px; text-align: center; color: #b91c1c;">
             <div style="font-size: 2.5rem; margin-bottom: 8px;">⚠️</div>
             <h2 style="margin-bottom: 6px;">No Order Found</h2>
-            <p style="font-size: 0.92rem; color: #64748b;">${String(res.error || 'Please double-check your order number and try again.').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]))}</p>
+            <p style="font-size: 0.92rem; color: #69645b;">${String(res.error || 'Please double-check your order number and try again.').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]))}</p>
           </div>
         `;
       }
     }
   </script>
+  <script defer src="js/consent.js?v=20261112-consent"></script>
 </body>
 </html>

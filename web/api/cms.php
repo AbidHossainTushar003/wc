@@ -20,6 +20,7 @@ if ($method === 'GET' && isset($_GET['slug'])) {
 }
 
 $admin = requireAdminToken($pdo);
+requireAdminPermission($admin, 'cms', $method === 'GET' ? 'read' : 'update');
 switch ($method) {
     case 'GET':
         $stmt = $pdo->query("SELECT * FROM cms_pages ORDER BY id DESC");
@@ -38,10 +39,19 @@ switch ($method) {
             jsonResponse(['error' => 'Slug and title are required.'], 422);
         }
 
-        $stmt = $pdo->prepare("INSERT INTO cms_pages (slug, title, content, meta_title, meta_description) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE title = VALUES(title), content = VALUES(content), meta_title = VALUES(meta_title), meta_description = VALUES(meta_description)");
-        $stmt->execute([$slug, $title, $content, $metaTitle, $metaDesc]);
-
-        logAudit($pdo, (int)$admin['id'], 'upsert', 'cms_page', null, null, $data);
+        try {
+            $pdo->beginTransaction();
+            $stmt = $pdo->prepare("INSERT INTO cms_pages (slug, title, content, meta_title, meta_description) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE title = VALUES(title), content = VALUES(content), meta_title = VALUES(meta_title), meta_description = VALUES(meta_description)");
+            $stmt->execute([$slug, $title, $content, $metaTitle, $metaDesc]);
+            logAuditRequired($pdo, (int)$admin['id'], 'upsert', 'cms_page', null, null, $data);
+            $pdo->commit();
+        } catch (Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            error_log('Shopademia CMS page update failed: ' . $e->getMessage());
+            jsonResponse(['error' => 'Could not save CMS page. Please try again.'], 500);
+        }
         jsonResponse(['status' => 'success', 'message' => 'CMS page saved successfully.']);
         break;
 

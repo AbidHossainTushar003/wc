@@ -3,10 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Shopping Cart | Wonderful Collection Dhaka</title>
+  <title>Shopping Cart | Shopademia</title>
+  <meta name="description" content="Review selected Shopademia products before checkout.">
   <meta name="robots" content="noindex, nofollow">
-  <link rel="stylesheet" href="css/style.css">
-  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/style.css?v=20261113-chat-dock-v3">
+  <link rel="stylesheet" href="css/consent.css?v=20261112-consent">
+  <link rel="icon" href="assets/favicon.ico" sizes="any">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
 </head>
 <body>
   <div class="top-bar">
@@ -26,7 +30,7 @@
 
   <header class="site-header">
     <div class="header-container">
-      <a href="index.html" class="brand-logo-wrap"><img width="741" height="265" src="assets/logo.jpg" alt="Wonderful Collection" class="brand-logo-img"></a>
+      <a href="index.html" class="brand-logo-wrap"><img width="741" height="265" src="assets/logo-shopademia.jpg" alt="Shopademia" class="brand-logo-img"></a>
       <div class="header-search">
         <form action="search.html" method="GET" class="search-input-wrap">
           <input type="text" name="q" class="search-input" placeholder="Search..." required>
@@ -41,9 +45,10 @@
     </div>
   </header>
 
-  <nav class="site-nav">
+  <nav class="site-nav" aria-label="Primary navigation">
     <div class="nav-container">
-      <ul class="nav-links">
+      <button class="nav-menu-toggle" type="button" aria-expanded="false" aria-controls="nav-menu-panel">Menu / More</button>
+      <ul class="nav-links" id="nav-links">
         <li><a href="index.html">Home</a></li>
         <li><a href="shop.html">All Products</a></li>
         <li><a href="category.html?cat=mens-fashion">Men's Fashion</a></li>
@@ -53,12 +58,16 @@
         <li><a href="category.html?cat=leather-accessories">Leather</a></li>
         <li><a href="category.html?cat=home-decor">Home Decor</a></li>
       </ul>
-      <div class="nav-location-pill">📍 Dhaka, Bangladesh</div>
+      <div class="nav-menu-panel" id="nav-menu-panel" hidden>
+        <div class="nav-menu-heading"><strong>Explore Shopademia</strong><button class="nav-menu-close" type="button" aria-label="Close navigation menu">Close</button></div>
+        <div class="nav-menu-links" id="nav-menu-links"></div>
+        <div class="nav-location-pill"><button id="nav-location-button" type="button" aria-label="Detect your location for delivery">📍 Use my location</button></div>
+      </div>
     </div>
   </nav>
 
   <main class="page-container">
-    <h1 style="font-size: 2.2rem; font-weight: 800; color: #0e2a47; margin-bottom: 24px;">Your Shopping Cart</h1>
+    <h1 style="font-size: 2.2rem; font-weight: 800; color: #26231f; margin-bottom: 24px;">Your Shopping Cart</h1>
 
     <div id="cart-content-view">
       <!-- Dynamic render -->
@@ -66,19 +75,19 @@
   </main>
 
   <footer class="site-footer">
-    <div class="footer-bottom"><div class="footer-bottom-container"><div>© 2026 Wonderful Collection - Dhaka, Bangladesh 🇧🇩</div></div></div>
+    <div class="footer-bottom"><div class="footer-bottom-container"><div>© 2026 Shopademia - Dhaka, Bangladesh 🇧🇩</div><nav class="footer-social-links" aria-label="Shopademia social media"><a href="https://www.instagram.com/ShopademiaBD" target="_blank" rel="noopener noreferrer">Instagram · ShopademiaBD</a><a href="https://x.com/SHOPADEMIA" target="_blank" rel="noopener noreferrer">X · SHOPADEMIA</a><a href="https://www.facebook.com/SHOPADEMIA" target="_blank" rel="noopener noreferrer">Facebook · SHOPADEMIA</a></nav></div></div>
   </footer>
 
-  <script src="js/store.js?v=20261109"></script>
+  <script src="js/store.js?v=20261113-storefront-final-v3"></script>
   <script>
     function renderCartPage() {
       const container = document.getElementById('cart-content-view');
       if (!Store.state.cart.length) {
         container.innerHTML = `
-          <div style="background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 60px 20px; text-align: center;">
+          <div style="background: #fff; border-radius: 16px; border: 1px solid #e8e2d8; padding: 60px 20px; text-align: center;">
             <div style="font-size: 4rem; margin-bottom: 16px;">🛍️</div>
-            <h2 style="color: #0e2a47; margin-bottom: 8px;">Your cart is empty</h2>
-            <p style="color: #64748b; margin-bottom: 24px;">Looks like you haven't added anything to your cart yet.</p>
+            <h2 style="color: #26231f; margin-bottom: 8px;">Your cart is empty</h2>
+            <p style="color: #69645b; margin-bottom: 24px;">Looks like you haven't added anything to your cart yet.</p>
             <a href="shop.html" class="btn-primary">Browse Shop</a>
           </div>
         `;
@@ -92,11 +101,11 @@
       container.innerHTML = `
         <div class="cart-layout" style="display: grid; grid-template-columns: 2fr 1fr; gap: 32px; align-items: start;">
           <!-- Cart Table -->
-          <div class="cart-table-card" style="background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 24px; box-shadow: var(--shadow-sm);">
+          <div class="cart-table-card" style="background: #fff; border-radius: 16px; border: 1px solid #e8e2d8; padding: 24px; box-shadow: var(--shadow-sm);">
             <div class="cart-table-wrap">
             <table class="cart-table" style="width: 100%; border-collapse: collapse; text-align: left;">
               <thead>
-                <tr style="border-bottom: 2px solid #f1f5f9; color: #64748b; font-size: 0.85rem; text-transform: uppercase;">
+                <tr style="border-bottom: 2px solid #f3efe8; color: #69645b; font-size: 0.85rem; text-transform: uppercase;">
                   <th style="padding-bottom: 12px;">Product</th>
                   <th style="padding-bottom: 12px;">Price</th>
                   <th style="padding-bottom: 12px;">Quantity</th>
@@ -106,22 +115,22 @@
               </thead>
               <tbody>
                 ${Store.state.cart.map(item => `
-                  <tr style="border-bottom: 1px solid #f1f5f9;">
+                  <tr style="border-bottom: 1px solid #f3efe8;">
                     <td style="padding: 16px 0; display: flex; align-items: center; gap: 14px;">
-                      <img src="${Store.escapeHtml(Store.productImage({ image: item.image }))}" alt="${Store.escapeHtml(item.name)}" onerror="this.onerror=null;this.src='assets/product-placeholder.svg'" style="width: 60px; height: 60px; border-radius: 8px; object-fit: cover;">
-                      <a href="product.html?id=${Number(item.id)}" style="font-weight: 700; color: #0e2a47;">${Store.escapeHtml(item.name)}</a>
+                      <img src="${Store.escapeHtml(Store.productImage({ image: item.image }))}" alt="${Store.escapeHtml(item.name)}" data-image-fallback="assets/product-placeholder.svg" style="width: 60px; height: 60px; border-radius: 8px; object-fit: cover;">
+                      <a href="product.html?id=${Number(item.id)}" style="font-weight: 700; color: #26231f;">${Store.escapeHtml(item.name)}</a>
                     </td>
                     <td style="padding: 16px 0; font-weight: 700;">${Store.formatBDT(item.price)}</td>
                     <td style="padding: 16px 0;">
-                      <div style="display: inline-flex; border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden;">
-                        <button onclick="Store.updateCartQuantity(${Number(item.id)}, -1)" style="border: none; padding: 4px 10px; cursor: pointer; background: #f8fafc;">-</button>
+                      <div style="display: inline-flex; border: 1px solid #d6cec1; border-radius: 6px; overflow: hidden;">
+                        <button data-csp-click="updateCartQuantity" data-product-id="${Number(item.id)}" data-quantity-delta="-1" style="border: none; padding: 4px 10px; cursor: pointer; background: #f7f4ee;">-</button>
                         <span style="padding: 4px 10px; font-weight: 700;">${Number(item.quantity)}</span>
-                        <button onclick="Store.updateCartQuantity(${Number(item.id)}, 1)" ${Number(item.stock_quantity) > 0 && Number(item.quantity) >= Number(item.stock_quantity) ? 'disabled' : ''} style="border: none; padding: 4px 10px; cursor: pointer; background: #f8fafc;">+</button>
+                        <button data-csp-click="updateCartQuantity" data-product-id="${Number(item.id)}" data-quantity-delta="1" ${Number(item.stock_quantity) > 0 && Number(item.quantity) >= Number(item.stock_quantity) ? 'disabled' : ''} style="border: none; padding: 4px 10px; cursor: pointer; background: #f7f4ee;">+</button>
                       </div>
                     </td>
-                    <td style="padding: 16px 0; font-weight: 800; color: #f05423;">${Store.formatBDT(item.price * item.quantity)}</td>
+                    <td style="padding: 16px 0; font-weight: 800; color: #302d28;">${Store.formatBDT(item.price * item.quantity)}</td>
                     <td style="padding: 16px 0;">
-                      <button onclick="Store.removeFromCart(${Number(item.id)})" style="border: none; background: none; color: #ef4444; cursor: pointer; font-size: 0.88rem;">✕</button>
+                      <button data-csp-click="removeFromCart" data-product-id="${Number(item.id)}" style="border: none; background: none; color: #ef4444; cursor: pointer; font-size: 0.88rem;">✕</button>
                     </td>
                   </tr>
                 `).join('')}
@@ -131,20 +140,20 @@
           </div>
 
           <!-- Order Summary -->
-          <div style="background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 24px; box-shadow: var(--shadow-sm);">
-            <h3 style="font-size: 1.25rem; font-weight: 800; color: #0e2a47; margin-bottom: 18px;">Order Summary</h3>
+          <div style="background: #fff; border-radius: 16px; border: 1px solid #e8e2d8; padding: 24px; box-shadow: var(--shadow-sm);">
+            <h3 style="font-size: 1.25rem; font-weight: 800; color: #26231f; margin-bottom: 18px;">Order Summary</h3>
             
-            <div style="display: flex; justify-content: space-between; margin-bottom: 12px; color: #475569;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 12px; color: #625d54;">
               <span>Subtotal:</span>
-              <span style="font-weight: 700; color: #0e2a47;">${Store.formatBDT(subtotal)}</span>
+              <span style="font-weight: 700; color: #26231f;">${Store.formatBDT(subtotal)}</span>
             </div>
 
             <!-- Coupon section -->
-            <div style="border-top: 1px dashed #cbd5e1; border-bottom: 1px dashed #cbd5e1; padding: 16px 0; margin: 16px 0;">
+            <div style="border-top: 1px dashed #d6cec1; border-bottom: 1px dashed #d6cec1; padding: 16px 0; margin: 16px 0;">
               <div style="font-size: 0.85rem; font-weight: 700; margin-bottom: 8px;">Apply Promo Code:</div>
               <div style="display: flex; gap: 8px;">
-                <input type="text" id="cart-coupon-input" placeholder="Enter promo code" value="${Store.escapeHtml(Store.state.appliedCoupon ? Store.state.appliedCoupon.code : '')}" style="flex: 1; border: 1px solid #cbd5e1; padding: 8px 12px; border-radius: 6px; text-transform: uppercase;">
-                <button onclick="applyCartCoupon()" style="background: #0e2a47; color: #fff; border: none; border-radius: 6px; padding: 8px 14px; font-weight: 700; cursor: pointer;">Apply</button>
+                <input type="text" id="cart-coupon-input" placeholder="Enter promo code" value="${Store.escapeHtml(Store.state.appliedCoupon ? Store.state.appliedCoupon.code : '')}" style="flex: 1; border: 1px solid #d6cec1; padding: 8px 12px; border-radius: 6px; text-transform: uppercase;">
+                <button data-csp-click="applyCartCoupon" style="background: #26231f; color: #fff; border: none; border-radius: 6px; padding: 8px 14px; font-weight: 700; cursor: pointer;">Apply</button>
               </div>
               ${Store.state.appliedCoupon ? `
                 <div style="color: #10b981; font-size: 0.82rem; font-weight: 600; margin-top: 6px;">
@@ -160,16 +169,16 @@
               </div>
             ` : ''}
 
-            <div style="display: flex; justify-content: space-between; margin-bottom: 24px; font-size: 1.25rem; font-weight: 800; color: #0e2a47;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 24px; font-size: 1.25rem; font-weight: 800; color: #26231f;">
               <span>Estimated Total:</span>
-              <span style="color: #f05423;">${Store.formatBDT(total)}</span>
+              <span style="color: #302d28;">${Store.formatBDT(total)}</span>
             </div>
 
             <a href="checkout.html" class="btn-primary" style="display: block; text-align: center; justify-content: center; width: 100%; box-sizing: border-box; font-size: 1rem; padding: 14px;">
               Proceed To Checkout →
             </a>
             
-            <p style="font-size: 0.78rem; color: #64748b; text-align: center; margin-top: 14px;">
+            <p style="font-size: 0.78rem; color: #69645b; text-align: center; margin-top: 14px;">
               🚚 Dhaka & all Bangladesh delivery fees calculated at checkout.
             </p>
           </div>
@@ -197,5 +206,6 @@
 
     document.addEventListener('DOMContentLoaded', renderCartPage);
   </script>
+  <script defer src="js/consent.js?v=20261112-consent"></script>
 </body>
 </html>

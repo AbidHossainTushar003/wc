@@ -1,6 +1,7 @@
--- Wonderful Collection E-Commerce Database Schema
+-- Shopademia E-Commerce Database Schema
 -- Ready for MySQL / MariaDB on cPanel (wonderfulcollection.store)
 -- Created for cPanel user: wonderfu
+-- Includes the schemas required by the enabled PHP admin modules.
 
 -- 1. Store Settings Table
 CREATE TABLE `settings` (
@@ -11,15 +12,15 @@ CREATE TABLE `settings` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO `settings` (`key_name`, `value_data`) VALUES
-('store_name', 'Wonderful Collection'),
-('store_moto', '🛍️ Wonderful Collection: Quality products, delivered across Bangladesh. 🇧🇩'),
-('announcement_text', '🚚 Delivery availability and estimates are shown at checkout. Cash on delivery & bKash available.'),
+('store_name', 'Shopademia'),
+('store_moto', '🛍️ Shopademia: Quality products, delivered across Bangladesh. 🇧🇩'),
+('announcement_text', '🚚 Delivery availability and payment options are shown at checkout.'),
 ('store_email', 'contact@wonderfulcollection.store'),
 ('store_phone', '+880 1560-024777'),
 ('store_address', 'DHAKA, BANGLADESH'),
 ('currency_symbol', '৳'),
 ('currency_code', 'BDT'),
-('delivery_fee_dhanmondi', '60'),
+('delivery_fee_local_dhaka', '60'),
 ('delivery_fee_dhaka', '80'),
 ('delivery_fee_outside_dhaka', '130'),
 ('free_delivery_min_amount', '2000'),
@@ -54,6 +55,7 @@ CREATE TABLE `products` (
   `is_featured` TINYINT(1) DEFAULT 0,
   `is_trending` TINYINT(1) DEFAULT 0,
   `is_archived` TINYINT(1) NOT NULL DEFAULT 0,
+  `is_sellable` TINYINT(1) NOT NULL DEFAULT 1,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (`category_id`) REFERENCES `categories`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -95,6 +97,7 @@ CREATE TABLE `orders` (
   `delivery_fee` DECIMAL(10,2) NOT NULL DEFAULT 60.00,
   `subtotal` DECIMAL(10,2) NOT NULL,
   `discount` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+  `coupon_id` INT DEFAULT NULL,
   `total` DECIMAL(10,2) NOT NULL,
   `payment_method` VARCHAR(50) NOT NULL DEFAULT 'Cash on Delivery',
   `payment_status` VARCHAR(50) NOT NULL DEFAULT 'Pending',
@@ -102,6 +105,7 @@ CREATE TABLE `orders` (
   `order_status` ENUM('Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled') DEFAULT 'Pending',
   `tracking_code` VARCHAR(50) UNIQUE NOT NULL,
   `idempotency_key` VARCHAR(128) DEFAULT NULL UNIQUE,
+  `idempotency_fingerprint` CHAR(64) CHARACTER SET ascii COLLATE ascii_bin DEFAULT NULL,
   `notes` TEXT,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   UNIQUE KEY `uq_orders_payment_trx_id` (`payment_method`, `trx_id`),
@@ -125,6 +129,7 @@ CREATE TABLE `order_items` (
 CREATE TABLE `coupons` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `code` VARCHAR(50) UNIQUE NOT NULL,
+  `tag` VARCHAR(40) DEFAULT NULL,
   `type` ENUM('percentage', 'fixed') NOT NULL DEFAULT 'percentage',
   `value` DECIMAL(10,2) NOT NULL,
   `min_order` DECIMAL(10,2) DEFAULT 0.00,
@@ -135,6 +140,9 @@ CREATE TABLE `coupons` (
   `is_active` TINYINT(1) DEFAULT 1,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+ALTER TABLE `orders` ADD KEY `idx_orders_coupon_id` (`coupon_id`);
+ALTER TABLE `orders` ADD CONSTRAINT `fk_orders_coupon` FOREIGN KEY (`coupon_id`) REFERENCES `coupons`(`id`) ON DELETE SET NULL;
 
 -- 8. Customer Reviews Table
 CREATE TABLE `reviews` (
@@ -199,4 +207,139 @@ CREATE TABLE `customer_email_verifications` (
   `verified_at` DATETIME DEFAULT NULL,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (`customer_id`) REFERENCES `customers`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Admin modules
+CREATE TABLE `accounts` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(150) NOT NULL,
+  `type` VARCHAR(50) NOT NULL DEFAULT 'Cash',
+  `balance` DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `transactions` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `account_id` INT NOT NULL,
+  `type` ENUM('Income', 'Expense') NOT NULL,
+  `amount` DECIMAL(12,2) NOT NULL,
+  `category` VARCHAR(150) NOT NULL DEFAULT 'General',
+  `notes` TEXT,
+  `created_by` INT DEFAULT NULL,
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_transactions_account_id` (`account_id`),
+  KEY `idx_transactions_created_by` (`created_by`),
+  CONSTRAINT `fk_transactions_account` FOREIGN KEY (`account_id`) REFERENCES `accounts` (`id`) ON DELETE RESTRICT,
+  CONSTRAINT `fk_transactions_admin` FOREIGN KEY (`created_by`) REFERENCES `admins` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `employee_salaries` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `employee_name` VARCHAR(150) NOT NULL,
+  `designation` VARCHAR(150) NOT NULL DEFAULT '',
+  `base_salary` DECIMAL(12,2) NOT NULL,
+  `advance_paid` DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+  `deductions` DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+  `net_paid` DECIMAL(12,2) NOT NULL,
+  `month` CHAR(7) NOT NULL,
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_employee_salaries_month` (`month`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `office_sales` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `invoice_number` VARCHAR(50) NOT NULL,
+  `customer_name` VARCHAR(150) NOT NULL,
+  `customer_phone` VARCHAR(30) NOT NULL DEFAULT '',
+  `subtotal` DECIMAL(12,2) NOT NULL,
+  `discount` DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+  `total` DECIMAL(12,2) NOT NULL,
+  `paid` DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+  `due` DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+  `payment_method` VARCHAR(50) NOT NULL DEFAULT 'Cash',
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_office_sales_invoice_number` (`invoice_number`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `suppliers` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(150) NOT NULL,
+  `contact_person` VARCHAR(150) DEFAULT NULL,
+  `phone` VARCHAR(30) NOT NULL,
+  `email` VARCHAR(150) DEFAULT NULL,
+  `address` TEXT,
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_suppliers_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `cms_pages` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `slug` VARCHAR(150) NOT NULL,
+  `title` VARCHAR(255) NOT NULL,
+  `content` LONGTEXT NOT NULL,
+  `meta_title` VARCHAR(255) NOT NULL DEFAULT '',
+  `meta_description` VARCHAR(500) NOT NULL DEFAULT '',
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_cms_pages_slug` (`slug`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `error_logs` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `type` VARCHAR(50) NOT NULL DEFAULT 'application',
+  `message` TEXT NOT NULL,
+  `file` VARCHAR(500) DEFAULT NULL,
+  `line` INT DEFAULT NULL,
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_error_logs_created_at` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `audit_logs` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `admin_id` INT DEFAULT NULL,
+  `action` VARCHAR(100) NOT NULL,
+  `entity_type` VARCHAR(100) NOT NULL,
+  `entity_id` INT DEFAULT NULL,
+  `old_values` LONGTEXT,
+  `new_values` LONGTEXT,
+  `ip_address` VARCHAR(45) NOT NULL,
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_audit_logs_admin_id` (`admin_id`),
+  KEY `idx_audit_logs_entity` (`entity_type`, `entity_id`),
+  KEY `idx_audit_logs_created_at` (`created_at`),
+  CONSTRAINT `fk_audit_logs_admin` FOREIGN KEY (`admin_id`) REFERENCES `admins` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `consent_log` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT,
+  `choice` VARCHAR(16) NOT NULL,
+  `categories_json` TEXT NOT NULL,
+  `banner_version` VARCHAR(32) NOT NULL,
+  `policy_version` VARCHAR(32) NOT NULL,
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_consent_log_created_at` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `courier_parcels` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `order_id` INT DEFAULT NULL,
+  `courier_name` VARCHAR(100) NOT NULL,
+  `tracking_code` VARCHAR(100) NOT NULL,
+  `cod_amount` DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+  `status` VARCHAR(100) NOT NULL DEFAULT 'Pending',
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_courier_parcels_tracking_code` (`tracking_code`),
+  KEY `idx_courier_parcels_order_id` (`order_id`),
+  CONSTRAINT `fk_courier_parcels_order` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

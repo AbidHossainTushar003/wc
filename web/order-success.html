@@ -3,62 +3,145 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Order details | Wonderful Collection</title>
+  <title>Order details | Shopademia</title>
+  <meta name="description" content="View your Shopademia order confirmation and details.">
   <meta name="robots" content="noindex, nofollow">
-  <link rel="stylesheet" href="css/style.css">
-  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+  <meta name="referrer" content="no-referrer">
+  <link rel="stylesheet" href="css/style.css?v=20261113-chat-dock-v3">
+  <link rel="stylesheet" href="css/consent.css?v=20261112-consent">
+  <link rel="icon" href="assets/favicon.ico" sizes="any">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
+  <style>
+    .order-success-card {
+      margin: 24px auto 40px;
+      padding: clamp(24px, 6vw, 48px) clamp(18px, 5vw, 36px);
+    }
+    .order-success-details {
+      display: grid;
+      gap: 12px;
+      text-align: left;
+    }
+    .order-success-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+      align-items: start;
+      gap: 12px;
+    }
+    .order-success-row strong {
+      overflow-wrap: anywhere;
+      text-align: right;
+    }
+    .order-success-actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      max-width: 520px;
+      margin: 0 auto 28px;
+    }
+    .order-success-actions a {
+      display: inline-flex;
+      width: 100%;
+      min-height: 48px;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 16px !important;
+      overflow-wrap: anywhere;
+      text-align: center;
+    }
+    .order-success-actions .btn-secondary:not(#whatsapp-btn) {
+      background: #f7f4ee;
+      color: #302d28;
+      border: 1px solid #e8e2d8;
+      text-decoration: none;
+    }
+    .order-success-actions .btn-secondary:not(#whatsapp-btn):hover {
+      background: #eee8dd;
+      border-color: #d6cec1;
+    }
+    .order-success-actions a:focus-visible,
+    .order-success-home:focus-visible {
+      outline: 3px solid #b7791f;
+      outline-offset: 3px;
+    }
+    .order-success-home {
+      display: inline-flex;
+      min-height: 44px;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 12px;
+    }
+    @media (max-width: 540px) {
+      .order-success-actions {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .order-success-row {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 2px;
+      }
+      .order-success-row strong {
+        text-align: left;
+      }
+    }
+  </style>
 </head>
 <body>
   <header class="site-header">
     <div class="header-container" style="justify-content: center;">
-      <a href="index.html" class="brand-logo-wrap"><img width="741" height="265" src="assets/logo.jpg" alt="Wonderful Collection" class="brand-logo-img"></a>
+      <a href="index.html" class="brand-logo-wrap"><img width="741" height="265" src="assets/logo-shopademia.jpg" alt="Shopademia" class="brand-logo-img"></a>
     </div>
   </header>
 
   <main class="page-container" style="max-width: 680px; text-align: center;">
-    <div style="background: #fff; border-radius: 20px; border: 1px solid #e2e8f0; padding: 48px 32px; box-shadow: var(--shadow-md); margin-top: 24px;">
+    <div class="order-success-card" style="background: #fff; border-radius: 20px; border: 1px solid #e8e2d8; box-shadow: var(--shadow-md);">
       <div id="order-success-icon" style="width: 80px; height: 80px; background: #ecfdf5; color: #10b981; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto 20px;" aria-hidden="true">
         ✓
       </div>
 
-      <h1 id="order-success-heading" style="font-size: 2rem; font-weight: 800; color: #0e2a47; margin-bottom: 8px;">Order received</h1>
-      <p id="order-success-message" role="status" style="color: #64748b; font-size: 1.05rem; margin-bottom: 24px;">
-        Thank you for choosing <strong>Wonderful Collection</strong>. Your order has been received. Use the order number and phone number to check its status.
+      <h1 id="order-success-heading" style="font-size: 2rem; font-weight: 800; color: #26231f; margin-bottom: 8px;">Order received</h1>
+      <p id="order-success-message" role="status" style="color: #69645b; font-size: 1.05rem; margin-bottom: 24px;">
+        Thank you for choosing <strong>Shopademia</strong>. Your order has been received. Use the order number and phone number to check its status.
       </p>
 
-      <div id="order-success-details" style="background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 12px; padding: 20px; margin-bottom: 28px; text-align: left;">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-          <span style="color: #64748b; font-size: 0.9rem;">Order Number:</span>
-          <strong id="disp-order-number" style="color: #0e2a47; font-size: 1rem;">—</strong>
+      <div id="order-success-details" class="order-success-details" style="background: #f7f4ee; border: 1px dashed #d6cec1; border-radius: 12px; padding: 20px; margin-bottom: 28px;">
+        <div class="order-success-row">
+          <span style="color: #69645b; font-size: 0.9rem;">Order Number:</span>
+          <strong id="disp-order-number" style="color: #26231f; font-size: 1rem;">—</strong>
         </div>
-        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-          <span style="color: #64748b; font-size: 0.9rem;">Tracking Code:</span>
-          <strong id="disp-track-code" style="color: #f05423; font-size: 1rem;">—</strong>
+        <div class="order-success-row">
+          <span style="color: #69645b; font-size: 0.9rem;">Tracking Code:</span>
+          <strong id="disp-track-code" style="color: #302d28; font-size: 1rem;">—</strong>
         </div>
-        <div style="display: flex; justify-content: space-between;">
-          <span style="color: #64748b; font-size: 0.9rem;">Total Amount:</span>
+        <div class="order-success-row">
+          <span style="color: #69645b; font-size: 0.9rem;">Total Amount:</span>
           <strong id="disp-total-amount" style="color: #10b981; font-size: 1.15rem;">—</strong>
         </div>
       </div>
 
-      <div id="order-success-actions" style="display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-bottom: 28px;">
+      <div id="order-success-actions" class="order-success-actions">
         <a id="track-btn-link" href="track-order.html" class="btn-primary" style="padding: 12px 24px;">
           📍 Track Order Delivery
         </a>
-        <a id="whatsapp-btn" href="#" target="_blank" class="btn-secondary" style="background: #25D366; color: #fff; border: none; padding: 12px 24px;">
+        <a id="whatsapp-btn" href="#" target="_blank" rel="noopener noreferrer" class="btn-secondary" style="background: #25D366; color: #fff; border: none; padding: 12px 24px;">
           💬 WhatsApp Confirmation
+        </a>
+        <a id="receipt-view-link" href="#" class="btn-secondary" style="padding: 12px 24px; display: none;">
+          View receipt
+        </a>
+        <a id="receipt-download-link" href="#" class="btn-secondary" style="padding: 12px 24px; display: none;">
+          Download receipt
         </a>
       </div>
 
-      <a href="index.html" style="font-size: 0.9rem; font-weight: 700; color: #0e2a47;">← Back to Home Page</a>
+      <a class="order-success-home" href="index.html" style="font-size: 0.9rem; font-weight: 700; color: #26231f;">← Back to Home Page</a>
     </div>
   </main>
 
   <footer class="site-footer">
-    <div class="footer-bottom"><div class="footer-bottom-container"><div>© 2026 Wonderful Collection - Dhaka, Bangladesh 🇧🇩</div></div></div>
+    <div class="footer-bottom"><div class="footer-bottom-container"><div>© 2026 Shopademia - Dhaka, Bangladesh 🇧🇩</div><nav class="footer-social-links" aria-label="Shopademia social media"><a href="https://www.instagram.com/ShopademiaBD" target="_blank" rel="noopener noreferrer">Instagram · ShopademiaBD</a><a href="https://x.com/SHOPADEMIA" target="_blank" rel="noopener noreferrer">X · SHOPADEMIA</a><a href="https://www.facebook.com/SHOPADEMIA" target="_blank" rel="noopener noreferrer">Facebook · SHOPADEMIA</a></nav></div></div>
   </footer>
 
-  <script src="js/store.js?v=20261109"></script>
+  <script src="js/store.js?v=20261113-storefront-final-v3"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const params = new URLSearchParams(window.location.search);
@@ -66,8 +149,8 @@
       const track = params.get('track') || '';
       const totalText = params.get('total') || '';
       const total = Number(totalText);
-      const hasOrderDetails = /^WC-[A-F0-9]{10}$/.test(order)
-        && /^TRK-WC-[A-F0-9]{10}$/.test(track)
+      const hasOrderDetails = /^WC-(?:[A-F0-9]{10}|[A-F0-9]{32}|[0-9]{5})$/.test(order)
+        && /^TRK-WC-(?:[A-F0-9]{10}|[A-F0-9]{32}|[0-9]{4})$/.test(track)
         && totalText !== ''
         && Number.isFinite(total)
         && total >= 0;
@@ -77,11 +160,13 @@
         icon.textContent = '!';
         icon.style.background = '#fef2f2';
         icon.style.color = '#b91c1c';
-        document.title = 'Order details unavailable | Wonderful Collection';
+        document.title = 'Order details unavailable | Shopademia';
         document.getElementById('order-success-heading').textContent = 'Order details unavailable';
         document.getElementById('order-success-message').textContent = 'We could not verify order details from this link. Check your order number and phone on the tracking page.';
         document.getElementById('order-success-details').style.display = 'none';
         document.getElementById('whatsapp-btn').style.display = 'none';
+        document.getElementById('receipt-view-link').style.display = 'none';
+        document.getElementById('receipt-download-link').style.display = 'none';
         document.getElementById('track-btn-link').textContent = 'Go to order tracking';
         document.getElementById('track-btn-link').href = 'track-order.html';
         return;
@@ -92,10 +177,20 @@
       document.getElementById('disp-total-amount').textContent = Store.formatBDT(total);
 
       document.getElementById('track-btn-link').href = `track-order.html?order=${encodeURIComponent(order)}`;
+      const receiptUrl = `/api/receipt.php?order=${encodeURIComponent(order)}&track=${encodeURIComponent(track)}`;
+      const receiptView = document.getElementById('receipt-view-link');
+      receiptView.href = receiptUrl;
+      receiptView.target = '_blank';
+      receiptView.rel = 'noopener noreferrer';
+      receiptView.style.display = 'inline-flex';
+      const receiptDownload = document.getElementById('receipt-download-link');
+      receiptDownload.href = `${receiptUrl}&download=1`;
+      receiptDownload.style.display = 'inline-flex';
 
-      const waMsg = encodeURIComponent(`Hi Wonderful Collection! I just placed order ${order} (Tracking: ${track}) for ${Store.formatBDT(total)}. Please confirm.`);
+      const waMsg = encodeURIComponent(`Hi Shopademia! I just placed order ${order} (Tracking: ${track}) for ${Store.formatBDT(total)}. Please confirm.`);
       document.getElementById('whatsapp-btn').href = `https://wa.me/8801560024777?text=${waMsg}`;
     });
   </script>
+  <script defer src="js/consent.js?v=20261112-consent"></script>
 </body>
 </html>

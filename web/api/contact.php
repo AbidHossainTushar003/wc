@@ -38,8 +38,8 @@ $body = "New contact message\n\n"
     . "Phone: {$phone}\n"
     . "Subject: {$subject}\n\n"
     . "Message:\n{$message}\n";
-if (!sendStoreMail($recipient, 'Wonderful Collection contact message', $body)) {
-    error_log('Wonderful Collection contact email delivery failed.');
+if (!sendStoreMail($recipient, 'Shopademia contact message', $body)) {
+    error_log('Shopademia contact email delivery failed.');
     jsonResponse(['error' => 'We could not send your message right now. Please contact the store by phone or WhatsApp.'], 503);
 }
 

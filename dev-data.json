@@ -1,19 +1,33 @@
 {
   "settings": {
-    "store_name": "Wonderful Collection",
-    "store_moto": "Wonderful Collection: Quality products, delivered across Bangladesh.",
+    "store_name": "Shopademia",
+    "store_moto": "Shopademia: Quality products, delivered across Bangladesh.",
     "store_email": "contact@wonderfulcollection.store",
     "store_phone": "+880 1560-024777",
     "store_address": "DHAKA, BANGLADESH",
     "currency_symbol": "৳",
     "currency_code": "BDT",
-    "delivery_fee_dhanmondi": "60",
     "delivery_fee_dhaka": "80",
     "delivery_fee_outside_dhaka": "130",
     "free_delivery_min_amount": "2000",
     "bkash_number": "01560024777 (Personal)",
     "nagad_number": "01560024777 (Personal)",
-    "rocket_number": "01560024777 (Personal)"
+    "rocket_number": "015600247777 (Personal)",
+    "primary_nav_links": "[\"home\",\"shop\",\"category:mens-fashion\",\"category:womens-fashion\",\"contact\"]",
+    "announcement_text": "Delivery availability and estimates are shown at checkout.",
+    "social_heading": "Follow us",
+    "social_instagram_label": "ShopademiaBD",
+    "social_instagram_url": "https://www.instagram.com/ShopademiaBD",
+    "social_x_label": "SHOPADEMIA",
+    "social_x_url": "https://x.com/SHOPADEMIA",
+    "social_facebook_label": "SHOPADEMIA",
+    "social_facebook_url": "https://www.facebook.com/SHOPADEMIA",
+    "homepage_promo_eyebrow": "Explore the collection",
+    "homepage_promo_title": "Discover Our Latest Collection",
+    "homepage_promo_description": "Explore quality products selected for everyday living.",
+    "homepage_promo_button_text": "Shop Collection →",
+    "homepage_promo_link": "shop.html",
+    "homepage_promo_image": ""
   },
   "categories": [
     {
@@ -22,7 +36,7 @@
       "slug": "mens-fashion",
       "description": "Premium Panjabis, shirts, and traditional attire.",
       "image": "assets/category-placeholder.svg",
-      "product_count": 1
+      "product_count": 3
     },
     {
       "id": 2,
@@ -67,6 +81,46 @@
   ],
   "products": [
     {
+      "id": 1793892343938,
+      "name": "Test Executive Panjabi 1793892343935",
+      "slug": "test-executive-panjabi-1793892343935-447",
+      "category_id": 1,
+      "category_name": "Men's Fashion",
+      "category_slug": "mens-fashion",
+      "regular_price": 3200,
+      "sale_price": 2750,
+      "stock_quantity": 50,
+      "sku": "WC-HUVK3V",
+      "short_desc": "Handcrafted organic cotton panjabi for testing",
+      "description": "",
+      "images": [
+        "assets/product-placeholder.svg"
+      ],
+      "is_featured": 0,
+      "is_trending": 0,
+      "reviews": []
+    },
+    {
+      "id": 1793892076353,
+      "name": "Test Executive Panjabi 1793892076351",
+      "slug": "test-executive-panjabi-1793892076351-553",
+      "category_id": 1,
+      "category_name": "Men's Fashion",
+      "category_slug": "mens-fashion",
+      "regular_price": 3200,
+      "sale_price": 2750,
+      "stock_quantity": 50,
+      "sku": "WC-A9TS9W",
+      "short_desc": "Handcrafted organic cotton panjabi for testing",
+      "description": "",
+      "images": [
+        "assets/product-placeholder.svg"
+      ],
+      "is_featured": 0,
+      "is_trending": 0,
+      "reviews": []
+    },
+    {
       "id": 1,
       "name": "Royal Nawab Premium Cotton Panjabi - Navy Blue",
       "slug": "royal-nawab-panjabi-navy",
@@ -75,10 +129,10 @@
       "category_slug": "mens-fashion",
       "regular_price": 2800,
       "sale_price": 2350,
-      "stock_quantity": 18,
+      "stock_quantity": 16,
       "sku": "WC-PANJ-001",
       "short_desc": "Handcrafted semi-fitted 100% organic Egyptian cotton Panjabi with intricate threadwork on collar and placket.",
-      "description": "Experience exceptional elegance with our flagship Royal Nawab Panjabi. Tailored from 100% breathable organic Egyptian cotton, designed specifically for Dhaka's climate. Hand-embroidered mandarin collar, contrast buttons, and side pockets. Delivered right to your doorstep in Dhanmondi within 2-4 hours.",
+      "description": "Experience exceptional elegance with our flagship Royal Nawab Panjabi. Tailored from 100% breathable organic Egyptian cotton, designed specifically for Dhaka's climate. Hand-embroidered mandarin collar, contrast buttons, and side pockets. Delivery options and estimated times are shown at checkout.",
       "images": [
         "assets/product-placeholder.svg"
       ],
@@ -89,7 +143,7 @@
           "id": 1,
           "customer_name": "Fahim Morshed",
           "rating": 5,
-          "comment": "Super fast delivery to Dhanmondi Road 4. The fabric is 10/10 quality! Definitely ordering again."
+          "comment": "Super fast delivery in Dhaka. The fabric is 10/10 quality! Definitely ordering again."
         },
         {
           "5": 5,
@@ -149,8 +203,8 @@
     },
     {
       "id": 4,
-      "name": "Dhanmondi Blossom Designer Georgette 3-Piece",
-      "slug": "dhanmondi-blossom-georgette-3piece",
+      "name": "Blossom Designer Georgette 3-Piece",
+      "slug": "blossom-georgette-3piece",
       "category_id": 2,
       "category_name": "Women's Fashion",
       "category_slug": "womens-fashion",
@@ -170,7 +224,7 @@
           "id": 4,
           "customer_name": "Sadia Rahman",
           "rating": 5,
-          "comment": "Wore this to a family dawat in Dhanmondi, got so many compliments. Beautiful embroidery work."
+          "comment": "Wore this to a family dawat in Dhaka, got so many compliments. Beautiful embroidery work."
         }
       ]
     },
@@ -206,7 +260,7 @@
       "stock_quantity": 22,
       "sku": "WC-HOME-006",
       "short_desc": "Hand-poured 100% natural soy wax candle scented with petrichor, jasmine, and wet earthen sandalwood.",
-      "description": "Relive the nostalgic beauty of sudden monsoon rain in Dhanmondi lake. Poured by hand into reusable amber glass jars using unbleached cotton wicks.",
+      "description": "Relive the nostalgic beauty of sudden monsoon rain. Poured by hand into reusable amber glass jars using unbleached cotton wicks.",
       "images": [
         "assets/product-placeholder.svg"
       ],
@@ -261,8 +315,8 @@
       "name": "Tanvir Ahmed",
       "email": "tanvir.dhk@example.com",
       "phone": "01711223344",
-      "address": "House 14, Road 8, Dhanmondi",
-      "area": "Dhanmondi",
+      "address": "House 14, Road 8, Dhaka",
+      "area": "Local Dhaka",
       "city": "Dhaka",
       "total_orders": 1,
       "total_spent": 2410
@@ -272,8 +326,8 @@
       "name": "Nusrat Jahan",
       "email": "nusrat.j@example.com",
       "phone": "01822334455",
-      "address": "Apt 4B, Concord Tower, Dhanmondi 27",
-      "area": "Dhanmondi",
+      "address": "Apt 4B, Dhaka",
+      "area": "Local Dhaka",
       "city": "Dhaka",
       "total_orders": 1,
       "total_spent": 3345
@@ -288,9 +342,88 @@
       "city": "Dhaka",
       "total_orders": 1,
       "total_spent": 5320
+    },
+    {
+      "id": 4,
+      "name": "abid",
+      "email": "test@gmail.com",
+      "phone": "+8801560024777",
+      "whatsapp_phone": null,
+      "notify_email": false,
+      "notify_whatsapp": false,
+      "notify_website": false,
+      "area": "Dhaka",
+      "city": "Dhaka",
+      "address": "",
+      "home_house_flat": "",
+      "home_road": "",
+      "home_village_area": "",
+      "home_union_ward": "",
+      "home_upazila_thana": "",
+      "home_district": "",
+      "home_division": "",
+      "home_postcode": "",
+      "email_verified": true,
+      "is_vip": 0,
+      "total_orders": 0,
+      "total_spent": 0
     }
   ],
   "orders": [
+    {
+      "id": 1793892343942,
+      "order_number": "WC-86703",
+      "customer_id": null,
+      "customer_name": "Test Buyer",
+      "customer_phone": "01711223344",
+      "customer_email": "testbuyer@example.com",
+      "delivery_address": "House 10, Road 5, Dhaka",
+      "delivery_area": "Local Dhaka",
+      "delivery_fee": 60,
+      "subtotal": 2750,
+      "discount": 0,
+      "total": 2810,
+      "payment_method": "Cash on Delivery",
+      "payment_status": "Pending Verification",
+      "trx_id": null,
+      "order_status": "Processing",
+      "tracking_code": "TRK-WC-8097",
+      "notes": "",
+      "created_at": "2026-11-05T15:25:43.942Z",
+      "items": [
+        {
+          "product_id": 1,
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "id": 1793892076357,
+      "order_number": "WC-71817",
+      "customer_id": null,
+      "customer_name": "Test Buyer",
+      "customer_phone": "01711223344",
+      "customer_email": "testbuyer@example.com",
+      "delivery_address": "House 10, Road 5, Dhaka",
+      "delivery_area": "Local Dhaka",
+      "delivery_fee": 60,
+      "subtotal": 2750,
+      "discount": 0,
+      "total": 2810,
+      "payment_method": "Cash on Delivery",
+      "payment_status": "Paid",
+      "trx_id": null,
+      "order_status": "Processing",
+      "tracking_code": "TRK-WC-8127",
+      "notes": "",
+      "created_at": "2026-11-05T15:21:16.357Z",
+      "items": [
+        {
+          "product_id": 1,
+          "quantity": 1
+        }
+      ]
+    },
     {
       "id": 1,
       "order_number": "WC-10021",
@@ -298,18 +431,18 @@
       "customer_name": "Tanvir Ahmed",
       "customer_phone": "01711223344",
       "customer_email": "tanvir.dhk@example.com",
-      "delivery_address": "House 14, Road 8, Dhanmondi, Dhaka",
-      "delivery_area": "Dhanmondi",
+      "delivery_address": "House 14, Road 8, Dhaka",
+      "delivery_area": "Local Dhaka",
       "delivery_fee": 60,
       "subtotal": 2350,
       "discount": 0,
       "total": 2410,
       "payment_method": "bKash",
-      "payment_status": "Paid",
+      "payment_status": "Pending Verification",
       "trx_id": "BKASH9823471",
-      "order_status": "Processing",
+      "order_status": "Shipped",
       "tracking_code": "TRK-WC-7721",
-      "notes": "Deliver after 4 PM at Dhanmondi Lake.",
+      "notes": "Deliver after 4 PM.",
       "created_at": "2026-11-01T14:34:59.373Z",
       "items": [
         {
@@ -328,23 +461,23 @@
       "customer_name": "Nusrat Jahan",
       "customer_phone": "01822334455",
       "customer_email": "nusrat.j@example.com",
-      "delivery_address": "Apt 4B, Concord Tower, Dhanmondi 27",
-      "delivery_area": "Dhanmondi",
+      "delivery_address": "Apt 4B, Dhaka",
+      "delivery_area": "Local Dhaka",
       "delivery_fee": 60,
       "subtotal": 3650,
       "discount": 365,
       "total": 3345,
       "payment_method": "Cash on Delivery",
-      "payment_status": "Pending",
+      "payment_status": "Paid",
       "trx_id": null,
-      "order_status": "Pending",
+      "order_status": "Delivered",
       "tracking_code": "TRK-WC-8842",
       "notes": "Call before delivery.",
       "created_at": "2026-11-01T17:34:59.374Z",
       "items": [
         {
           "product_id": 4,
-          "product_name": "Dhanmondi Blossom Designer Georgette 3-Piece",
+          "product_name": "Blossom Designer Georgette 3-Piece",
           "price": 3650,
           "quantity": 1,
           "total": 3650
@@ -365,9 +498,9 @@
       "discount": 200,
       "total": 5320,
       "payment_method": "Nagad",
-      "payment_status": "Paid",
+      "payment_status": "Refunded",
       "trx_id": "NGD7716298",
-      "order_status": "Delivered",
+      "order_status": "Cancelled",
       "tracking_code": "TRK-WC-6619",
       "notes": "Delivered with receipt.",
       "created_at": "2026-10-31T19:34:59.374Z",
@@ -392,7 +525,7 @@
   "coupons": [
     {
       "id": 1,
-      "code": "DHANMONDI10",
+      "code": "LOCAL10",
       "type": "percentage",
       "value": 10,
       "min_order": 1000,
@@ -426,5 +559,449 @@
       "times_used": 8,
       "is_active": 1
     }
-  ]
+  ],
+  "heroSlides": [
+    {
+      "image_desktop": "assets/hero/f268203888cf29097f1b3db020b7091d.jpg",
+      "image_mobile": "assets/hero/6d3818ccb0a383c905c1962b7081b55b.jpg",
+      "link_type": "page",
+      "link_value": "home",
+      "alt_text": "",
+      "starts_at": null,
+      "ends_at": null,
+      "is_enabled": true,
+      "sort_order": 0,
+      "id": 1
+    },
+    {
+      "image_desktop": "assets/hero/2a8512d157a328d3cc782202e61cb077.jpg",
+      "image_mobile": "assets/hero/b564019471331f1f9f932f37caf2c5b5.jpg",
+      "link_type": "page",
+      "link_value": "shop",
+      "alt_text": "",
+      "starts_at": null,
+      "ends_at": null,
+      "is_enabled": true,
+      "sort_order": 1,
+      "id": 2
+    }
+  ],
+  "supportChatConversations": [
+    {
+      "id": 1,
+      "chat_token_hash": "f9ff6fe6337a790bf39eb60113c98ab920c9daa78d7615cff3e3310f4250583f",
+      "chat_token_expires_at": "2026-12-12T15:43:46.527Z",
+      "customer_id": null,
+      "guest_name": "Guest",
+      "guest_contact": "",
+      "status": "open",
+      "assigned_admin_id": null,
+      "last_activity_at": "2026-11-12T15:43:46.529Z",
+      "created_at": "2026-11-12T15:43:46.527Z"
+    },
+    {
+      "id": 2,
+      "chat_token_hash": "20647b4adcf29e6e8e72e8e06069d30c2a1dad71a6fc162f0340cb51795efb16",
+      "chat_token_expires_at": "2026-12-12T15:44:33.915Z",
+      "customer_id": null,
+      "guest_name": "Guest",
+      "guest_contact": "",
+      "status": "open",
+      "assigned_admin_id": null,
+      "last_activity_at": "2026-11-12T15:44:33.916Z",
+      "created_at": "2026-11-12T15:44:33.916Z"
+    },
+    {
+      "id": 3,
+      "chat_token_hash": "71da6d1d25de92f7b2c86eba67242258cd0cd369fa5b53e7aa4262c7452f63c8",
+      "chat_token_expires_at": "2026-12-12T15:49:31.279Z",
+      "customer_id": null,
+      "guest_name": "Guest",
+      "guest_contact": "",
+      "status": "open",
+      "assigned_admin_id": 1,
+      "last_activity_at": "2026-11-12T17:14:48.661Z",
+      "created_at": "2026-11-12T15:49:31.279Z"
+    },
+    {
+      "id": 4,
+      "chat_token_hash": "d0d9cff71c3c4c85fadd8d3f6cce3edef67b34c76317f87ccb4fc070d9a42dc8",
+      "chat_token_expires_at": "2026-12-12T15:49:40.180Z",
+      "customer_id": null,
+      "guest_name": "Guest",
+      "guest_contact": "",
+      "status": "open",
+      "assigned_admin_id": null,
+      "last_activity_at": "2026-11-12T15:49:40.180Z",
+      "created_at": "2026-11-12T15:49:40.180Z"
+    },
+    {
+      "id": 5,
+      "chat_token_hash": "6231047239ac820f0269ae5df69946ac00539794d519d05f1410208a8181dde4",
+      "chat_token_expires_at": "2026-12-12T15:49:49.167Z",
+      "customer_id": null,
+      "guest_name": "Guest",
+      "guest_contact": "",
+      "status": "open",
+      "assigned_admin_id": null,
+      "last_activity_at": "2026-11-12T15:49:49.168Z",
+      "created_at": "2026-11-12T15:49:49.167Z"
+    },
+    {
+      "id": 6,
+      "chat_token_hash": "ab15fd9772d81d3609ef2f9d952d675de213b661212608169f94ff764728d1e1",
+      "chat_token_expires_at": "2026-12-12T15:51:07.795Z",
+      "customer_id": null,
+      "guest_name": "Guest",
+      "guest_contact": "",
+      "status": "open",
+      "assigned_admin_id": null,
+      "last_activity_at": "2026-11-12T15:51:07.795Z",
+      "created_at": "2026-11-12T15:51:07.795Z"
+    },
+    {
+      "id": 7,
+      "chat_token_hash": "4dca4bcbee6f796683cf1e42ee5f884c10c6645b31d4455c411bab4bdefbb569",
+      "chat_token_expires_at": "2026-12-13T00:10:00.351Z",
+      "customer_id": null,
+      "guest_name": "Guest",
+      "guest_contact": "",
+      "status": "open",
+      "assigned_admin_id": 1,
+      "last_activity_at": "2026-11-13T00:41:00.150Z",
+      "created_at": "2026-11-13T00:10:00.357Z"
+    },
+    {
+      "id": 8,
+      "chat_token_hash": "5cbfc38efcdaf3492518b0e1505686a4d93cb645bfd0fa0a77609ef6b5ba46c1",
+      "chat_token_expires_at": "2026-12-13T00:44:58.955Z",
+      "customer_id": null,
+      "guest_name": "Guest",
+      "guest_contact": "",
+      "status": "open",
+      "assigned_admin_id": 1,
+      "last_activity_at": "2026-11-13T00:45:34.076Z",
+      "created_at": "2026-11-13T00:44:58.956Z"
+    }
+  ],
+  "supportChatMessages": [
+    {
+      "id": 1,
+      "conversation_id": 1,
+      "sender_type": "guest",
+      "sender_id": null,
+      "message": "test from terminal",
+      "read_at": "2026-11-12T17:06:08.391Z",
+      "created_at": "2026-11-12T15:43:46.529Z"
+    },
+    {
+      "id": 2,
+      "conversation_id": 2,
+      "sender_type": "guest",
+      "sender_id": null,
+      "message": "quick check",
+      "read_at": null,
+      "created_at": "2026-11-12T15:44:33.916Z"
+    },
+    {
+      "id": 3,
+      "conversation_id": 3,
+      "sender_type": "guest",
+      "sender_id": null,
+      "message": "HI",
+      "read_at": "2026-11-12T16:00:19.223Z",
+      "created_at": "2026-11-12T15:49:31.279Z"
+    },
+    {
+      "id": 4,
+      "conversation_id": 4,
+      "sender_type": "guest",
+      "sender_id": null,
+      "message": "UI verification",
+      "read_at": null,
+      "created_at": "2026-11-12T15:49:40.180Z"
+    },
+    {
+      "id": 5,
+      "conversation_id": 5,
+      "sender_type": "guest",
+      "sender_id": null,
+      "message": "UI verification",
+      "read_at": null,
+      "created_at": "2026-11-12T15:49:49.168Z"
+    },
+    {
+      "id": 6,
+      "conversation_id": 6,
+      "sender_type": "guest",
+      "sender_id": null,
+      "message": "smoke test from local API",
+      "read_at": "2026-11-12T16:00:16.840Z",
+      "created_at": "2026-11-12T15:51:07.795Z"
+    },
+    {
+      "id": 7,
+      "conversation_id": 3,
+      "sender_type": "guest",
+      "sender_id": null,
+      "message": "HI",
+      "read_at": "2026-11-12T16:00:19.224Z",
+      "created_at": "2026-11-12T15:53:47.003Z"
+    },
+    {
+      "id": 8,
+      "conversation_id": 3,
+      "sender_type": "admin",
+      "sender_id": null,
+      "message": "hi",
+      "read_at": null,
+      "created_at": "2026-11-12T16:00:22.640Z"
+    },
+    {
+      "id": 9,
+      "conversation_id": 3,
+      "sender_type": "admin",
+      "sender_id": null,
+      "message": "hi",
+      "read_at": null,
+      "created_at": "2026-11-12T17:05:55.887Z"
+    },
+    {
+      "id": 10,
+      "conversation_id": 3,
+      "sender_type": "guest",
+      "sender_id": null,
+      "message": "hi",
+      "read_at": "2026-11-12T17:14:44.815Z",
+      "created_at": "2026-11-12T17:14:33.798Z"
+    },
+    {
+      "id": 11,
+      "conversation_id": 3,
+      "sender_type": "admin",
+      "sender_id": null,
+      "message": "hi",
+      "read_at": null,
+      "created_at": "2026-11-12T17:14:48.661Z"
+    },
+    {
+      "id": 12,
+      "conversation_id": 7,
+      "sender_type": "guest",
+      "sender_id": null,
+      "message": "I have a question about an order.",
+      "read_at": "2026-11-13T00:25:27.114Z",
+      "created_at": "2026-11-13T00:10:00.357Z"
+    },
+    {
+      "id": 13,
+      "conversation_id": 7,
+      "sender_type": "admin",
+      "sender_id": null,
+      "message": "hi",
+      "read_at": null,
+      "created_at": "2026-11-13T00:25:39.147Z"
+    },
+    {
+      "id": 14,
+      "conversation_id": 7,
+      "sender_type": "admin",
+      "sender_id": null,
+      "message": "ola",
+      "read_at": null,
+      "created_at": "2026-11-13T00:41:00.150Z"
+    },
+    {
+      "id": 15,
+      "conversation_id": 8,
+      "sender_type": "guest",
+      "sender_id": null,
+      "message": "I have a question about an order.",
+      "read_at": "2026-11-13T00:45:18.162Z",
+      "created_at": "2026-11-13T00:44:58.956Z"
+    },
+    {
+      "id": 16,
+      "conversation_id": 8,
+      "sender_type": "admin",
+      "sender_id": null,
+      "message": "hi",
+      "read_at": "2026-11-13T00:45:24.140Z",
+      "created_at": "2026-11-13T00:45:22.026Z"
+    },
+    {
+      "id": 17,
+      "conversation_id": 8,
+      "sender_type": "admin",
+      "sender_id": null,
+      "message": "gg",
+      "read_at": "2026-11-13T00:59:15.847Z",
+      "created_at": "2026-11-13T00:45:34.076Z"
+    }
+  ],
+  "supportChatFaq": [
+    {
+      "id": 1,
+      "question": "dd",
+      "answer": "ddd",
+      "keywords": "dd",
+      "is_active": 1,
+      "sort_order": 0
+    },
+    {
+      "id": 2,
+      "question": "ddd",
+      "answer": "dddd",
+      "keywords": "d",
+      "is_active": 1,
+      "sort_order": 0
+    }
+  ],
+  "supportChatSettings": {
+    "admin_online": 0,
+    "bot_wait_seconds": 60
+  },
+  "customerCredentials": [
+    {
+      "customer_id": 4,
+      "email": "test@gmail.com",
+      "password_hash": "12fa84fd526bab5dddc4f6ac2cb6de14$5a12a154524076a9d1576f6e6209c1aefb75239303a11dbd1ed8c0f09ef5b147e0be7810b77f9e174a31643b06c74efbd5d16d859759cfb2ea786c91d4e5176b"
+    }
+  ],
+  "adminRoles": [
+    {
+      "name": "Super Admin",
+      "permissions": [
+        "*.*"
+      ]
+    },
+    {
+      "name": "Inventory Manager",
+      "permissions": [
+        "categories.read",
+        "products.read",
+        "inventory.read",
+        "inventory.adjust",
+        "inventory.set",
+        "suppliers.read"
+      ]
+    },
+    {
+      "name": "Order Manager",
+      "permissions": [
+        "categories.read",
+        "products.read",
+        "orders.read",
+        "orders.update",
+        "feedback.read",
+        "feedback.update",
+        "support.read",
+        "support.update",
+        "customers.read",
+        "customers.update",
+        "couriers.read",
+        "couriers.create",
+        "reports.read"
+      ]
+    },
+    {
+      "name": "Sales Manager",
+      "permissions": [
+        "categories.read",
+        "products.read",
+        "orders.read",
+        "orders.update",
+        "feedback.read",
+        "feedback.update",
+        "support.read",
+        "support.update",
+        "customers.read",
+        "customers.update",
+        "sales.read",
+        "sales.create",
+        "reports.read"
+      ]
+    },
+    {
+      "name": "Accountant",
+      "permissions": [
+        "accounts.read",
+        "accounts.transactions.read",
+        "accounts.transactions.create",
+        "accounts.salaries.read",
+        "accounts.salaries.pay",
+        "reports.read",
+        "sales.read",
+        "orders.read"
+      ]
+    },
+    {
+      "name": "Viewer",
+      "permissions": [
+        "categories.read",
+        "products.read",
+        "orders.read",
+        "customers.read",
+        "inventory.read",
+        "sales.read",
+        "accounts.read",
+        "accounts.transactions.read",
+        "accounts.salaries.read",
+        "suppliers.read",
+        "couriers.read",
+        "reports.read"
+      ]
+    }
+  ],
+  "adminAccounts": [
+    {
+      "id": 1,
+      "username": "admin",
+      "full_name": "Wonderful Store Manager",
+      "role": "Super Admin",
+      "is_active": true,
+      "password_hash": null,
+      "must_change_password": false,
+      "created_at": "2026-11-12T18:24:57.893Z"
+    }
+  ],
+  "adminAuditLog": [],
+  "consentReceipts": [
+    {
+      "id": 1,
+      "choice": "accept_all",
+      "categories": {
+        "analytics": true,
+        "marketing": true,
+        "sessionReplay": true
+      },
+      "banner_version": "1",
+      "policy_version": "draft-2",
+      "page_path": "/index.html",
+      "locale": "en-US",
+      "timezone": "Asia/Dhaka",
+      "device_type": "Desktop",
+      "browser_name": "Chrome",
+      "created_at": "2026-11-13T00:10:55.845Z"
+    },
+    {
+      "id": 2,
+      "choice": "accept_all",
+      "categories": {
+        "analytics": true,
+        "marketing": true,
+        "sessionReplay": true
+      },
+      "banner_version": "1",
+      "policy_version": "draft-2",
+      "page_path": "/index.html",
+      "locale": "en-US",
+      "timezone": "Asia/Dhaka",
+      "device_type": "Desktop",
+      "browser_name": "Chrome",
+      "created_at": "2026-11-13T00:44:53.623Z"
+    }
+  ],
+  "customerFeedback": [],
+  "notificationLogs": []
 }

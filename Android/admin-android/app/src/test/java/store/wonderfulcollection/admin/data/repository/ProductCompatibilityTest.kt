@@ -32,4 +32,31 @@ class ProductCompatibilityTest {
         assertEquals("/uploads/legacy.jpg", product.images.first())
         assertTrue(product.shortDesc.contains("Cotton shirt"))
     }
+
+    @Test
+    fun parseProductAcceptsCamelCaseAndNestedImageObjects() {
+        val product = parseProduct(
+            JSONObject(
+                """{
+                    "id": 19,
+                    "product_name": "Travel Mug",
+                    "regularPrice": 620.0,
+                    "salePrice": 510.0,
+                    "stockQuantity": 11,
+                    "categoryName": "Lifestyle",
+                    "shortDesc": "Insulated stainless mug",
+                    "description": "A lightweight travel cup.",
+                    "images": [{"url": "/uploads/mug.jpg"}]
+                }""".trimIndent(),
+            ),
+        )
+
+        assertEquals(19L, product.id)
+        assertEquals("Travel Mug", product.name)
+        assertEquals(620.0, product.regularPrice, 0.0)
+        assertEquals(510.0, product.salePrice ?: 0.0, 0.0)
+        assertEquals("Lifestyle", product.categoryName)
+        assertEquals("/uploads/mug.jpg", product.images.first())
+        assertTrue(product.shortDesc.contains("Insulated stainless mug"))
+    }
 }

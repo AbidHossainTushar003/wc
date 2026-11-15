@@ -7,10 +7,7 @@ require_once __DIR__ . '/db.php';
 
 $pdo = Database::getConnection();
 $admin = requireAdminToken($pdo);
-
-if ($admin['role'] !== 'Super Admin') {
-    jsonResponse(['error' => 'Error log viewer is restricted to the store owner.'], 403);
-}
+requireAdminPermission($admin, 'administration', 'logs.read');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     jsonResponse(['error' => 'Method not allowed'], 405);
