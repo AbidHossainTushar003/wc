@@ -2906,24 +2906,30 @@ async function verifyTrackingInstallation() {
     const status = document.getElementById('tracking-manager-status');
     status.textContent = 'Checking the latest server-rendered storefront home page…';
     try {
-        const response = await fetch('/', { cache: 'no-store', credentials: 'same-origin' });
-        if (!response.ok) throw new Error(`Storefront returned HTTP ${response.status}.`);
-        const html = await response.text();
+        const response = await adminFetch(`${API_BASE}/tracking-settings?action=verify`);
+        const verificationResponse = await response.json();
+        if (!response.ok || verificationResponse.status !== 'success' || !verificationResponse.data?.slots) {
+            throw new Error(verificationResponse.error || 'Could not verify the storefront installation.');
+        }
         let enabledCount = 0;
         for (const slotKey of TRACKING_SLOT_KEYS) {
             const slot = trackingSlots[slotKey];
-            const result = document.getElementById(`tracking-verification-${slotKey}`);
+            const verification = document.getElementById(`tracking-verification-${slotKey}`);
             if (!slot?.enabled || !slot.value) {
-                if (result) result.textContent = 'Verification skipped while disabled.';
+                if (verification) verification.textContent = 'Verification skipped while disabled.';
                 continue;
             }
             enabledCount++;
-            const present = html.includes(`<!-- tracking-slot:${slotKey} -->`);
-            slot.verification = present ? 'Present in latest server-rendered home page.' : 'Missing from latest server-rendered home page.';
-            if (result) result.textContent = slot.verification;
+            const state = verificationResponse.data.slots[slotKey];
+            slot.verification = state === 'present'
+                ? 'Present in latest server-rendered home page.'
+                : state === 'missing'
+                    ? 'Missing from latest server-rendered home page.'
+                    : 'Error checking this tracking slot.';
+            if (verification) verification.textContent = slot.verification;
         }
         status.textContent = enabledCount
-            ? 'Installation check completed against the latest storefront home-page response.'
+            ? `Installation check completed against ${verificationResponse.data.url} at ${verificationResponse.data.checked_at}.`
             : 'No enabled snippets to verify.';
     } catch (error) {
         for (const slotKey of TRACKING_SLOT_KEYS) {
